@@ -5,7 +5,7 @@ from typing import Iterable, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from autofeat.transform import Table
+    from autofeat.table import Table
 
 
 class Dataset(abc.ABC):

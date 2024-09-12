@@ -3,17 +3,29 @@ import pathlib
 import polars
 from typing import Iterable
 
-import kaggle
-
 from autofeat.dataset.base import Dataset
-from autofeat.transform import Table
+from autofeat.table import Table
+
+
+DEFAULT_CACHE = pathlib.Path.home() / "cache" / "kaggle"
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class KaggleCompetition(Dataset):
+    """A Kaggle competition."""
+
+    def list_tables(
+        self,
+    ) -> Iterable[Table]:
+        # TODO
+        ...
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class KaggleDataset(Dataset):
-    """A dataset stored in Kaggle.
+    """A Kaggle dataset.
 
-    >>> KaggleDataset(id="abdullah0a/urban-air-quality-and-health-impact-dataset")
+    >>> dataset = KaggleDataset(id="abdullah0a/urban-air-quality-and-health-impact-dataset")
 
     .. code-block:: bash
 
@@ -26,23 +38,23 @@ class KaggleDataset(Dataset):
         Create a `key <https://www.kaggle.com/settings>`_ from your account settings.
 
     :param id:
+    :param cache:
     :param sample_size:
     """
 
     id: str
-    cache: pathlib.Path = pathlib.Path.home() / "cache" / "kaggle"
+    cache: pathlib.Path = DEFAULT_CACHE
     sample_size: int = 250
 
     def list_tables(
         self,
     ) -> Iterable[Table]:
-        api = kaggle.KaggleApi()
-
-        api.authenticate()
+        # kaggle creates and authenticates a client on import
+        import kaggle
 
         path = self.cache / "datasets" / self.id
 
-        api.dataset_download_files(
+        kaggle.api.dataset_download_files(
             dataset=self.id,
             path=str(path),
             unzip=True,
