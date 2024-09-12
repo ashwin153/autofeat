@@ -38,13 +38,13 @@ class KaggleDataset(Dataset):
             echo '{"username":"$USER", "key":"$KEY"}' >~/.config/kaggle/kaggle.json
             chmod 600 ~/.config/kaggle/kaggle.json
 
-    :param id: Dataset identifier in the form owner/name.
     :param cache: Path where datasets are locally cached.
+    :param id: Dataset identifier in the form owner/name.
     :param sample_size: Number of rows to sample from each table in the dataset.
     """
 
-    id: str
     cache: pathlib.Path = DEFAULT_CACHE
+    id: str
     sample_size: int = 250
 
     def list_tables(
