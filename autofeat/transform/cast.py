@@ -52,8 +52,8 @@ class Cast(Transform):
             if table.is_valid(time):
                 return time
 
-            unique_counts = table.sample.select(expr.unique_counts()).item()
-            if max(unique_counts) > 1:
+            largest_category = table.sample.select(expr.unique_counts().max()).item()
+            if largest_category > 1:
                 return expr.cast(polars.Categorical)
 
         return expr
