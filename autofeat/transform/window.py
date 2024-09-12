@@ -20,12 +20,11 @@ class Window(Transform):
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for table in tables:
-            predicates = []
-
-            for column, data_type in table.schema.items():
-                if data_type.is_temporal():
-                    expr = polars.col(column)
-                    predicates.append(expr.filter(expr >= expr.max() - self.period))
+            predicates = [
+                polars.col(column) >= polars.col(column).max() - self.period
+                for column, data_type in table.schema.items()
+                if data_type.is_temporal()
+            ]
 
             if predicates:
                 yield table.apply(lambda df: df.filter(predicates))
