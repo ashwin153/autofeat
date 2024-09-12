@@ -1,8 +1,7 @@
 __all__ = [
     "Dataset",
     "KaggleDataset",
-    "Table",
 ]
 
-from dataset.base import Dataset, Table
-from dataset.kaggle import KaggleDataset
+from autofeat.dataset.base import Dataset
+from autofeat.dataset.kaggle import KaggleDataset
