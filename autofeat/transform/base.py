@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import abc
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 
-from autofeat.table import Table
+
+if TYPE_CHECKING:
+    from autofeat.table import Table
 
 
 class Transform(abc.ABC):

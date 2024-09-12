@@ -1,0 +1,28 @@
+line-length = 100
+lint.select = [
+    # flake8
+    "ASYNC",
+    "C4",
+    "COM",
+    "FBT",
+    "INT",
+    "PIE",
+    "Q",
+    "RSE",
+    "T10",
+    "TCH",
+    "TID",
+    # numpy
+    "NPY",
+    # pycodestyle
+    "E",
+    "W",
+    # pyflakes
+    "F",
+    # pylint
+    "PLC",
+    "PLE",
+    # ruff
+    "RUF",
+]
+target-version = "py312"
