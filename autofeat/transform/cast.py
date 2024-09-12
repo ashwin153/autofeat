@@ -35,7 +35,7 @@ class Cast(Transform):
         column: str,
     ) -> polars.Expr:
         if isinstance(table.schema[column], polars.String):
-            date = polars.col(column).str.to_date()
+            date = polars.col(column).str.to_date("%Y-%m-%d", strict=False)
             if table.is_valid(date):
                 return date
 

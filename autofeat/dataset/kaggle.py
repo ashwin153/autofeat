@@ -45,12 +45,13 @@ class KaggleDataset(Dataset):
 
     cache: pathlib.Path = DEFAULT_CACHE
     id: str
-    sample_size: int = 250
+    sample_size: int = 10
 
     def list_tables(
         self,
     ) -> Iterable[Table]:
         path = self.cache / "datasets" / self.id
+        path.mkdir(parents=True, exist_ok=True)
 
         # TODO: also redownload when the dataset version changes
         if not any(path.iterdir()):

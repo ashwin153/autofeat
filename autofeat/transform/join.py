@@ -5,6 +5,7 @@ from typing import Iterable, Set
 
 import networkx
 import polars
+import polars._typing
 
 from autofeat.table import Table
 from autofeat.transform.base import Transform
@@ -23,7 +24,7 @@ class Join(Transform):
     """
 
     on: Set[str]
-    how: polars.JoinStrategy = "outer"
+    how: polars._typing.JoinStrategy = "outer"
 
     def apply(
         self,
