@@ -9,6 +9,7 @@ description = ""
 python = "^3.12"
 polars = "^1.6.0"
 kaggle = "^1.6.17"
+networkx = "^3.3"
 
 [tool.poetry.group.dev.dependencies]
 notebook = "^7.2.2"
