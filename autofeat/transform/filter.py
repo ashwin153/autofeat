@@ -49,11 +49,11 @@ class Filter(Transform):
                 expr = polars.col(column)
 
                 if isinstance(data_type, polars.Datetime):
-                    yield expr.filter(expr < self.as_of)
+                    yield expr < self.as_of
                 elif isinstance(data_type, polars.Date):
-                    yield expr.filter(expr < self.as_of.date())
+                    yield expr < self.as_of.date()
                 elif isinstance(data_type, polars.Time):
-                    yield expr.filter(expr <= self.as_of.time())
+                    yield expr < self.as_of.time()
 
     def _eq_predicates(
         self,
@@ -64,7 +64,7 @@ class Filter(Transform):
                 expr = polars.col(column)
 
                 if column in table.schema:
-                    yield expr.filter(expr.eq(value))
+                    yield expr.eq(value)
 
     def _gt_predicates(
         self,
@@ -75,7 +75,7 @@ class Filter(Transform):
                 expr = polars.col(column)
 
                 if column in table.schema:
-                    yield expr.filter(expr.gt(value))
+                    yield expr.gt(value)
 
     def _lt_predicates(
         self,
@@ -86,4 +86,4 @@ class Filter(Transform):
                 expr = polars.col(column)
 
                 if column in table.schema:
-                    yield expr.filter(expr.lt(value))
+                    yield expr.lt(value)
