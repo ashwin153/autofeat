@@ -19,7 +19,7 @@ class Join(Transform):
         Aggregate tables by the same key columns that they are joined on to avoid join explosion.
 
     :param on: Columns to join on.
-    :param how: Method of joining the tables. (outer)
+    :param how: Method of joining the tables.
     """
 
     on: Set[str]

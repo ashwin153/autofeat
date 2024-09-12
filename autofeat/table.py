@@ -80,8 +80,8 @@ class Table:
         """Join this table with the ``other`` table.
 
         :param other: Table to join with.
-        :param on: Columns to join on. (inferred)
-        :param how: Method of joining the tables. (outer)
+        :param on: Columns to join on.
+        :param how: Method of joining the tables.
         :return: Joined table.
         """
         return Table(
