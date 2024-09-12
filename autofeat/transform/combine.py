@@ -20,21 +20,24 @@ class Combine(Transform):
             columns = []
 
             for x, y in itertools.combinations(self._numeric_columns(table), 2):
-                columns.append(x + y)
-                columns.append(x - y)
-                columns.append(y - x)
-                columns.append(x * y)
-                columns.append(x / y)
-                columns.append(y / x)
+                x_expr = polars.col(x)
+                y_expr = polars.col(y)
 
-            yield table.apply(lambda df: df.with_columns(columns))
+                columns.append((x_expr + y_expr).alias(f"{x} + {y}"))
+                columns.append((x_expr - y_expr).alias(f"{x} - {y}"))
+                columns.append((y_expr - x_expr).alias(f"{y} - {x}"))
+                columns.append((x_expr * y_expr).alias(f"{x} * {y}"))
+                columns.append((x_expr / y_expr).alias(f"{x} / {y}"))
+                columns.append((y_expr / x_expr).alias(f"{y} / {x}"))
+
+            yield table.apply(lambda df: df.select(columns))
 
     def _numeric_columns(
         self,
         table: Table,
-    ) -> list[polars.Expr]:
+    ) -> list[str]:
         return [
-            polars.col(column)
+            column
             for column, data_type in table.schema.items()
             if data_type.is_numeric()
         ]

@@ -34,21 +34,26 @@ class Cast(Transform):
         table: Table,
         column: str,
     ) -> polars.Expr:
-        if isinstance(table.schema[column], polars.String):
-            date = polars.col(column).str.to_date()
+        expr = polars.col(column)
+
+        if (
+            isinstance(table.schema[column], polars.String)
+            and not table.sample.select(expr.is_null().all()).item()
+        ):
+            date = expr.str.to_date("%Y-%m-%d")
             if table.is_valid(date):
                 return date
 
-            datetime = polars.col(column).str.to_datetime()
+            datetime = expr.str.to_datetime()
             if table.is_valid(datetime):
                 return datetime
 
-            time = polars.col(column).str.to_time()
+            time = expr.str.to_time()
             if table.is_valid(time):
                 return time
 
-            category_sizes = table.sample.get_column(column).unique_counts()
-            if max(category_sizes) > 1:
-                return polars.col(column).cast(polars.Categorical)
+            unique_counts = table.sample.select(expr.unique_counts()).item()
+            if max(unique_counts) > 1:
+                return expr.cast(polars.Categorical)
 
-        return polars.col(column)
+        return expr

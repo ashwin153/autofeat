@@ -34,14 +34,14 @@ class Aggregate(Transform):
         for column, data_type in table.sample.schema.items():
             expr = polars.col(column)
 
-            yield expr.count()
-            yield expr.null_count()
+            yield expr.count().alias(f"count({column})")
+            yield expr.null_count().alias(f"null_count({column})")
 
             if data_type.is_numeric():
-                yield expr.max()
-                yield expr.mean()
-                yield expr.median()
-                yield expr.min()
-                yield expr.std()
-                yield expr.sum()
-                yield expr.var()
+                yield expr.max().alias(f"max({column})")
+                yield expr.mean().alias(f"mean({column})")
+                yield expr.median().alias(f"median({column})")
+                yield expr.min().alias(f"min({column})")
+                yield expr.std().alias(f"std({column})")
+                yield expr.sum().alias(f"sum({column})")
+                yield expr.var().alias(f"var({column})")
