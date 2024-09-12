@@ -52,6 +52,7 @@ class KaggleDataset(Dataset):
     ) -> Iterable[Table]:
         path = self.cache / "datasets" / self.id
 
+        # TODO: also redownload when the dataset version changes
         if not any(path.iterdir()):
             # kaggle creates and authenticates a client on import
             import kaggle
