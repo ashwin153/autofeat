@@ -65,7 +65,7 @@ class Table:
         """
         try:
             self.sample.select(expr)
-        except polars.exceptions.ComputeError:
+        except polars.exceptions.PolarsError:
             return False
         else:
             return True
