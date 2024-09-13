@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 from typing import Iterable
 
@@ -7,6 +8,7 @@ from autofeat.table import Table
 from autofeat.transform import Transform
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Window(Transform):
     """Filter out rows from tables that are older than the period.
 

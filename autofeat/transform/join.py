@@ -31,26 +31,28 @@ class Join(Transform):
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for related_tables in self._related_tables(list(tables)):
-            yield functools.reduce(
-                lambda x, y: x.join(
-                    y,
-                    on=list(self.on & x.columns & y.columns),
-                    how=self.how,
-                ),
-                related_tables,
-            )
+            if len(related_tables) > 1:
+                yield functools.reduce(
+                    lambda x, y: x.join(
+                        y,
+                        on=list(self.on & x.columns & y.columns),
+                        how=self.how,
+                    ),
+                    related_tables,
+                )
 
     def _related_tables(
         self,
         tables: list[Table],
-    ) -> list[list[Table]]:
+    ) -> Iterable[list[Table]]:
         graph = networkx.Graph()
 
-        for x in tables:
-            graph.add_node(x)
+        for i in range(len(tables)):
+            graph.add_node(i)
 
-        for x, y in itertools.combinations(tables, 2):
-            if self.on & x.columns & y.columns:
+        for x, y in itertools.combinations(range(len(tables)), 2):
+            if self.on & tables[x].columns & tables[y].columns:
                 graph.add_edge(x, y)
 
-        return list(networkx.connected_components(graph))
+        for component in list(networkx.connected_components(graph)):
+            yield [tables[i] for i in component]
