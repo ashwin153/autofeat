@@ -11,10 +11,12 @@ class Table:
     """A table of data.
 
     :param data: Lazily-loaded contents of this table.
+    :param name: Name of this table.
     :param sample: Eagerly-loaded sample of the ``data``.
     """
 
     data: polars.LazyFrame
+    name: str
     sample: polars.DataFrame
 
     @property
@@ -52,6 +54,7 @@ class Table:
         """
         return Table(
             data=cast(polars.LazyFrame, f(self.data)),
+            name=self.name,
             sample=cast(polars.DataFrame, f(self.sample)),
         )
 
@@ -86,6 +89,7 @@ class Table:
         """
         return Table(
             data=self.data.join(other.data, on=on, how=how),
+            name=f"{self.name} {how} {other.name}",
             sample=self.sample.join(other.sample, on=on, how=how),
         )
 
@@ -95,4 +99,8 @@ class Table:
 
         :return: Empty table.
         """
-        return Table(data=polars.LazyFrame(), sample=polars.DataFrame())
+        return Table(
+            data=polars.LazyFrame(),
+            name="empty",
+            sample=polars.DataFrame(),
+        )

@@ -65,7 +65,10 @@ class KaggleDataset(Dataset):
             )
 
         for csv in path.glob("*.csv"):
+            df = polars.read_csv(csv)
+
             yield Table(
                 data=polars.scan_csv(csv),
-                sample=polars.read_csv(csv).sample(self.sample_size),
+                name=csv.name,
+                sample=df.sample(min(self.sample_size, len(df))),
             )
