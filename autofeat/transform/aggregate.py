@@ -41,6 +41,6 @@ class Aggregate(Transform):
                 yield expr.mean().alias(f"mean({column})")
                 yield expr.median().alias(f"median({column})")
                 yield expr.min().alias(f"min({column})")
-                yield expr.sum().alias(f"sum({column})")
                 yield expr.std().alias(f"std({column})")
+                yield expr.sum().alias(f"sum({column})")
                 yield expr.var().alias(f"var({column})")
