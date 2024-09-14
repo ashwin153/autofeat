@@ -14,7 +14,7 @@ DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 class KaggleCompetition(Dataset):
     """A Kaggle competition."""
 
-    def list_tables(
+    def tables(
         self,
     ) -> Iterable[Table]:
         # TODO
@@ -47,7 +47,7 @@ class KaggleDataset(Dataset):
     id: str
     sample_size: int = 10
 
-    def list_tables(
+    def tables(
         self,
     ) -> Iterable[Table]:
         path = self.cache / "datasets" / self.id
