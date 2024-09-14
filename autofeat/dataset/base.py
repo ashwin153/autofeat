@@ -57,5 +57,6 @@ class Dataset(abc.ABC):
                     how="horizontal",
                 )
                 for filter in (filters or [Identity()])
-            ], how="diagonal",
+            ],
+            how="diagonal",
         )
