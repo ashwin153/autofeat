@@ -20,7 +20,7 @@ class Encode(Transform):
 
             for column in table.columns:
                 if isinstance(column.data_type, polars.Categorical):
-                    categories = table.sample.select(column.expr.unique())
+                    categories = table.sample.select(column.expr.unique()).to_series()
                     for category in categories:
                         dummy_variables.append(
                             (column.expr == category)
