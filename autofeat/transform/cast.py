@@ -3,7 +3,7 @@ from typing import Iterable
 
 import polars
 
-from autofeat.table import Table
+from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
@@ -24,7 +24,7 @@ class Cast(Transform):
         for table in tables:
             columns = [
                 self._cast(table, column)
-                for column in table.schema
+                for column in table.columns
             ]
 
             yield table.apply(lambda df: df.select(columns))
@@ -32,28 +32,26 @@ class Cast(Transform):
     def _cast(
         self,
         table: Table,
-        column: str,
+        column: Column,
     ) -> polars.Expr:
-        expr = polars.col(column)
-
         if (
-            isinstance(table.schema[column], polars.String)
-            and not table.sample.select(expr.is_null().all()).item()
+            isinstance(column.data_type, polars.String)
+            and not table.sample.select(column.expr.is_null().all()).item()
         ):
-            date = expr.str.to_date("%Y-%m-%d")
+            date = column.expr.str.to_date("%Y-%m-%d")
             if table.is_valid(date):
                 return date
 
-            datetime = expr.str.to_datetime()
+            datetime = column.expr.str.to_datetime()
             if table.is_valid(datetime):
                 return datetime
 
-            time = expr.str.to_time()
+            time = column.expr.str.to_time()
             if table.is_valid(time):
                 return time
 
-            largest_category = table.sample.select(expr.unique_counts().max()).item()
+            largest_category = table.sample.select(column.expr.unique_counts().max()).item()
             if largest_category > 1:
-                return expr.cast(polars.Categorical)
+                return column.expr.cast(polars.Categorical)
 
-        return expr
+        return column.expr

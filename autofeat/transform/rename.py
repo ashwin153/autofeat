@@ -22,8 +22,8 @@ class Rename(Transform):
             mapping = {
                 old: new
                 for old, new in self.mapping.items()
-                if old in table.schema
-                if new not in table.schema
+                if any(old == column.name for column in table.columns)
+                if all(new != column.name for column in table.columns)
             }
 
             yield table.apply(lambda df: df.rename(mapping))
