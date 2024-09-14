@@ -2,9 +2,7 @@ import dataclasses
 import itertools
 from typing import Iterable
 
-import polars
-
-from autofeat.table import Table
+from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
@@ -20,24 +18,21 @@ class Combine(Transform):
             columns = []
 
             for x, y in itertools.combinations(self._numeric_columns(table), 2):
-                x_expr = polars.col(x)
-                y_expr = polars.col(y)
-
-                columns.append((x_expr + y_expr).alias(f"{x} + {y}"))
-                columns.append((x_expr - y_expr).alias(f"{x} - {y}"))
-                columns.append((y_expr - x_expr).alias(f"{y} - {x}"))
-                columns.append((x_expr * y_expr).alias(f"{x} * {y}"))
-                columns.append((x_expr / y_expr).alias(f"{x} / {y}"))
-                columns.append((y_expr / x_expr).alias(f"{y} / {x}"))
+                columns.append((x.expr + y.expr).alias(f"{x} + {y}"))
+                columns.append((x.expr - y.expr).alias(f"{x} - {y}"))
+                columns.append((y.expr - x.expr).alias(f"{y} - {x}"))
+                columns.append((x.expr * y.expr).alias(f"{x} * {y}"))
+                columns.append((x.expr / y.expr).alias(f"{x} / {y}"))
+                columns.append((y.expr / x.expr).alias(f"{y} / {x}"))
 
             yield table.apply(lambda df: df.select(columns))
 
     def _numeric_columns(
         self,
         table: Table,
-    ) -> list[str]:
+    ) -> list[Column]:
         return [
             column
-            for column, data_type in table.schema.items()
-            if data_type.is_numeric()
+            for column in table.columns
+            if column.data_type.is_numeric()
         ]

@@ -2,7 +2,6 @@ import dataclasses
 import datetime
 from typing import Iterable
 
-import polars
 
 from autofeat.table import Table
 from autofeat.transform import Transform
@@ -23,9 +22,9 @@ class Window(Transform):
     ) -> Iterable[Table]:
         for table in tables:
             predicates = [
-                polars.col(column) >= polars.col(column).max() - self.period
-                for column, data_type in table.schema.items()
-                if data_type.is_temporal()
+                column.expr >= column.expr.max() - self.period
+                for column in table.columns
+                if column.data_type.is_temporal()
             ]
 
             if predicates:

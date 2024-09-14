@@ -7,6 +7,33 @@ import polars
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
+class Column:
+    """A column in a table.
+
+    :param data_type: Type of data stored in the column.
+    :param name: Name of the column.
+    """
+
+    data_type: polars.DataType
+    name: str
+
+    def __str__(
+        self,
+    ) -> str:
+        return self.name
+
+    @property
+    def expr(
+        self,
+    ) -> polars.Expr:
+        """Convert this column to a Polars expression.
+
+        :return: Converted expression.
+        """
+        return polars.col(self.name)
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Table:
     """A table of data.
 
@@ -22,22 +49,15 @@ class Table:
     @property
     def columns(
         self,
-    ) -> Set[str]:
-        """Infer the columns in this table from the sample.
+    ) -> Set[Column]:
+        """Infer the columns in this table from the sample data.
 
         :return: Columns in this table.
         """
-        return set(self.sample.schema)
-
-    @property
-    def schema(
-        self,
-    ) -> polars.Schema:
-        """Infer the schema of this table from the sample.
-
-        :return: Schema of this table.
-        """
-        return self.sample.schema
+        return {
+            Column(name=name, data_type=data_type)
+            for name, data_type in self.sample.schema.items()
+        }
 
     def apply(
         self,
