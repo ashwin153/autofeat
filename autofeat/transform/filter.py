@@ -14,14 +14,10 @@ class Filter(Transform):
 
     :param as_of: Temporal filter.
     :param eq: Equality filters by column.
-    :param gt: Greater than filters by column.
-    :param lt: Less than filters by column.
     """
 
     as_of: datetime.datetime | None = None
     eq: dict[str, Any] | None = None
-    gt: dict[str, Any] | None = None
-    lt: dict[str, Any] | None = None
 
     def apply(
         self,
@@ -31,8 +27,6 @@ class Filter(Transform):
             predicates = [
                 *self._as_of_predicates(table),
                 *self._eq_predicates(table),
-                *self._gt_predicates(table),
-                *self._lt_predicates(table),
             ]
 
             if predicates:
@@ -61,21 +55,3 @@ class Filter(Transform):
             for column in table.columns:
                 if value := self.eq.get(column.name):
                     yield column.expr.eq(value)
-
-    def _gt_predicates(
-        self,
-        table: Table,
-    ) -> Iterable[polars.Expr]:
-        if self.gt:
-            for column in table.columns:
-                if value := self.gt.get(column.name):
-                    yield column.expr.gt(value)
-
-    def _lt_predicates(
-        self,
-        table: Table,
-    ) -> Iterable[polars.Expr]:
-        if self.lt:
-            for column in table.columns:
-                if value := self.lt.get(column.name):
-                    yield column.expr.lt(value)
