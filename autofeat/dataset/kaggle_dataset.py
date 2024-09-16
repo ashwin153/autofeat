@@ -1,11 +1,11 @@
 import dataclasses
 import pathlib
-import polars
 from typing import Iterable
+
+import polars
 
 from autofeat.dataset.base import Dataset
 from autofeat.table import Table
-
 
 DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 

@@ -12,6 +12,8 @@ lint.select = [
     "T10",
     "TCH",
     "TID",
+    # isort
+    "I",
     # numpy
     "NPY",
     # pycodestyle

@@ -1,10 +1,10 @@
 import dataclasses
 from typing import Iterable
 
-from autofeat.table import Table, Set
-from autofeat.transform.base import Transform
-
 import polars
+
+from autofeat.table import Set, Table
+from autofeat.transform.base import Transform
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

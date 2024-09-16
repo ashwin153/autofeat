@@ -1,6 +1,5 @@
-from typing import Iterable
-
 import dataclasses
+from typing import Iterable
 
 from autofeat.dataset.base import Dataset
 from autofeat.table import Table

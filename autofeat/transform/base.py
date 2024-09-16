@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Iterable, TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
     from autofeat.table import Table
