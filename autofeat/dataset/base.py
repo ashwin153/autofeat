@@ -6,6 +6,7 @@ from typing import Iterable, TYPE_CHECKING
 import polars
 
 from autofeat.transform.identity import Identity
+from autofeat.dataset.derived_dataset import DerivedDataset
 
 
 if TYPE_CHECKING:
@@ -26,20 +27,33 @@ class Dataset(abc.ABC):
         :return: All tables.
         """
 
+    def apply(
+        self,
+        transform: Transform,
+        /,
+    ) -> Dataset:
+        """Apply the ``transform`` to each table in this dataset.
+
+        :param transform: Transform to apply.
+        :return: Derived dataset.
+        """
+        return DerivedDataset(
+            dataset=self,
+            transform=transform,
+        )
+
     def features(
         self,
         *,
         filters: list[Filter] | None = None,
-        transform: Transform | None = None,
     ) -> polars.LazyFrame:
-        """Extract features under the ``transform`` given each of the ``filters``.
+        """Extract features for each of the ``filters``.
 
-        Features are the boolean or numeric columns from tables that reduce to a single row under
-        the ``transform``. A simple way to guarantee this is to always filter and aggregate data by
-        the same columns.
+        Features are the boolean or numeric columns from tables containing a single row. A simple
+        way to guarantee every table has a single row is to aggregate tables by the same columns
+        that they are filtered by.
 
         :param filters: Filters to apply before transforming the data.
-        :param transform: Transform to apply to the data.
         :return: Extracted features.
         """
         return polars.concat(
@@ -52,7 +66,7 @@ class Dataset(abc.ABC):
                             (polars.selectors.boolean() | polars.selectors.numeric())
                             .name.suffix(f" from {table.name}"),
                         )
-                        for table in filter.then(transform or Identity()).apply(self.tables())
+                        for table in filter.apply(self.tables())
                     ],
                     how="horizontal",
                 )
