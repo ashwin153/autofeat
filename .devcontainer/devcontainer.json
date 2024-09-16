@@ -14,6 +14,10 @@
 						"source.organizeImports": "always"
 					}
 				},
+				"editor.inlayHints.enabled": "offUnlessPressed",
+				"editor.rulers": [100],
+				"editor.stickyScroll.enabled": true,
+				"files.autoSave": "onFocusChange",
 				"python.analysis.autoFormatStrings": true,
 				"python.analysis.autoSearchPaths": false,
 				"python.analysis.completeFunctionParens": true,
@@ -28,7 +32,9 @@
 				"python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest",
 				"python.testing.unittestEnabled": false,
 				"telemetry.telemetryLevel": "off",
-				"terminal.integrated.stickyScroll.enabled": true
+				"terminal.integrated.stickyScroll.enabled": true,
+				"workbench.editor.showTabs": "single",
+				"workbench.tree.enableStickyScroll": true
 			}
 		}
 	},
