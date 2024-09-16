@@ -41,8 +41,7 @@ class Dataset(abc.ABC):
 
     def features(
         self,
-        *,
-        filters: list[Filter] | None = None,
+        *filters: Filter | Iterable[Filter],
     ) -> polars.LazyFrame:
         """Extract features for each of the ``filters``.
 
@@ -53,6 +52,12 @@ class Dataset(abc.ABC):
         :param filters: Filters to apply before transforming the data.
         :return: Extracted features.
         """
+        flattened_filters = [
+            y
+            for x in (filters or [Identity()])
+            for y in (x if isinstance(x, Iterable) else [x])
+        ]
+
         return polars.concat(
             [
                 polars.concat(
@@ -67,7 +72,7 @@ class Dataset(abc.ABC):
                     ],
                     how="horizontal",
                 )
-                for filter in (filters or [Identity()])
+                for filter in flattened_filters
             ],
             how="diagonal",
         )
