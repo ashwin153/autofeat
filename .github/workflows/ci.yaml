@@ -10,7 +10,10 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
+        with:
+          python-version: 3.12
+          poetry-version: 1.8.3
       - uses: pre-commit/action@v3.0.1
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: failure()
