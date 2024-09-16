@@ -7,6 +7,7 @@ import polars
 
 from autofeat.transform.identity import Identity
 from autofeat.dataset.derived_dataset import DerivedDataset
+from autofeat.dataset.merged_dataset import MergedDataset
 
 
 if TYPE_CHECKING:
@@ -27,7 +28,7 @@ class Dataset(abc.ABC):
         :return: All tables.
         """
 
-    def apply(
+    def derive(
         self,
         transform: Transform,
         /,
@@ -37,10 +38,7 @@ class Dataset(abc.ABC):
         :param transform: Transform to apply.
         :return: Derived dataset.
         """
-        return DerivedDataset(
-            dataset=self,
-            transform=transform,
-        )
+        return DerivedDataset(dataset=self, transform=transform)
 
     def features(
         self,
@@ -74,3 +72,17 @@ class Dataset(abc.ABC):
             ],
             how="diagonal",
         )
+
+    def merge(
+        self,
+        *datasets: Dataset,
+    ) -> Dataset:
+        """Add the ``datasets`` to this dataset.
+
+        :param datasets: Datasets to merge.
+        :return: Merged dataset.
+        """
+        if datasets:
+            return MergedDataset(datasets=[self, *datasets])
+        else:
+            return self
