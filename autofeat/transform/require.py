@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 from autofeat.table import Table
 from autofeat.transform.base import Transform

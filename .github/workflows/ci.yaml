@@ -1,14 +1,30 @@
 name: ci
 on:
   pull_request:
+  push:
+    branches:
+      - main
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
+        with:
+          python-version: 3.12
+          poetry-version: 1.8.3
       - uses: pre-commit/action@v3.0.1
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: failure()
         with:
-          commit_message: Run pre-commit
+          commit_message: 'chore: run pre-commit'
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
+        with:
+          python-version: 3.12
+          poetry-version: 1.8.3
+      - run: poetry run pytest -v
