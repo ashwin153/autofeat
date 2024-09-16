@@ -41,8 +41,7 @@ class Dataset(abc.ABC):
 
     def features(
         self,
-        *,
-        filters: list[Filter] | None = None,
+        *filters: Filter | Iterable[Filter],
     ) -> polars.LazyFrame:
         """Extract features for each of the ``filters``.
 
@@ -54,9 +53,9 @@ class Dataset(abc.ABC):
         :return: Extracted features.
         """
         return polars.concat(
-            [
+            (
                 polars.concat(
-                    [
+                    (
                         table.data
                         .filter(polars.len() == 1)
                         .select(
@@ -64,11 +63,19 @@ class Dataset(abc.ABC):
                             .name.suffix(f" from {table.name}"),
                         )
                         for table in filter.apply(self.tables())
-                    ],
+                    ),
                     how="horizontal",
                 )
-                for filter in (filters or [Identity()])
-            ],
+                for filter in (
+                    filter
+                    for filter_or_iterable in (filters or [Identity()])
+                    for filter in (
+                        filter_or_iterable
+                        if isinstance(filter_or_iterable, Iterable)
+                        else [filter_or_iterable]
+                    )
+                )
+            ),
             how="diagonal",
         )
 
