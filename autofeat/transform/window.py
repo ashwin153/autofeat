@@ -1,6 +1,6 @@
 import dataclasses
 import datetime
-from typing import Iterable
+from collections.abc import Iterable
 
 from autofeat.table import Table
 from autofeat.transform import Transform

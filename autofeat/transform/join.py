@@ -1,7 +1,7 @@
 import dataclasses
 import functools
 import itertools
-from typing import Iterable, Set
+from collections.abc import Iterable
 
 import networkx
 import polars
@@ -23,7 +23,7 @@ class Join(Transform):
     :param how: Method of joining the tables.
     """
 
-    on: Set[str]
+    on: set[str]
     how: polars._typing.JoinStrategy = "outer"
 
     def apply(

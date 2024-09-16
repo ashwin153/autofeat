@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Callable, Set, cast
+from typing import TYPE_CHECKING, cast
 
 import polars
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -49,7 +52,7 @@ class Table:
     @property
     def columns(
         self,
-    ) -> Set[Column]:
+    ) -> set[Column]:
         """Infer the columns in this table from the sample data.
 
         :return: Columns in this table.

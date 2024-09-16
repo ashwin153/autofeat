@@ -15,6 +15,15 @@ repos:
       - id: mixed-line-ending
       - id: no-commit-to-branch
       - id: trailing-whitespace
+  # GitHub
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.1
+    hooks:
+      - id: actionlint
+  - repo: https://github.com/sirosen/check-jsonschema
+    rev: 0.29.1
+    hooks:
+      - id: check-github-workflows
   # Python
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.5.5
@@ -33,6 +42,7 @@ repos:
       - id: pyupgrade
         args:
           - --keep-runtime-typing
+          - --py312-plus
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

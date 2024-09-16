@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Iterable
+from collections.abc import Iterable
 
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform

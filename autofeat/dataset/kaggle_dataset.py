@@ -1,6 +1,6 @@
 import dataclasses
 import pathlib
-from typing import Iterable
+from collections.abc import Iterable
 
 import polars
 

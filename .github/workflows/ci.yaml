@@ -1,9 +1,13 @@
 name: ci
 on:
   pull_request:
+  push:
+    branches:
+      - main
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -12,3 +16,12 @@ jobs:
         if: failure()
         with:
           commit_message: Run pre-commit
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: packetcoders/action-setup-cache-python-poetry@v1
+        with:
+          python-version: 3.12
+          poetry-version: 1.8.3
+      - run: poetry run pytest -v
