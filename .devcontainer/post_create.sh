@@ -7,3 +7,5 @@ poetry completions bash >> ~/.bash_completion
 poetry install
 
 pre-commit install
+
+git config --global --add --bool push.autoSetupRemote true
