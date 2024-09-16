@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: packetcoders/action-setup-cache-python-poetry@v1
+      - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
         with:
           python-version: 3.12
           poetry-version: 1.8.3
