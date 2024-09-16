@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 import abc
-from typing import Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 import polars
 
-from autofeat.transform.identity import Identity
 from autofeat.dataset.derived_dataset import DerivedDataset
 from autofeat.dataset.merged_dataset import MergedDataset
-
+from autofeat.transform.identity import Identity
 
 if TYPE_CHECKING:
-    from autofeat.transform.filter import Filter
-    from autofeat.transform.base import Transform
     from autofeat.table import Table
+    from autofeat.transform.base import Transform
+    from autofeat.transform.filter import Filter
 
 
 class Dataset(abc.ABC):

@@ -2,7 +2,6 @@ import dataclasses
 import datetime
 from typing import Iterable
 
-
 from autofeat.table import Table
 from autofeat.transform import Transform
 

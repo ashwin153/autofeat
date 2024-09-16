@@ -1,6 +1,6 @@
 import dataclasses
-import itertools
 import functools
+import itertools
 from typing import Iterable, Set
 
 import networkx
