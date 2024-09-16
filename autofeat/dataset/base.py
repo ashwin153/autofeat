@@ -52,16 +52,10 @@ class Dataset(abc.ABC):
         :param filters: Filters to apply before transforming the data.
         :return: Extracted features.
         """
-        flattened_filters = [
-            y
-            for x in (filters or [Identity()])
-            for y in (x if isinstance(x, Iterable) else [x])
-        ]
-
         return polars.concat(
-            [
+            (
                 polars.concat(
-                    [
+                    (
                         table.data
                         .filter(polars.len() == 1)
                         .select(
@@ -69,11 +63,19 @@ class Dataset(abc.ABC):
                             .name.suffix(f" from {table.name}"),
                         )
                         for table in filter.apply(self.tables())
-                    ],
+                    ),
                     how="horizontal",
                 )
-                for filter in flattened_filters
-            ],
+                for filter in (
+                    filter
+                    for filter_or_iterable in (filters or [Identity()])
+                    for filter in (
+                        filter_or_iterable
+                        if isinstance(filter_or_iterable, Iterable)
+                        else [filter_or_iterable]
+                    )
+                )
+            ),
             how="diagonal",
         )
 
