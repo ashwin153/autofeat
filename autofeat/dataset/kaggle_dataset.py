@@ -11,17 +11,6 @@ DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class KaggleCompetition(Dataset):
-    """A Kaggle competition."""
-
-    def tables(
-        self,
-    ) -> Iterable[Table]:
-        # TODO
-        ...
-
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
 class KaggleDataset(Dataset):
     """A Kaggle dataset.
 
