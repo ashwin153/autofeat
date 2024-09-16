@@ -50,8 +50,8 @@ class Dataset(abc.ABC):
         """Extract features for each of the ``filters``.
 
         Features are the boolean or numeric columns from tables containing a single row. A simple
-        way to guarantee that every table has a single row is to aggregate them by the same
-        columns that the tables are filtered by.
+        way to guarantee every table has a single row is to aggregate tables by the same columns
+        that they are filtered by.
 
         :param filters: Filters to apply before transforming the data.
         :return: Extracted features.
