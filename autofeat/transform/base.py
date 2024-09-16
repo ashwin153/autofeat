@@ -43,16 +43,24 @@ class Transform(abc.ABC):
         """
         from autofeat.transform.all_of import AllOf
         from autofeat.transform.any_of import AnyOf
+        from autofeat.transform.identity import Identity
 
-        transforms = [
-            AllOf(
-                transforms=[
-                    *(self.transforms if isinstance(self, AllOf) else [self]),
-                    *(next.transforms if isinstance(next, AllOf) else [next]),
-                ],
-            )
-            for next in (head, *tail)
-        ]
+        transforms = []
+
+        for next in (head, *tail):
+            if isinstance(self, Identity):
+                transforms.append(next)
+            elif isinstance(next, Identity):
+                transforms.append(self)
+            else:
+                transforms.append(
+                    AllOf(
+                        transforms=[
+                            *(self.transforms if isinstance(self, AllOf) else [self]),
+                            *(next.transforms if isinstance(next, AllOf) else [next]),
+                        ],
+                    ),
+                )
 
         if len(transforms) == 1:
             return transforms[0]

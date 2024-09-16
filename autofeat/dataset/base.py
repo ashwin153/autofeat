@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, Iterable
 
 import polars
 
-from autofeat.dataset.derived_dataset import DerivedDataset
-from autofeat.dataset.merged_dataset import MergedDataset
 from autofeat.transform.identity import Identity
 
 if TYPE_CHECKING:
@@ -37,6 +35,8 @@ class Dataset(abc.ABC):
         :param transform: Transform to apply.
         :return: Derived dataset.
         """
+        from autofeat.dataset.derived_dataset import DerivedDataset
+
         return DerivedDataset(dataset=self, transform=transform)
 
     def features(
@@ -88,6 +88,8 @@ class Dataset(abc.ABC):
         :param datasets: Datasets to merge.
         :return: Merged dataset.
         """
+        from autofeat.dataset.merged_dataset import MergedDataset
+
         if datasets:
             return MergedDataset(datasets=[self, *datasets])
         else:
