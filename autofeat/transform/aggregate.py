@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 import polars
 
-from autofeat.table import Set, Table
+from autofeat.table import Table
 from autofeat.transform.base import Transform
 
 
@@ -14,7 +14,7 @@ class Aggregate(Transform):
     :param by: Columns to group by.
     """
 
-    by: Set[str]
+    by: set[str]
 
     def apply(
         self,
