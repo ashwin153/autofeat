@@ -5,7 +5,7 @@ from autofeat.dataset.base import Dataset
 from autofeat.table import Table
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(frozen=True)
 class MergedDataset(Dataset):
     """A composition of multiple datasets.
 
