@@ -6,7 +6,7 @@ from autofeat.table import Table
 from autofeat.transform import Transform
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(frozen=True)
 class DerivedDataset(Dataset):
     """A transformation of a dataset.
 
