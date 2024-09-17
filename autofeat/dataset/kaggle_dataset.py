@@ -74,19 +74,21 @@ class KaggleDataset(Dataset):
                 dataset=self.id,
                 path=str(path),
             )
+
+            return path / f"{kaggle.api.split_dataset_string(self.id)[1]}.zip"
         else:
             kaggle.api.competition_download_files(
                 competition=self.id,
                 path=str(path),
             )
 
-        return path / f"{self.id}.zip"
+            return path / f"{self.id}.zip"
 
     def _unzip(
         self,
         archive: pathlib.Path,
     ) -> None:
         with zipfile.ZipFile(archive) as zip:
-            zip.extractall(archive.parent)
+            zip.extractall(str(archive.parent))
 
         os.remove(archive)
