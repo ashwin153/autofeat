@@ -19,11 +19,22 @@ class Column:
 
     data_type: polars.DataType
     name: str
+    table: Table
 
     def __str__(
         self,
     ) -> str:
         return self.name
+
+    @property
+    def data(
+        self,
+    ) -> polars.LazyFrame:
+        """Lazily-loaded contents of this column.
+
+        :return: Column data.
+        """
+        return self.table.data.select(self.expr)
 
     @property
     def expr(
@@ -35,6 +46,16 @@ class Column:
         """
         return polars.col(self.name)
 
+    @property
+    def sample(
+        self,
+    ) -> polars.Series:
+        """Eagerly-loaded sample of the column.
+
+        :return: Column sample.
+        """
+        return self.table.sample.get_column(self.name)
+
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Table:
@@ -42,7 +63,7 @@ class Table:
 
     :param data: Lazily-loaded contents of this table.
     :param name: Name of this table.
-    :param sample: Eagerly-loaded sample of the ``data``.
+    :param sample: Eagerly-loaded sample of the table.
     """
 
     data: polars.LazyFrame
@@ -58,7 +79,7 @@ class Table:
         :return: Columns in this table.
         """
         return {
-            Column(name=name, data_type=data_type)
+            Column(name=name, data_type=data_type, table=self)
             for name, data_type in self.sample.schema.items()
         }
 
