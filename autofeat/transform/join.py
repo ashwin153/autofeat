@@ -35,11 +35,20 @@ class Join(Transform):
                 yield functools.reduce(
                     lambda x, y: x.join(
                         y,
-                        on=list(self.on & x.columns & y.columns),
+                        on=self._join_columns(x, y),
                         how=self.how,
                     ),
                     related_tables,
                 )
+
+    def _join_columns(
+        self,
+        x: Table,
+        y: Table,
+    ) -> list[str]:
+        x_columns = {column.name for column in x.columns}
+        y_columns = {column.name for column in y.columns}
+        return list(self.on & x_columns & y_columns)
 
     def _related_tables(
         self,
@@ -51,7 +60,7 @@ class Join(Transform):
             graph.add_node(i)
 
         for x, y in itertools.combinations(range(len(tables)), 2):
-            if self.on & tables[x].columns & tables[y].columns:
+            if self._join_columns(tables[x], tables[y]):
                 graph.add_edge(x, y)
 
         for component in list(networkx.connected_components(graph)):

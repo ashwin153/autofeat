@@ -22,7 +22,7 @@ class Aggregate(Transform):
     ) -> Iterable[Table]:
         for table in tables:
             if aggregations := list(self._aggregations(table)):
-                if by := self.by & table.columns:
+                if by := self._pivot_columns(table):
                     yield table.apply(lambda df: df.group_by(by).agg(*aggregations))
                 else:
                     yield table.apply(lambda df: df.select(aggregations))
@@ -44,3 +44,13 @@ class Aggregate(Transform):
                 yield expr.std().alias(f"std({column})")
                 yield expr.sum().alias(f"sum({column})")
                 yield expr.var().alias(f"var({column})")
+
+    def _pivot_columns(
+        self,
+        table: Table,
+    ) -> list[str]:
+        return [
+            column.name
+            for column in table.columns
+            if column.name in self.by
+        ]
