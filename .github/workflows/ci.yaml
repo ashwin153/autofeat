@@ -7,7 +7,6 @@ on:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
@@ -15,6 +14,8 @@ jobs:
           python-version: 3.12
           poetry-version: 1.8.3
       - uses: pre-commit/action@v3.0.1
+        env:
+          SKIP: no-commit-to-branch
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: failure()
         with:
