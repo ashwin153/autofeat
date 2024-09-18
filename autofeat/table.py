@@ -157,12 +157,12 @@ class Table:
         *,
         exclude: list[str] | None = None,
         include: list[str] | None = None,
-    ) -> list[Column]:
-        """Infer the columns in this table from the sample data.
+    ) -> Table:
+        """Select a subset of columns from the table.
 
         :param exclude: Column names to exclude.
         :param include: Column names to include.
-        :return: Columns in this table.
+        :return: Projected table.
         """
         assert (
             not exclude
@@ -170,12 +170,20 @@ class Table:
             or all(column not in exclude for column in include)
         ), "`include` and `exclude` must be mutually exclusive"
 
-        return [
-            Column(name=name, data_type=data_type, table=self)
-            for name, data_type in self.sample.schema.items()
-            if include is None or name in include
-            if exclude is None or name not in exclude
-        ]
+        selector = (
+            polars.selectors.by_name(include)
+            if include
+            else polars.all()
+        )
+
+        if exclude:
+            selector = selector.exclude(exclude)
+
+        return Table(
+            data=self.data.select(selector),
+            name=self.name,
+            sample=self.sample.select(selector),
+        )
 
     @staticmethod
     def empty() -> Table:
