@@ -16,9 +16,12 @@ DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 class KaggleDataset(Dataset):
     """A Kaggle dataset or competition.
 
-    >>> dataset = KaggleDataset(id="abdullah0a/urban-air-quality-and-health-impact-dataset")
+    .. note::
 
-    >>> competition = KaggleDataset(id="house-prices-advanced-regression-techniques")
+        Dataset names are prefixed by the name of the owner, but competition names are not.
+
+        >>> dataset = KaggleDataset(name="abdullah0a/urban-air-quality-and-health-impact-dataset")
+        >>> competition = KaggleDataset(name="house-prices-advanced-regression-techniques")
 
     .. tip::
 
@@ -32,29 +35,31 @@ class KaggleDataset(Dataset):
             chmod 600 ~/.config/kaggle/kaggle.json
 
     :param cache: Path where datasets are locally cached.
-    :param id: Name of the competition or dataset.
+    :param name: Name of the competition or dataset.
     :param sample_size: Number of rows to sample from each table in the dataset.
     """
 
     cache: pathlib.Path = DEFAULT_CACHE
-    id: str
+    name: str
     sample_size: int = 10
 
     def tables(
         self,
     ) -> Iterable[Table]:
-        path = self.cache / "datasets" / self.id
+        path = self.cache / "data" / self.name
+
         path.mkdir(parents=True, exist_ok=True)
 
         if not any(path.iterdir()):
-            archive = self._download(path)
-            self._unzip(archive)
+            try:
+                archive = self._download(path)
+                self._unzip(archive)
+            except Exception:
+                path.unlink()
+                raise
 
         for csv in path.glob("*.csv"):
-            df = polars.read_csv(
-                csv,
-                null_values="NA",
-            )
+            df = polars.read_csv(csv, null_values="NA")
 
             yield Table(
                 data=df.lazy(),
@@ -69,20 +74,13 @@ class KaggleDataset(Dataset):
         # kaggle creates and authenticates a client on import
         import kaggle  # type: ignore[import-untyped]
 
-        if "/" in self.id:
-            kaggle.api.dataset_download_files(
-                dataset=self.id,
-                path=str(path),
-            )
-
-            return path / f"{kaggle.api.split_dataset_string(self.id)[1]}.zip"
+        if "/" in self.name:
+            kaggle.api.dataset_download_files(self.name, str(path))
+            dataset = kaggle.api.split_dataset_string(self.name)[1]
+            return path / f"{dataset}.zip"
         else:
-            kaggle.api.competition_download_files(
-                competition=self.id,
-                path=str(path),
-            )
-
-            return path / f"{self.id}.zip"
+            kaggle.api.competition_download_files(self.name, str(path))
+            return path / f"{self.name}.zip"
 
     def _unzip(
         self,
