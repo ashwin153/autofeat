@@ -2,8 +2,8 @@ from collections.abc import Iterable
 
 import polars
 
-from autofeat.action.extract_filters import IntoFilters, extract_filters
-from autofeat.action.extract_tables import IntoTables, extract_tables
+from autofeat.analysis.extract_filters import IntoFilters, extract_filters
+from autofeat.analysis.extract_tables import IntoTables, extract_tables
 from autofeat.transform.identity import Identity
 
 

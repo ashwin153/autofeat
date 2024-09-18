@@ -6,6 +6,6 @@ __all__ = [
     "IntoTables",
 ]
 
-from autofeat.action.extract_features import extract_features
-from autofeat.action.extract_filters import IntoFilters, extract_filters
-from autofeat.action.extract_tables import IntoTables, extract_tables
+from autofeat.analysis.extract_features import extract_features
+from autofeat.analysis.extract_filters import IntoFilters, extract_filters
+from autofeat.analysis.extract_tables import IntoTables, extract_tables
