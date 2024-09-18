@@ -54,7 +54,7 @@ class Join(Transform):
         self,
         tables: list[Table],
     ) -> Iterable[list[Table]]:
-        graph = networkx.Graph()
+        graph = networkx.Graph[int]()
 
         for i in range(len(tables)):
             graph.add_node(i)

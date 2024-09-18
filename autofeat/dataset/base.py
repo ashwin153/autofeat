@@ -53,32 +53,32 @@ class Dataset(abc.ABC):
         :param filters: Filters to apply before transforming the data.
         :return: Extracted features.
         """
-        return polars.concat(
-            (
-                polars.concat(
-                    (
-                        table.data
-                        .filter(polars.len() == 1)
-                        .select(
-                            (polars.selectors.boolean() | polars.selectors.numeric())
-                            .name.suffix(f" from {table.name}"),
-                        )
-                        for table in filter.apply(self.tables())
-                    ),
-                    how="horizontal",
+        transforms: list[Transform] = [
+            y
+            for x in (filters or (Identity(),))
+            for y in (x if isinstance(x, Iterable) else (x,))
+        ]
+
+        feature_vectors = []
+
+        for transform in transforms:
+            feature_values = []
+
+            for table in transform.apply(self.tables()):
+                feature_selector = (
+                    (polars.selectors.boolean() | polars.selectors.numeric())
+                    .name.suffix(f" from {table.name}")
                 )
-                for filter in (
-                    filter
-                    for filter_or_iterable in (filters or [Identity()])
-                    for filter in (
-                        filter_or_iterable
-                        if isinstance(filter_or_iterable, Iterable)
-                        else [filter_or_iterable]
-                    )
+
+                feature_values.append(
+                    table.data
+                    .filter(polars.len() == 1)
+                    .select(feature_selector),
                 )
-            ),
-            how="diagonal",
-        )
+
+            feature_vectors.append(polars.concat(feature_values, how="horizontal"))
+
+        return polars.concat(feature_vectors, how="diagonal")
 
     def merge(
         self,
