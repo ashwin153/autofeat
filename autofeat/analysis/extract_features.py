@@ -8,7 +8,6 @@ from autofeat.transform.identity import Identity
 
 
 def extract_features(
-    *,
     tables: IntoTables | Iterable[IntoTables],
     filters: IntoFilters | Iterable[IntoFilters],
 ) -> polars.LazyFrame:
