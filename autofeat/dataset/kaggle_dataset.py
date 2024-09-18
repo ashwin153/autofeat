@@ -67,7 +67,7 @@ class KaggleDataset(Dataset):
         path: pathlib.Path,
     ) -> pathlib.Path:
         # kaggle creates and authenticates a client on import
-        import kaggle
+        import kaggle  # type: ignore[import-untyped]
 
         if "/" in self.id:
             kaggle.api.dataset_download_files(
