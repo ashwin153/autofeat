@@ -4,7 +4,7 @@ from typing import TypeAlias
 
 import polars
 
-from autofeat.table import Table
+from autofeat.table import Column, Table
 from autofeat.transform.filter import Filter
 
 IntoFilters: TypeAlias = (
@@ -12,6 +12,7 @@ IntoFilters: TypeAlias = (
     | polars.LazyFrame
     | polars.DataFrame
     | Table
+    | Column
 )
 
 
@@ -56,6 +57,11 @@ def _(value: polars.DataFrame) -> list[Filter]:
 
 @_extract_filters.register
 def _(value: Table) -> list[Filter]:
+    return _extract_filters(value.data)
+
+
+@_extract_filters.register
+def _(value: Column) -> list[Filter]:
     return _extract_filters(value.data)
 
 
