@@ -47,6 +47,7 @@ class KaggleDataset(Dataset):
         self,
     ) -> Iterable[Table]:
         path = self.cache / "data" / self.name
+
         path.mkdir(parents=True, exist_ok=True)
 
         if not any(path.iterdir()):
@@ -58,10 +59,7 @@ class KaggleDataset(Dataset):
                 raise
 
         for csv in path.glob("*.csv"):
-            df = polars.read_csv(
-                csv,
-                null_values="NA",
-            )
+            df = polars.read_csv(csv, null_values="NA")
 
             yield Table(
                 data=df.lazy(),
@@ -77,20 +75,11 @@ class KaggleDataset(Dataset):
         import kaggle  # type: ignore[import-untyped]
 
         if "/" in self.name:
-            kaggle.api.dataset_download_files(
-                dataset=self.name,
-                path=str(path),
-            )
-
+            kaggle.api.dataset_download_files(self.name, str(path))
             dataset = kaggle.api.split_dataset_string(self.name)[1]
-
             return path / f"{dataset}.zip"
         else:
-            kaggle.api.competition_download_files(
-                competition=self.name,
-                path=str(path),
-            )
-
+            kaggle.api.competition_download_files(self.name, str(path))
             return path / f"{self.name}.zip"
 
     def _unzip(
