@@ -4,10 +4,8 @@ from typing import TypeAlias
 
 import polars
 
-from autofeat.dataset import Dataset
 from autofeat.table import Table
 from autofeat.transform.filter import Filter
-from autofeat.transform.identity import Identity
 
 IntoFilters: TypeAlias = (
     Filter
@@ -89,41 +87,3 @@ def _(value: polars.LazyFrame) -> list[Filter]:
         )
         for row in df.rows(named=True)
     ]
-
-
-def extract_features(
-    dataset: Dataset,
-    *filters: IntoFilters | Iterable[IntoFilters],
-) -> polars.LazyFrame:
-    """Extract features from the ``dataset`` for each of the ``filters``.
-
-    Features are the boolean or numeric columns from tables in the ``dataset`` that contain a single
-    row. A simple way to guarantee this is to aggregate tables by the same columns that they are
-    filtered by.
-
-    :param dataset: Dataset to extract features from.
-    :param filters: Filters to apply before transforming the data.
-    :return: Extracted features.
-    """
-    feature_vectors = []
-    tables = list(dataset.tables())
-    transforms = extract_filters(*filters) or (Identity(),)
-
-    for transform in transforms:
-        feature_vector = []
-
-        for table in transform.apply(tables):
-            feature_selector = (
-                (polars.selectors.boolean() | polars.selectors.numeric())
-                .name.suffix(f" from {table.name}")
-            )
-
-            feature_vector.append(
-                table.data
-                .filter(polars.len() == 1)
-                .select(feature_selector),
-            )
-
-        feature_vectors.append(polars.concat(feature_vector, how="horizontal"))
-
-    return polars.concat(feature_vectors, how="diagonal")
