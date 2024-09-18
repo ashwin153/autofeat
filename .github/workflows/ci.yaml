@@ -32,4 +32,4 @@ jobs:
         with:
           python-version: 3.12
           poetry-version: 1.8.3
-      - run: poetry run pytest -v
+      - run: poetry run pytest -v --doctest-modules

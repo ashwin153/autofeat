@@ -34,10 +34,10 @@ class Transform(abc.ABC):
         >>> from autofeat.transform import *
 
         >>> transform = (
-        ...     Rename({"old": "new"})
+        ...     Rename(mapping={"old": "new"})
         ...     .then(Cast())
-        ...     .then(Aggregate(by={"group"})
-        ...     .then(Identity(), Join(on={"group"}).Combine())
+        ...     .then(Aggregate(by={"group"}))
+        ...     .then(Identity(), Join(on={"group"}).then(Combine()))
         ... )
 
         :param head: Transform to apply after this transform.
