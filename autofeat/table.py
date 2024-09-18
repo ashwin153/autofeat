@@ -73,15 +73,15 @@ class Table:
     @property
     def columns(
         self,
-    ) -> set[Column]:
+    ) -> list[Column]:
         """Infer the columns in this table from the sample data.
 
         :return: Columns in this table.
         """
-        return {
+        return [
             Column(name=name, data_type=data_type, table=self)
             for name, data_type in self.sample.schema.items()
-        }
+        ]
 
     def apply(
         self,
@@ -101,6 +101,21 @@ class Table:
             name=self.name,
             sample=cast(polars.DataFrame, f(self.sample)),
         )
+
+    def column(
+        self,
+        name: str,
+    ) -> Column:
+        """Get the column with the corresponding name.
+
+        :param name: Name of the column.
+        :return: Corresponding column.
+        """
+        for column in self.columns:
+            if column.name == name:
+                return column
+
+        raise ValueError(f"column `{name}` does not exist")
 
     def is_valid(
         self,
@@ -136,6 +151,31 @@ class Table:
             name=f"{self.name} {how} {other.name}",
             sample=self.sample.join(other.sample, on=on, how=how),
         )
+
+    def select(
+        self,
+        *,
+        exclude: list[str] | None = None,
+        include: list[str] | None = None,
+    ) -> list[Column]:
+        """Infer the columns in this table from the sample data.
+
+        :param exclude: Column names to exclude.
+        :param include: Column names to include.
+        :return: Columns in this table.
+        """
+        assert (
+            not exclude
+            or not include
+            or all(column not in exclude for column in include)
+        ), "`include` and `exclude` must be mutually exclusive"
+
+        return [
+            Column(name=name, data_type=data_type, table=self)
+            for name, data_type in self.sample.schema.items()
+            if include is None or name in include
+            if exclude is None or name not in exclude
+        ]
 
     @staticmethod
     def empty() -> Table:
