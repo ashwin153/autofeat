@@ -1,0 +1,12 @@
+{
+  "constraints": {
+    "python": "==3.12"
+  },
+  "extends": [
+    "config:base"
+  ],
+  "pre-commit": {
+    "enabled": true
+  },
+  "rebaseWhen": "conflicted"
+}
