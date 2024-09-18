@@ -18,7 +18,7 @@ class KaggleDataset(Dataset):
 
     .. note::
 
-        Dataset names are prefixed by the dataset owner, but competition names are not.
+        Dataset names are prefixed by the name of the owner, but competition names are not.
 
         >>> dataset = KaggleDataset(name="abdullah0a/urban-air-quality-and-health-impact-dataset")
         >>> competition = KaggleDataset(name="house-prices-advanced-regression-techniques")
