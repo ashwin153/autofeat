@@ -59,26 +59,26 @@ class Dataset(abc.ABC):
             for y in (x if isinstance(x, Iterable) else (x,))
         ]
 
-        vectors = []
+        feature_vectors = []
 
         for transform in transforms:
-            values = []
+            feature_values = []
 
             for table in transform.apply(self.tables()):
-                selector = (
+                feature_selector = (
                     (polars.selectors.boolean() | polars.selectors.numeric())
                     .name.suffix(f" from {table.name}")
                 )
 
-                values.append(
+                feature_values.append(
                     table.data
                     .filter(polars.len() == 1)
-                    .select(selector),
+                    .select(feature_selector),
                 )
 
-            vectors.append(polars.concat(values, how="horizontal"))
+            feature_vectors.append(polars.concat(feature_values, how="horizontal"))
 
-        return polars.concat(vectors, how="diagonal")
+        return polars.concat(feature_vectors, how="diagonal")
 
     def merge(
         self,
