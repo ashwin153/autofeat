@@ -51,3 +51,18 @@ class Dataset(abc.ABC):
             return MergedDataset(datasets=[self, *datasets])
         else:
             return self
+
+    def table(
+        self,
+        name: str,
+    ) -> Table:
+        """Get the table with the corresponding name.
+
+        :param name: Name of the table.
+        :return: Corresponding table.
+        """
+        for table in self.tables():
+            if table.name == name:
+                return table
+
+        raise ValueError(f"table `{name}` does not exist")
