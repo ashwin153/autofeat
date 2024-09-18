@@ -10,6 +10,7 @@ __all__ = [
     "Join",
     "Rename",
     "Require",
+    "Select",
     "Transform",
     "Window",
 ]
@@ -26,4 +27,5 @@ from autofeat.transform.identity import Identity
 from autofeat.transform.join import Join
 from autofeat.transform.rename import Rename
 from autofeat.transform.require import Require
+from autofeat.transform.select import Select
 from autofeat.transform.window import Window
