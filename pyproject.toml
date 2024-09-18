@@ -3,7 +3,7 @@ name = "autofeat"
 version = "0.1.0"
 readme = "README.md"
 authors = ["Ashwin Madavan <ashwin.madavan@gmail.com>"]
-description = ""
+description = "EDA Automation"
 
 [tool.poetry.dependencies]
 python = "^3.12"
