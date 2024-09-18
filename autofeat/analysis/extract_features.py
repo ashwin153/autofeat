@@ -23,12 +23,12 @@ def extract_features(
     """
     feature_vectors = []
     tables = extract_tables(tables)
-    transforms = extract_filters(filters) or (Identity(),)
+    filters = extract_filters(filters)
 
-    for transform in transforms:
+    for filter in (filters or (Identity(),)):
         feature_values = []
 
-        for table in transform.apply(tables):
+        for table in filter.apply(tables):
             feature_selector = (
                 (polars.selectors.boolean() | polars.selectors.numeric())
                 .name.suffix(f" from {table.name}")
