@@ -8,9 +8,9 @@ from autofeat.transform.identity import Identity
 
 
 def extract_features(
-    *,
     tables: IntoTables | Iterable[IntoTables],
-    filters: IntoFilters | Iterable[IntoFilters],
+    *,
+    filters: IntoFilters | Iterable[IntoFilters] | None = None,
 ) -> polars.LazyFrame:
     """Extract features from the ``tables`` for each of the ``filters``.
 
@@ -24,7 +24,7 @@ def extract_features(
     """
     feature_vectors = []
     tables = extract_tables(tables)
-    transforms = extract_filters(filters) or (Identity(),)
+    transforms = ([] if filters is None else extract_filters(filters)) or (Identity(),)
 
     for transform in transforms:
         feature_values = []
