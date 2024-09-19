@@ -156,8 +156,8 @@ class Table:
     def select(
         self,
         *,
-        exclude: list[str] | None = None,
-        include: list[str] | None = None,
+        exclude: set[str] | None = None,
+        include: set[str] | None = None,
     ) -> Table:
         """Select a subset of columns from the table.
 

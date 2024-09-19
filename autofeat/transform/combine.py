@@ -25,7 +25,10 @@ class Combine(Transform):
                 columns.append((x.expr / y.expr).alias(f"{x} / {y}"))
                 columns.append((y.expr / x.expr).alias(f"{y} / {x}"))
 
-            yield table.apply(lambda df: df.select(columns))
+            if columns:
+                yield table.apply(lambda df: df.with_columns(columns))
+            else:
+                yield table
 
     def _numeric_columns(
         self,

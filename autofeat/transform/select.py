@@ -13,12 +13,15 @@ class Select(Transform):
     :param exclude: Column names to exclude.
     """
 
-    include: list[str] | None = None
-    exclude: list[str] | None = None
+    include: set[str] | None = None
+    exclude: set[str] | None = None
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for table in tables:
-            yield table.select(include=self.include, exclude=self.exclude)
+            yield table.select(
+                include=self.include,
+                exclude=self.exclude,
+            )

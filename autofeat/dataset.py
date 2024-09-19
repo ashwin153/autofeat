@@ -7,7 +7,6 @@ import polars
 
 from autofeat.convert.into_filters import IntoFilters, into_filters
 from autofeat.transform.filter import Filter
-from autofeat.transform.identity import Identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -44,38 +43,23 @@ class Dataset:
 
     def features(
         self,
-        *,
-        filters: IntoFilters | Iterable[IntoFilters] | None = None,
-        transform: Transform | None = None,
+        *filters: IntoFilters | Iterable[IntoFilters],
     ) -> polars.LazyFrame:
-        """Extract features under the ``transform`` for each of the ``filters``.
+        """Extract features for each of the ``filters``.
 
-        Features are the boolean or numeric columns in tables that reduce to a single row under the
-        ``transform``. A simple way to guarantee that every table has a single row is to aggregate
-        tables by the same columns that are used in ``filters``.
+        Features are the boolean or numeric columns in tables that contain a single row under the
+        ``transform``. A simple way to guarantee that every table has a single row is to apply a
+        transform that aggregates tables by the same columns that are used in ``filters``.
 
         :param filters: Filters to apply before transforming the data.
-        :param transform: Transform to apply to tables.
         :return: Extracted features.
         """
         feature_vectors = []
 
-        filters = (
-            (Filter(),)
-            if filters is None
-            else into_filters(filters)
-        )
-
-        for filter in filters:
+        for filter in into_filters(*filters) or [Filter()]:
             feature_values = []
 
-            tables = (
-                filter
-                .then(transform or Identity())
-                .apply(self.tables)
-            )
-
-            for table in tables:
+            for table in filter.apply(self.tables):
                 feature_selector = (
                     (polars.selectors.boolean() | polars.selectors.numeric())
                     .name.suffix(f" from {table.name}")
