@@ -14,6 +14,7 @@ IntoFilters: TypeAlias = Union[
     "Table",
     "Column",
     polars.DataFrame,
+    polars.Series,
     polars.LazyFrame,
 ]
 
@@ -21,7 +22,7 @@ IntoFilters: TypeAlias = Union[
 def into_filters(
     *values: IntoFilters | Iterable[IntoFilters],
 ) -> list[Filter]:
-    """Convert the values into a collection of filters.
+    """Convert the ``values`` into a collection of filters.
 
     .. note::
 
@@ -48,6 +49,8 @@ def _into_filters(
             yield from _into_filters(value.data)
         elif isinstance(value, polars.DataFrame):
             yield from _into_filters(value.lazy())
+        elif isinstance(value, polars.Series):
+            yield from _into_filters(value.to_frame())
         elif isinstance(value, polars.LazyFrame):
             df = value.collect()
 

@@ -17,7 +17,7 @@ IntoTables: TypeAlias = Union[
 def into_tables(
     *values: IntoTables | Iterable[IntoTables],
 ) -> list[Table]:
-    """Convert the values into a collection of tables.
+    """Convert the ``values`` into a collection of tables.
 
     :param values: Values to convert.
     :return: Converted tables.
