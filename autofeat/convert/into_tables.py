@@ -35,7 +35,7 @@ def _into_tables(
         if isinstance(value, Table):
             yield value
         elif isinstance(value, Dataset):
-            return value.tables
+            yield from value.tables
         elif isinstance(value, Iterable):
             yield from (t for v in value for t in _into_tables(v))
         else:

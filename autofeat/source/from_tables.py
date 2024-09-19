@@ -12,4 +12,4 @@ def from_tables(
     :param tables:
     :return:
     """
-    return Dataset(into_tables(tables))
+    return Dataset(into_tables(*tables))
