@@ -1,6 +1,7 @@
 import dataclasses
 import os
 import pathlib
+import shutil
 import zipfile
 from collections.abc import Iterable
 
@@ -55,7 +56,7 @@ class KaggleDataset(Dataset):
                 archive = self._download(path)
                 self._unzip(archive)
             except Exception:
-                path.unlink()
+                shutil.rmtree(path)
                 raise
 
         for csv in path.glob("*.csv"):
