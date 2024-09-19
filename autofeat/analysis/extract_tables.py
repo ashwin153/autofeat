@@ -18,22 +18,18 @@ def extract_tables(
     :param values: Values to convert.
     :return: Converted tables.
     """
-    tables = []
+    return list(_extract_tables(*values))
 
-    for value_or_iterable in values:
-        if isinstance(value_or_iterable, IntoTables):
-            tables.extend(_extract_tables(value_or_iterable))
+
+def _extract_tables(
+    *values: IntoTables | Iterable[IntoTables],
+) -> Iterable[Table]:
+    for value in values:
+        if isinstance(value, Iterable):
+            yield from (t for v in value for t in _extract_tables(v))
+        if isinstance(value, Table):
+            yield value
+        elif isinstance(value, Dataset):
+            yield from value.tables()
         else:
-            for value in value_or_iterable:
-                tables.extend(_extract_tables(value))
-
-    return tables
-
-
-def _extract_tables(value: IntoTables) -> list[Table]:
-    if isinstance(value, Table):
-        return [value]
-    elif isinstance(value, Dataset):
-        return list(value.tables())
-    else:
-        raise NotImplementedError(f"`{type(value)}` cannot be converted to a table")
+            raise NotImplementedError(f"`{type(value)}` cannot be converted to tables")

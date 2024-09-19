@@ -9,22 +9,27 @@ from autofeat.transform.identity import Identity
 
 def extract_features(
     tables: IntoTables | Iterable[IntoTables],
-    *,
     filters: IntoFilters | Iterable[IntoFilters] | None = None,
 ) -> polars.LazyFrame:
     """Extract features from the ``tables`` for each of the ``filters``.
 
-    Features are the boolean or numeric columns in ``tables`` that contain a single row. A simple
-    way to guarantee this is to aggregate the ``tables`` by the same columns that they are filtered
-    by.
+    Features are the boolean or numeric columns in ``tables`` that contain a single way. A simple
+    way to guarantee that every table has a single row is to aggregate ``tables`` by the same
+    columns that they are filtered by.
 
     :param tables: Tables to extract features from.
     :param filters: Filters to apply before transforming the data.
     :return: Extracted features.
     """
     feature_vectors = []
+
     tables = extract_tables(tables)
-    transforms = ([] if filters is None else extract_filters(filters)) or (Identity(),)
+
+    transforms = (
+        (Identity(),)
+        if filters is None
+        else extract_filters(filters)
+    )
 
     for transform in transforms:
         feature_values = []

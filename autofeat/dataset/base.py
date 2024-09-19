@@ -22,7 +22,7 @@ class Dataset(abc.ABC):
         :return: All tables.
         """
 
-    def derive(
+    def apply(
         self,
         transform: Transform,
         /,
@@ -34,23 +34,13 @@ class Dataset(abc.ABC):
         """
         from autofeat.dataset.derived_dataset import DerivedDataset
 
-        return DerivedDataset(dataset=self, transform=transform)
+        transform = (
+            self.transform.then(transform)
+            if isinstance(self, DerivedDataset)
+            else transform
+        )
 
-    def merge(
-        self,
-        *datasets: Dataset,
-    ) -> Dataset:
-        """Add the ``datasets`` to this dataset.
-
-        :param datasets: Datasets to merge.
-        :return: Merged dataset.
-        """
-        from autofeat.dataset.merged_dataset import MergedDataset
-
-        if datasets:
-            return MergedDataset(datasets=[self, *datasets])
-        else:
-            return self
+        return DerivedDataset(self, transform)
 
     def table(
         self,
