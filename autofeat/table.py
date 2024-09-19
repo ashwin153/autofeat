@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 from typing import TYPE_CHECKING, cast
 
 import polars
@@ -70,7 +71,7 @@ class Table:
     name: str
     sample: polars.DataFrame
 
-    @property
+    @functools.cached_property
     def columns(
         self,
     ) -> list[Column]:

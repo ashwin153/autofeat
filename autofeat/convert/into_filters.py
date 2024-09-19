@@ -1,24 +1,28 @@
+from __future__ import annotations
+
 from collections.abc import Iterable
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, Union
 
 import polars
 
-from autofeat.table import Column, Table
-from autofeat.transform.filter import Filter
+if TYPE_CHECKING:
+    from autofeat.table import Column, Table
+    from autofeat.transform.filter import Filter
 
-IntoFilters: TypeAlias = (
-    Filter
-    | polars.LazyFrame
-    | polars.DataFrame
-    | Table
-    | Column
-)
+IntoFilters: TypeAlias = Union[
+    "Filter",
+    "Table",
+    "Column",
+    polars.DataFrame,
+    polars.Series,
+    polars.LazyFrame,
+]
 
 
-def extract_filters(
+def into_filters(
     *values: IntoFilters | Iterable[IntoFilters],
 ) -> list[Filter]:
-    """Convert the values into a collection of filters.
+    """Convert the ``values`` into a collection of filters.
 
     .. note::
 
@@ -27,21 +31,26 @@ def extract_filters(
     :param values: Values to convert.
     :return: Converted filters.
     """
-    return list(_extract_filters(*values))
+    return list(_into_filters(*values))
 
 
-def _extract_filters(
+def _into_filters(
     *values: IntoFilters | Iterable[IntoFilters],
 ) -> Iterable[Filter]:
+    from autofeat.table import Column, Table
+    from autofeat.transform.filter import Filter
+
     for value in values:
         if isinstance(value, Filter):
             yield value
         elif isinstance(value, Table):
-            yield from _extract_filters(value.data)
+            yield from _into_filters(value.data)
         elif isinstance(value, Column):
-            yield from _extract_filters(value.data)
+            yield from _into_filters(value.data)
         elif isinstance(value, polars.DataFrame):
-            yield from _extract_filters(value.lazy())
+            yield from _into_filters(value.lazy())
+        elif isinstance(value, polars.Series):
+            yield from _into_filters(value.to_frame())
         elif isinstance(value, polars.LazyFrame):
             df = value.collect()
 
@@ -70,6 +79,6 @@ def _extract_filters(
                 for row in df.rows(named=True)
             )
         elif isinstance(value, Iterable):
-            yield from (t for v in value for t in _extract_filters(v))
+            yield from (t for v in value for t in _into_filters(v))
         else:
             raise NotImplementedError(f"`{type(value)}` cannot be converted to filters")
