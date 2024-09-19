@@ -23,9 +23,9 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass(frozen=True)
 class Dataset:
-    """
+    """A collection of tables.
 
-    :param tables:
+    :param tables: Tables in this dataset.
     """
 
     tables: list[Table]
