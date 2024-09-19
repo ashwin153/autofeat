@@ -1745,6 +1745,41 @@ files = [
 ]
 
 [[package]]
+name = "ormsgpack"
+version = "1.5.0"
+description = "Fast, correct Python msgpack library supporting dataclasses, datetimes, and numpy"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "ormsgpack-1.5.0-cp310-cp310-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:98efdbb1f8c4a172a05143bbbc000491ca7d99644521ad90a15d5e96c7895fba"},
+    {file = "ormsgpack-1.5.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:091bb019b3101dd034515dce13852f4250aa2ee406e6ac5cb8d745dc1e146e6f"},
+    {file = "ormsgpack-1.5.0-cp310-cp310-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:7ee97e618e852891e3cb3ae8a0662d54e289e7ba438fc245e70643c6f0b16849"},
+    {file = "ormsgpack-1.5.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:789725c38493509a1c7a0a25d9baaf2edc120a38a51e0a85008215de25d034c7"},
+    {file = "ormsgpack-1.5.0-cp310-none-win_amd64.whl", hash = "sha256:c81dfcaef16e1a0583f1491441d6f7888b742d72dc299fdeddc3da069774ede4"},
+    {file = "ormsgpack-1.5.0-cp311-cp311-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:a94c8dfe1ee41e536b9c20af48b191fcae89b015b7fcbef0909915c0d5624c8d"},
+    {file = "ormsgpack-1.5.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fb56792348a674ae8915106bdf7b02720852fc195fdda23884c24a5f05e5fd9a"},
+    {file = "ormsgpack-1.5.0-cp311-cp311-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:044856a25c2fa19261f02a6f7a9b5329e90a51cf45780cface01b667cc21ac3d"},
+    {file = "ormsgpack-1.5.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:111214ea0970eb49b19ffa1fde94996f09efa4d8585986be9d5b81492fa1e3fc"},
+    {file = "ormsgpack-1.5.0-cp311-none-win_amd64.whl", hash = "sha256:e2a28bfc10cb492659c8704007567483aa3cfc863a22fd5973309373f396c9e1"},
+    {file = "ormsgpack-1.5.0-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:a921b0d54b5fb5ba1ea4e87c65caa8992736224f1fc5ce8f46a882e918c8e22d"},
+    {file = "ormsgpack-1.5.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c6d423668e2c3abdbc474562b1c73360ff7326f06cb9532dcb73254b5b63dae4"},
+    {file = "ormsgpack-1.5.0-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:eeb2dd4ed3e503a8266dcbfbb8d810a36baa34e4bb4229e90e9c213058a06d74"},
+    {file = "ormsgpack-1.5.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6f13bd643df1324e8797caba4c5c0168a87524df8424e8413ba29723e89a586a"},
+    {file = "ormsgpack-1.5.0-cp312-none-win_amd64.whl", hash = "sha256:e016da381a126478c4bafab0ae19d3a2537f6471341ecced4bb61471e8841cad"},
+    {file = "ormsgpack-1.5.0-cp38-cp38-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:b6e9689d55530f434976dc311e8db805010db2239844c780f79061a9af533348"},
+    {file = "ormsgpack-1.5.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b406d8aa676b70b592d6b65c6523de2e55a41d68b8da60a991419f2a76a50ab9"},
+    {file = "ormsgpack-1.5.0-cp38-cp38-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:a00632ae356844093cae4b1801bea15b54d850c9a4c5a0a1b92690176ed7d376"},
+    {file = "ormsgpack-1.5.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bb24010cbb35b7c31bad2be3067499af3648417164f8c3198dc82a35860f4b24"},
+    {file = "ormsgpack-1.5.0-cp38-none-win_amd64.whl", hash = "sha256:97db92b4e42c24513f0fc03ba850a4ce72cf8bc790892b1363000b1e904abe44"},
+    {file = "ormsgpack-1.5.0-cp39-cp39-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:09a16f2bb84a0d246fc20eb9c5498f5829fb69e4f248de3e550c0b939613b4e3"},
+    {file = "ormsgpack-1.5.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:aad7753bd8ec719861d329a89e10377dc1c5533ed9b4bdbeafdd3bf655c43d9d"},
+    {file = "ormsgpack-1.5.0-cp39-cp39-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:badc0afac2d724f2aa6716da3579cf5ffc2ebbe7cce58cf574b5487dac26ea62"},
+    {file = "ormsgpack-1.5.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:82de1300c1897ac8ab091a87724706e3a2343338409ccd19db44e6eebe758fac"},
+    {file = "ormsgpack-1.5.0-cp39-none-win_amd64.whl", hash = "sha256:69cd334fe02c123500fa59b53ab66258ee718bda697d5133df9933b1a0089bc3"},
+    {file = "ormsgpack-1.5.0.tar.gz", hash = "sha256:00c0743ebaa8d21f1c868fbb609c99151ea79e67fec98b51a29077efd91ce348"},
+]
+
+[[package]]
 name = "overrides"
 version = "7.7.0"
 description = "A decorator to automatically detect mismatch when overriding a method."
@@ -3155,4 +3190,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8148da75447eb50279d3cc57b000032fecac27d3e63d493cd828b108afa11445"
+content-hash = "670fb00abc37c942fcc13f9a42b7b25bcfcd71dd4c60b9392bce38ea39c63b16"
