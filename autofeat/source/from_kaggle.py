@@ -24,8 +24,15 @@ def from_kaggle(
 
         Dataset names are prefixed by the name of the owner, but competition names are not.
 
-        >>> dataset = from_kaggle(name="abdullah0a/urban-air-quality-and-health-impact-dataset")
-        >>> competition = from_kaggle(name="house-prices-advanced-regression-techniques")
+        .. code-block:: python
+
+            dataset = from_kaggle(
+                name="abdullah0a/urban-air-quality-and-health-impact-dataset",
+            )
+
+            competition = from_kaggle(
+                name="house-prices-advanced-regression-techniques",
+            )
 
     .. tip::
 
