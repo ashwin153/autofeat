@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 from collections.abc import Iterable
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, Union
 
-from autofeat.dataset import Dataset
-from autofeat.table import Table
-
-IntoTables: TypeAlias = (
-    Table
-    | Dataset
-)
+if TYPE_CHECKING:
+    from autofeat.dataset import Dataset
+    from autofeat.table import Table
 
 
-def extract_tables(
+IntoTables: TypeAlias = Union[
+    "Table",
+    "Dataset",
+]
+
+
+def into_tables(
     *values: IntoTables | Iterable[IntoTables],
 ) -> list[Table]:
     """Convert the values into a collection of tables.
@@ -18,18 +22,21 @@ def extract_tables(
     :param values: Values to convert.
     :return: Converted tables.
     """
-    return list(_extract_tables(*values))
+    return list(_into_tables(*values))
 
 
-def _extract_tables(
+def _into_tables(
     *values: IntoTables | Iterable[IntoTables],
 ) -> Iterable[Table]:
+    from autofeat.dataset import Dataset
+    from autofeat.table import Table
+
     for value in values:
-        if isinstance(value, Iterable):
-            yield from (t for v in value for t in _extract_tables(v))
         if isinstance(value, Table):
             yield value
         elif isinstance(value, Dataset):
-            yield from value.tables()
+            return value.tables
+        elif isinstance(value, Iterable):
+            yield from (t for v in value for t in _into_tables(v))
         else:
             raise NotImplementedError(f"`{type(value)}` cannot be converted to tables")
