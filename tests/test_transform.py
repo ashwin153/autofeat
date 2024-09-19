@@ -12,18 +12,23 @@ from autofeat.transform import AllOf, AnyOf, Cast, Combine, Encode, Identity, Tr
     [
         (
             Cast(),
-            [polars.DataFrame([{"date": "2021-02-03"}])],
-            [polars.DataFrame([{"date": datetime.date(2021, 2, 3)}])],
+            [polars.DataFrame({"date": ["2021-02-03"]})],
+            [polars.DataFrame({"date": [datetime.date(2021, 2, 3)]})],
         ),
         (
             Cast(),
-            [polars.DataFrame([{"datetime": "2021-02-03T04:05:06"}])],
-            [polars.DataFrame([{"datetime": datetime.datetime(2021, 2, 3, 4, 5, 6)}])],
+            [polars.DataFrame({"datetime": ["2021-02-03T04:05:06"]})],
+            [polars.DataFrame({"datetime": [datetime.datetime(2021, 2, 3, 4, 5, 6)]})],
         ),
         (
             Cast(),
-            [polars.DataFrame([{"time": "09:30:05"}])],
-            [polars.DataFrame([{"time": datetime.time(9, 30, 5)}])],
+            [polars.DataFrame({"time": ["09:30:05"]})],
+            [polars.DataFrame({"time": [datetime.time(9, 30, 5)]})],
+        ),
+        (
+            Cast(),
+            [polars.DataFrame({"cat": ["a", "b", "a"]})],
+            [polars.DataFrame({"cat": ["a", "b", "a"]}, schema={"cat": polars.Categorical()})],
         ),
     ],
 )
