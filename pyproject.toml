@@ -6,7 +6,7 @@ authors = ["Ashwin Madavan <ashwin.madavan@gmail.com>"]
 description = "EDA Automation"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 polars = "^1.6.0"
 kaggle = "^1.6.17"
 networkx = "^3.3"
