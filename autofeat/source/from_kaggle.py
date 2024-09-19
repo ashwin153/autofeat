@@ -17,7 +17,7 @@ def from_kaggle(
     cache: pathlib.Path = DEFAULT_CACHE,
     sample_size: int = 10,
 ) -> Dataset:
-    """Source tables from the Kaggle dataset or competition with the ``name``.
+    """Source tables from the corresponding Kaggle dataset or competition.
 
     .. note::
 
@@ -38,9 +38,9 @@ def from_kaggle(
             chmod 600 ~/.config/kaggle/kaggle.json
 
     :param name: Name of the competition or dataset.
-    :param cache: Path where datasets are locally cached.
-    :param sample_size: Number of rows to sample from each table in the dataset.
-    :return: Kaggle tables.
+    :param cache: Path where data is locally cached.
+    :param sample_size: Number of rows to sample from each table.
+    :return: Dataset.
     """
     path = cache / "data" / name
 

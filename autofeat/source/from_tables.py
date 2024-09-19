@@ -7,9 +7,9 @@ from autofeat.dataset import Dataset
 def from_tables(
     *tables: IntoTables | Iterable[IntoTables],
 ) -> Dataset:
-    """
+    """Concatenate the tables into a dataset.
 
-    :param tables:
-    :return:
+    :param tables: Tables to concatenate.
+    :return: Dataset.
     """
     return Dataset(into_tables(*tables))
