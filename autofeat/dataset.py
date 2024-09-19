@@ -30,6 +30,18 @@ class Dataset:
 
     tables: list[Table]
 
+    def apply(
+        self,
+        transform: Transform,
+        /,
+    ) -> Dataset:
+        """Apply the ``transform`` to each table in this dataset.
+
+        :param transform: Transform to apply.
+        :return: Transformed dataset.
+        """
+        return Dataset(list(transform.apply(self.tables)))
+
     def features(
         self,
         *,
