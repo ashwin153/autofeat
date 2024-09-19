@@ -26,7 +26,7 @@ def extract_features(
     tables = extract_tables(tables)
 
     transforms = (
-        [Identity()]
+        (Identity(),)
         if filters is None
         else extract_filters(filters)
     )
