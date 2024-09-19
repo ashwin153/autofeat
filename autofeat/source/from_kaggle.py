@@ -81,7 +81,7 @@ def from_kaggle(
         df = polars.read_csv(csv, null_values="NA")
 
         table = Table(
-            data=df.lazy(),
+            data=polars.scan_csv(csv, null_values="NA"),
             name=csv.name,
             sample=df.sample(min(sample_size, len(df))),
         )
