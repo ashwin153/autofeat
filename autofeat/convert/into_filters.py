@@ -1,20 +1,21 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, Union
 
 import polars
 
-from autofeat.table import Column, Table
-from autofeat.transform.filter import Filter
+if TYPE_CHECKING:
+    from autofeat.table import Column, Table
+    from autofeat.transform.filter import Filter
 
-IntoFilters: TypeAlias = (
-    Filter
-    | Table
-    | Column
-    | polars.DataFrame
-    | polars.LazyFrame
-)
+IntoFilters: TypeAlias = Union[
+    "Filter",
+    "Table",
+    "Column",
+    polars.DataFrame,
+    polars.LazyFrame,
+]
 
 
 def into_filters(
@@ -35,6 +36,9 @@ def into_filters(
 def _into_filters(
     *values: IntoFilters | Iterable[IntoFilters],
 ) -> Iterable[Filter]:
+    from autofeat.table import Column, Table
+    from autofeat.transform.filter import Filter
+
     for value in values:
         if isinstance(value, Filter):
             yield value
