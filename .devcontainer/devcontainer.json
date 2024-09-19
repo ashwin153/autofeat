@@ -38,5 +38,9 @@
 			}
 		}
 	},
-	"postCreateCommand": "bash ./.devcontainer/post_create.sh"
+	"postCreateCommand": "bash ./.devcontainer/post_create.sh",
+	"runArgs": [
+		"--gpus",
+		"all"
+	]
 }
