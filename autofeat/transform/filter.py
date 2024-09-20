@@ -1,6 +1,6 @@
 import dataclasses
 import datetime
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from typing import Any
 
 import polars
@@ -13,12 +13,14 @@ from autofeat.transform.base import Transform
 class Filter(Transform):
     """Filter out rows that do not satisfy the predicates.
 
-    :param as_of: Temporal filter.
-    :param eq: Equality filters by column.
+    :param as_of: Latest timestamp.
+    :param eq: Required column value.
+    :param is_in: Required column values.
     """
 
     as_of: datetime.datetime | None = None
     eq: dict[str, Any] | None = None
+    is_in: dict[str, Collection[Any]] | None = None
 
     def apply(
         self,
@@ -28,6 +30,7 @@ class Filter(Transform):
             predicates = [
                 *self._as_of_predicates(table),
                 *self._eq_predicates(table),
+                *self._is_in_predicates(table),
             ]
 
             if predicates:
@@ -56,3 +59,12 @@ class Filter(Transform):
             for column in table.columns:
                 if value := self.eq.get(column.name):
                     yield column.expr.eq(value)
+
+    def _is_in_predicates(
+        self,
+        table: Table,
+    ) -> Iterable[polars.Expr]:
+        if self.is_in:
+            for column in table.columns:
+                if values := self.is_in.get(column.name):
+                    yield column.expr.is_in(values)
