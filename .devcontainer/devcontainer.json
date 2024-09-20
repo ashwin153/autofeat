@@ -2,6 +2,9 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
+	"hostRequirements": {
+		"gpu": "optional"
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -39,9 +42,5 @@
 			}
 		}
 	},
-	"postCreateCommand": "bash ./.devcontainer/post_create.sh",
-	"runArgs": [
-		"--gpus",
-		"all"
-	]
+	"postCreateCommand": "bash ./.devcontainer/post_create.sh"
 }
