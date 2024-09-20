@@ -13,14 +13,18 @@ from autofeat.transform.base import Transform
 class Filter(Transform):
     """Filter out rows that do not satisfy the predicates.
 
-    :param as_of: Latest timestamp.
-    :param eq: Required column value.
-    :param is_in: Required column values.
+    :param as_of: Temporal constraint.
+    :param eq: Equality constraints.
+    :param gt: Greater-than constraints.
+    :param is_in: Set constraints.
+    :param lt: Less-than constraints.
     """
 
     as_of: datetime.datetime | None = None
     eq: dict[str, Any] | None = None
+    gt: dict[str, Any] | None = None
     is_in: dict[str, Collection[Any]] | None = None
+    lt: dict[str, Any] | None = None
 
     def apply(
         self,
@@ -30,7 +34,9 @@ class Filter(Transform):
             predicates = [
                 *self._as_of_predicates(table),
                 *self._eq_predicates(table),
+                *self._gt_predicates(table),
                 *self._is_in_predicates(table),
+                *self._lt_predicates(table),
             ]
 
             if predicates:
@@ -60,6 +66,15 @@ class Filter(Transform):
                 if value := self.eq.get(column.name):
                     yield column.expr.eq(value)
 
+    def _gt_predicates(
+        self,
+        table: Table,
+    ) -> Iterable[polars.Expr]:
+        if self.gt:
+            for column in table.columns:
+                if value := self.gt.get(column.name):
+                    yield column.expr.gt(value)
+
     def _is_in_predicates(
         self,
         table: Table,
@@ -68,3 +83,12 @@ class Filter(Transform):
             for column in table.columns:
                 if values := self.is_in.get(column.name):
                     yield column.expr.is_in(values)
+
+    def _lt_predicates(
+        self,
+        table: Table,
+    ) -> Iterable[polars.Expr]:
+        if self.lt:
+            for column in table.columns:
+                if value := self.lt.get(column.name):
+                    yield column.expr.lt(value)
