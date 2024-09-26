@@ -1,29 +1,14 @@
 from __future__ import annotations
 
-import dataclasses
-from typing import TYPE_CHECKING
+import collections
 
 import polars
 
 from autofeat.attribute import Attribute
 
-if TYPE_CHECKING:
-    from collections.abc import Iterator
 
-
-@dataclasses.dataclass(frozen=True)
-class Schema:
-    """A description of the structure of a tabular dataset.
-
-    :param columns: Columns in the table.
-    """
-
-    columns: dict[str, set[Attribute]]
-
-    def __iter__(
-        self,
-    ) -> Iterator[tuple[str, set[Attribute]]]:
-        return iter(self.columns.items())
+class Schema(collections.UserDict[str, set[Attribute]]):
+    """A description of the structure of a tabular dataset."""
 
     def select(
         self,
@@ -39,7 +24,7 @@ class Schema:
         """
         return {
             name
-            for name, attributes in self.columns.items()
+            for name, attributes in self.items()
             if include is None or include.issubset(attributes)
             if exclude is None or exclude.isdisjoint(attributes)
         }

@@ -9,7 +9,7 @@ SCHEMA = Schema({
 
 
 def test_iter() -> None:
-    assert ["x", "y", "z"] == list(iter(SCHEMA))
+    assert {"x", "y", "z"} == set(SCHEMA.keys())
 
 
 def test_select() -> None:
