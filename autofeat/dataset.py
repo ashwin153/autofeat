@@ -12,11 +12,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from autofeat.table import Table
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from autofeat.table import Table
     from autofeat.transform.base import Transform
 
 
