@@ -8,7 +8,7 @@ import polars
 from autofeat.attribute import Attribute
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterator
 
 
 @dataclasses.dataclass(frozen=True)
@@ -22,8 +22,8 @@ class Schema:
 
     def __iter__(
         self,
-    ) -> Iterable[tuple[str, set[Attribute]]]:
-        return self.columns.items()
+    ) -> Iterator[tuple[str, set[Attribute]]]:
+        return iter(self.columns.items())
 
     def select(
         self,
