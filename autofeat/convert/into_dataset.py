@@ -3,30 +3,37 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, TypeAlias, Union
 
+from autofeat.dataset import Dataset
+
 if TYPE_CHECKING:
-    from autofeat.dataset import Dataset
     from autofeat.table import Table
 
 
-IntoTables: TypeAlias = Union[
+_IntoDataset: TypeAlias = Union[
     "Table",
     "Dataset",
 ]
 
 
-def into_tables(
-    *values: IntoTables | Iterable[IntoTables],
-) -> list[Table]:
-    """Convert the ``values`` into a collection of tables.
+IntoDataset: TypeAlias = Union[
+    _IntoDataset,
+    Iterable[_IntoDataset],
+]
+
+
+def into_dataset(
+    *values: IntoDataset,
+) -> Dataset:
+    """Convert the ``values`` into a dataset.
 
     :param values: Values to convert.
-    :return: Converted tables.
+    :return: Converted dataset.
     """
-    return list(_into_tables(*values))
+    return Dataset(list(_tables(*values)))
 
 
-def _into_tables(
-    *values: IntoTables | Iterable[IntoTables],
+def _tables(
+    *values: IntoDataset,
 ) -> Iterable[Table]:
     from autofeat.dataset import Dataset
     from autofeat.table import Table
@@ -37,6 +44,6 @@ def _into_tables(
         elif isinstance(value, Dataset):
             yield from value.tables
         elif isinstance(value, Iterable):
-            yield from (t for v in value for t in _into_tables(v))
+            yield from (t for v in value for t in _tables(v))
         else:
             raise NotImplementedError(f"`{type(value)}` cannot be converted to tables")

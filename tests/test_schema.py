@@ -1,23 +1,12 @@
-from autofeat.attribute import Attribute
-from autofeat.schema import Schema
-
-SCHEMA = Schema({
-    "x": {Attribute.numeric, Attribute.primary_key},
-    "y": {Attribute.numeric},
-    "z": {Attribute.textual},
-})
-
-
-def test_iter() -> None:
-    assert {"x", "y", "z"} == set(SCHEMA.keys())
+from autofeat import Attribute, Schema
 
 
 def test_select() -> None:
-    assert {"x", "y"} == SCHEMA.select(
-        include={Attribute.numeric},
-    )
+    schema = Schema({
+        "x": {Attribute.numeric, Attribute.primary_key},
+        "y": {Attribute.numeric},
+        "z": {Attribute.textual},
+    })
 
-    assert {"y"} == SCHEMA.select(
-        include={Attribute.numeric},
-        exclude={Attribute.primary_key},
-    )
+    assert {"x", "y"} == set(schema.select(include={Attribute.numeric}))
+    assert {"y"} == set(schema.select(include={Attribute.numeric}, exclude={Attribute.primary_key}))

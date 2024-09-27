@@ -1,67 +1,47 @@
 import dataclasses
-import functools
 import itertools
 from collections.abc import Iterable
 
-import networkx
 import polars
 import polars._typing
 
+from autofeat.attribute import Attribute
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Join(Transform):
-    """Join tables on common key columns.
+    """Join tables on common primary key columns.
 
-    .. tip::
-
-        Aggregate tables by the same key columns that they are joined on to avoid join explosion.
-
-    :param on: Columns to join on.
     :param how: Method of joining the tables.
     """
 
-    on: set[str]
-    how: polars._typing.JoinStrategy = "outer"
+    how: polars._typing.JoinStrategy = "inner"
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for related_tables in self._related_tables(list(tables)):
-            if len(related_tables) > 1:
-                yield functools.reduce(
-                    lambda x, y: x.join(
-                        y,
-                        on=self._join_columns(x, y),
-                        how=self.how,
-                    ),
-                    related_tables,
-                )
+        primary_keys = {
+            table.name: set(table.schema.select(include={Attribute.primary_key}))
+            for table in tables
+        }
 
-    def _join_columns(
-        self,
-        x: Table,
-        y: Table,
-    ) -> list[str]:
-        x_columns = {column.name for column in x.columns}
-        y_columns = {column.name for column in y.columns}
-        return list(self.on & x_columns & y_columns)
+        for x, y in itertools.combinations(tables, 2):
+            if x.name not in y.name and y.name not in x.name:
+                x_primary_key = primary_keys[x.name]
+                y_primary_key = primary_keys[y.name]
 
-    def _related_tables(
-        self,
-        tables: list[Table],
-    ) -> Iterable[list[Table]]:
-        graph: networkx.Graph[int] = networkx.Graph()
-
-        for i in range(len(tables)):
-            graph.add_node(i)
-
-        for x, y in itertools.combinations(range(len(tables)), 2):
-            if self._join_columns(tables[x], tables[y]):
-                graph.add_edge(x, y)
-
-        for component in list(networkx.connected_components(graph)):
-            yield [tables[i] for i in component]
+                if y_primary_key and y_primary_key <= x_primary_key:
+                    yield Table(
+                        data=x.data.join(y.data, on=list(y_primary_key), how=self.how),
+                        name=f"{self.how}_join({x.name}, {y.name})",
+                        schema=y.schema | x.schema,
+                    )
+                elif x_primary_key and x_primary_key <= y_primary_key:
+                    yield Table(
+                        data=y.data.join(x.data, on=list(x_primary_key), how=self.how),
+                        name=f"{self.how}_join({y.name}, {x.name})",
+                        schema=x.schema | y.schema,
+                    )

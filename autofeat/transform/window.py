@@ -2,29 +2,33 @@ import dataclasses
 import datetime
 from collections.abc import Iterable
 
+import polars
+
+from autofeat.attribute import Attribute
 from autofeat.table import Table
 from autofeat.transform import Transform
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Window(Transform):
-    """Filter out rows from tables that are older than the period.
+    """Filter out rows from tables that are older than each of the ``periods``.
 
-    :param period: Size of the window.
+    :param periods: Window sizes.
     """
 
-    period: datetime.timedelta
+    periods: list[datetime.timedelta]
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for table in tables:
-            predicates = [
-                column.expr >= column.expr.max() - self.period
-                for column in table.columns
-                if column.data_type.is_temporal()
-            ]
+        now = datetime.datetime.now(datetime.UTC)
 
-            if predicates:
-                yield table.apply(lambda df: df.filter(predicates))
+        for table in tables:
+            for period in self.periods:
+                for column in table.schema.select(include={Attribute.temporal}):
+                    yield Table(
+                        data=table.data.filter(polars.col(column) >= now - period),
+                        name=f"window({table.name}, {period})",
+                        schema=table.schema,
+                    )

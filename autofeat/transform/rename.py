@@ -1,6 +1,7 @@
 import dataclasses
 from collections.abc import Iterable
 
+from autofeat.schema import Schema
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
@@ -22,8 +23,17 @@ class Rename(Transform):
             mapping = {
                 old: new
                 for old, new in self.mapping.items()
-                if any(old == column.name for column in table.columns)
-                if all(new != column.name for column in table.columns)
+                if old in table.schema
+                if new not in table.schema
             }
 
-            yield table.apply(lambda df: df.rename(mapping))
+            schema = Schema({
+                mapping.get(column, column): attributes
+                for column, attributes in table.schema.items()
+            })
+
+            yield Table(
+                data=table.data.rename(mapping),
+                name=table.name,
+                schema=schema,
+            )
