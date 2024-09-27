@@ -8,11 +8,5 @@ def test_select() -> None:
         "z": {Attribute.textual},
     })
 
-    assert {"x", "y"} == schema.select(
-        include={Attribute.numeric},
-    )
-
-    assert {"y"} == schema.select(
-        include={Attribute.numeric},
-        exclude={Attribute.primary_key},
-    )
+    assert {"x", "y"} == set(schema.select(include={Attribute.numeric}))
+    assert {"y"} == set(schema.select(include={Attribute.numeric}, exclude={Attribute.primary_key}))
