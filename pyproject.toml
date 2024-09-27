@@ -1,3 +1,46 @@
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_unimported = true
+disallow_untyped_defs = true
+explicit_package_bases = true
+no_implicit_optional = true
+show_error_codes = true
+strict_optional = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.ruff]
+line-length = 100
+lint.select = [
+    # flake8
+    "ASYNC",
+    "C4",
+    "COM",
+    "FBT",
+    "INT",
+    "PIE",
+    "Q",
+    "RSE",
+    "T10",
+    "TCH",
+    "TID",
+    # isort
+    "I",
+    # numpy
+    "NPY",
+    # pycodestyle
+    "E",
+    "W",
+    # pyflakes
+    "F",
+    # pylint
+    "PLC",
+    "PLE",
+    # ruff
+    "RUF",
+]
+target-version = "py312"
+
 [tool.poetry]
 name = "autofeat"
 version = "0.1.0"
