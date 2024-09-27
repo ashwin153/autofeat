@@ -24,6 +24,7 @@ poetry install
 pre-commit install --install-hooks
 
 # streamlit
+mkdir ~/.streamlit
 cat >~/.streamlit/config.toml <<EOF
 [browser]
 gatherUsageStats = false
