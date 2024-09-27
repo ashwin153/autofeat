@@ -4,10 +4,8 @@ import pathlib
 import shutil
 import zipfile
 
-import polars
-
 from autofeat.dataset import Dataset
-from autofeat.table import Table
+from autofeat.source.from_csv import from_csv
 
 DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 
@@ -16,9 +14,8 @@ def from_kaggle(
     name: str,
     *,
     cache: pathlib.Path = DEFAULT_CACHE,
-    sample_size: int = 10,
 ) -> Dataset:
-    """Source tables from the corresponding Kaggle dataset or competition.
+    """Load from Kaggle.
 
     .. note::
 
@@ -47,7 +44,6 @@ def from_kaggle(
 
     :param name: Name of the competition or dataset.
     :param cache: Path where data is locally cached.
-    :param sample_size: Number of rows to sample from each table.
     :return: Dataset.
     """
     path = cache / "data" / name
@@ -75,17 +71,8 @@ def from_kaggle(
             shutil.rmtree(path)
             raise
 
-    tables = []
-
-    for csv in path.glob("*.csv"):
-        df = polars.read_csv(csv, null_values="NA")
-
-        table = Table(
-            data=polars.scan_csv(csv, null_values="NA"),
-            name=csv.name,
-            sample=df.sample(min(sample_size, len(df))),
-        )
-
-        tables.append(table)
-
-    return Dataset(tables)
+    return from_csv(
+        path.glob("*.csv"),
+        ignore_errors=True,
+        null_values=["NA"],
+    )

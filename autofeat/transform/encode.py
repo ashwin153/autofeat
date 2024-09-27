@@ -3,6 +3,8 @@ from collections.abc import Iterable
 
 import polars
 
+from autofeat.attribute import Attribute
+from autofeat.schema import Schema
 from autofeat.table import Table
 from autofeat.transform import Transform
 
@@ -15,24 +17,45 @@ class Encode(Transform):
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for table in tables:
-            dummy_variables = []
+        encodable = [
+            (table, categorical_columns)
+            for table in tables
+            if (categorical_columns := table.schema.select(include={Attribute.categorical}))
+        ]
 
-            for column in table.columns:
-                if isinstance(column.data_type, polars.Categorical):
-                    categories = (
-                        table.sample
-                        .select(column.expr.drop_nulls().unique())
-                        .to_series()
-                    )
+        categories = iter(
+            polars.collect_all([
+                table.data.select(polars.col(column).drop_nulls().unique())
+                for table, categorical_columns in encodable
+                for column in categorical_columns
+            ]),
+        )
 
-                    for category in categories:
-                        dummy_variables.append(
-                            (column.expr == category)
-                            .alias(f"{column} == {category}"),
-                        )
+        for table, categorical_columns in encodable:
+            key_columns = {
+                *table.schema.select(include={Attribute.primary_key}),
+                *table.schema.select(include={Attribute.pivotable}),
+            }
 
-            if dummy_variables:
-                yield table.apply(lambda df: df.with_columns(dummy_variables))
-            else:
-                yield table
+            dummy_columns = {
+                f"{column} == {category}": polars.col(column) == category
+                for column in categorical_columns
+                for category in next(categories).to_series()
+            }
+
+            schema = Schema({
+                **{
+                    column: table.schema[column]
+                    for column in key_columns
+                },
+                **{
+                    column: {Attribute.boolean}
+                    for column in dummy_columns
+                },
+            })
+
+            yield Table(
+                data=table.data.select(*key_columns, **dummy_columns),
+                name=f"encode({table.name})",
+                schema=schema,
+            )

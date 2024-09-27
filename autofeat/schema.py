@@ -15,19 +15,19 @@ class Schema(collections.UserDict[str, set[Attribute]]):
         *,
         include: set[Attribute] | None = None,
         exclude: set[Attribute] | None = None,
-    ) -> set[str]:
+    ) -> Schema:
         """Select a subset of columns by attributes.
 
         :param include: Attributes that columns must have.
         :param exclude: Attributes that columns must not have.
         :return: Selected columns.
         """
-        return {
-            name
+        return Schema({
+            name: attributes
             for name, attributes in self.items()
             if include is None or include.issubset(attributes)
             if exclude is None or exclude.isdisjoint(attributes)
-        }
+        })
 
     @staticmethod
     def infer(
@@ -38,8 +38,7 @@ class Schema(collections.UserDict[str, set[Attribute]]):
 
         .. note::
 
-            Schema inference is a computationally expensive operation, because it requires
-            collecting the schema and various summary statistics from the ``data``.
+            Schema inference is a computationally expensive operation.
 
         :param data: Data to infer the schema of.
         :return: Inferred schema.
@@ -65,7 +64,7 @@ class Schema(collections.UserDict[str, set[Attribute]]):
         # use the profile and the schema of the data to infer column attributes
         columns = {}
 
-        for column, data_type in data.schema.items():
+        for column, data_type in data.collect_schema().items():
             attributes = set()
 
             if isinstance(data_type, polars.Boolean):
@@ -80,7 +79,10 @@ class Schema(collections.UserDict[str, set[Attribute]]):
             if data_type.is_numeric():
                 attributes.add(Attribute.numeric)
 
-            if profile["n_unique"][column] < profile["len"][column] * 0.10:
+            if (
+                profile["n_unique"][column] < profile["len"][column] * 0.10
+                and (data_type.is_integer() or isinstance(data_type, polars.String))
+            ):
                 attributes.add(Attribute.pivotable)
 
             if profile["n_unique"][column] == profile["len"][column]:

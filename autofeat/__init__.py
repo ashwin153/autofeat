@@ -1,12 +1,15 @@
 __all__ = [
-    "Column",
+    "Attribute",
     "convert",
     "Dataset",
+    "Schema",
     "source",
     "Table",
     "transform",
 ]
 
 from autofeat import convert, source, transform
+from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
-from autofeat.table import Column, Table
+from autofeat.schema import Schema
+from autofeat.table import Table

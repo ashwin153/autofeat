@@ -4,6 +4,7 @@ import ormsgpack
 import polars
 
 from autofeat.dataset import Dataset
+from autofeat.schema import Schema
 from autofeat.table import Table
 
 
@@ -11,16 +12,16 @@ def from_msgpack(
     value: bytes,
     /,
 ) -> Dataset:
-    """Deserialize a dataset from the Msgpack-encoded ``value``.
+    """Load from Msgpack.
 
     :param value: Msgpack-encoded bytes.
-    :return: Deserialized dataset.
+    :return: Dataset.
     """
     tables = [
         Table(
             data=polars.LazyFrame.deserialize(io.BytesIO(table["data"])),
             name=table["name"],
-            sample=polars.read_parquet(table["sample"]),
+            schema=Schema(table["schema"]),
         )
         for table in ormsgpack.unpackb(value)["tables"]
     ]

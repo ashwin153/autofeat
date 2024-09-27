@@ -5,12 +5,9 @@ from typing import TYPE_CHECKING
 
 import polars
 
-from autofeat.convert.into_filters import IntoFilters, into_filters
-from autofeat.transform.filter import Filter
+from autofeat.attribute import Attribute
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from autofeat.table import Table
     from autofeat.transform.base import Transform
 
@@ -38,49 +35,36 @@ class Dataset:
 
     def features(
         self,
-        *filters: IntoFilters | Iterable[IntoFilters],
-    ) -> polars.LazyFrame:
-        """Extract features for each of the ``filters``.
+        *,
+        where: polars.DataFrame,
+    ) -> polars.DataFrame:
+        """Extract features from all tables in this dataset that are relevant to ``where``.
 
-        Features are the boolean or numeric columns in tables that contain a single row under the
-        ``transform``. A simple way to guarantee that every table has a single row is to apply a
-        transform that aggregates tables by the same columns that are used in ``filters``.
+        .. note::
 
-        :param filters: Filters to apply before transforming the data.
+            Feature extraction is a computationally expensive operation.
+
+        :param where: Where clause.
         :return: Extracted features.
         """
-        feature_vectors = []
-
-        for filter in into_filters(*filters) or [Filter()]:
-            feature_values = []
-
-            for table in filter.apply(self.tables):
-                feature_selector = (
-                    (polars.selectors.boolean() | polars.selectors.numeric())
-                    .name.suffix(f" from {table.name}")
-                )
-
-                feature_values.append(
-                    table.data
-                    .filter(polars.len() == 1)
-                    .select(feature_selector),
-                )
-
-            if feature_values:
-                feature_vectors.append(
-                    polars.concat(
-                        feature_values,
-                        how="horizontal",
-                    ),
-                )
-
-        if feature_vectors:
-            return polars.concat(
-                feature_vectors,
-                how="diagonal",
+        features = [
+            (
+                where
+                .lazy()
+                .join(table.data, on=list(primary_key), how="left")
+                .select(polars.selectors.by_name(set(table.schema) - primary_key))
+                .select(polars.selectors.boolean() | polars.selectors.numeric())
+                .select(polars.all().name.suffix(f" from {table.name}"))
             )
-        else:
-            return polars.LazyFrame()
+            for table in self.tables
+            if (primary_key := set(table.schema.select(include={Attribute.primary_key})))
+            if primary_key.issubset(where.columns)
+        ]
+
+        return polars.concat(
+            polars.collect_all(features),
+            how="horizontal",
+        )
 
     def table(
         self,

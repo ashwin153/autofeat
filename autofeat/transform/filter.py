@@ -5,6 +5,7 @@ from typing import Any
 
 import polars
 
+from autofeat.attribute import Attribute
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
@@ -40,55 +41,52 @@ class Filter(Transform):
             ]
 
             if predicates:
-                yield table.apply(lambda df: df.filter(predicates))
-            else:
-                yield table
+                yield Table(
+                    data=table.data.filter(predicates),
+                    name=table.name,
+                    schema=table.schema,
+                )
 
     def _as_of_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.as_of:
-            for column in table.columns:
-                if isinstance(column.data_type, polars.Datetime):
-                    yield column.expr < self.as_of
-                elif isinstance(column.data_type, polars.Date):
-                    yield column.expr < self.as_of.date()
-                elif isinstance(column.data_type, polars.Time):
-                    yield column.expr < self.as_of.time()
+            for column in table.schema.select(include={Attribute.temporal}):
+                yield polars.col(column) < self.as_of
 
     def _eq_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.eq:
-            for column in table.columns:
-                if value := self.eq.get(column.name):
-                    yield column.expr.eq(value)
+            for column, value in self.eq.items():
+                if column in table.schema:
+                    yield polars.col(column).eq(value)
 
     def _gt_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.gt:
-            for column in table.columns:
-                if value := self.gt.get(column.name):
-                    yield column.expr.gt(value)
+            for column, value in self.gt.items():
+                if column in table.schema:
+                    yield polars.col(column).gt(value)
 
     def _is_in_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.is_in:
-            for column in table.columns:
-                if values := self.is_in.get(column.name):
-                    yield column.expr.is_in(values)
+            for column, values in self.is_in.items():
+                if column in table.schema:
+                    yield polars.col(column).is_in(values)
 
     def _lt_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.lt:
-            for column in table.columns:
-                if value := self.lt.get(column.name):
-                    yield column.expr.lt(value)
+            for column, value in self.lt.items():
+                if column in table.schema:
+                    yield polars.col(column).lt(value)

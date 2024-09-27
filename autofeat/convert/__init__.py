@@ -1,12 +1,12 @@
 __all__ = [
-    "into_filters",
+    "into_dataset",
     "into_msgpack",
-    "into_tables",
-    "IntoFilters",
+    "into_schema",
+    "IntoDataset",
     "IntoMsgpack",
-    "IntoTables",
+    "IntoSchema",
 ]
 
-from autofeat.convert.into_filters import IntoFilters, into_filters
+from autofeat.convert.into_dataset import IntoDataset, into_dataset
 from autofeat.convert.into_msgpack import IntoMsgpack, into_msgpack
-from autofeat.convert.into_tables import IntoTables, into_tables
+from autofeat.convert.into_schema import IntoSchema, into_schema

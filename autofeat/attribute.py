@@ -23,5 +23,8 @@ class Attribute(enum.Enum):
     primary_key = enum.auto()
     """Is a component of the primary key."""
 
+    temporal = enum.auto()
+    """Contains dates, times, or datetimes."""
+
     textual = enum.auto()
     """Contains strings."""

@@ -3,8 +3,13 @@ from collections.abc import Iterable
 
 import polars
 
-from autofeat.table import Column, Table
+from autofeat.attribute import Attribute
+from autofeat.schema import Schema
+from autofeat.table import Table
 from autofeat.transform.base import Transform
+
+#
+SAMPLE_SIZE = 10
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -12,46 +17,75 @@ class Cast(Transform):
     """Cast columns to more appropriate types.
 
     In particular, string columns containing date, time, or datetime values are converted to
-    temporal columns and string columns containing duplicate rows are converted to categorical
-    columns. Casting enables further transformation (e.g., time columns enable rolling aggregation)
-    and improves performance (e.g., categorical columns are easier to join).
+    temporal columns. Casting enables further transformation (e.g., time columns enable rolling
+    aggregation) and improves performance (e.g., categorical columns are easier to join).
     """
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for table in tables:
-            columns = [
-                self._cast(table, column)
-                for column in table.columns
-            ]
+        castable = [
+            (table, columns)
+            for table in tables
+            if (columns := table.schema.select(include={Attribute.textual}))
+        ]
 
-            yield table.apply(lambda df: df.select(columns))
+        samples = polars.collect_all([
+            (
+                table.data
+                .select(columns)
+                .head(SAMPLE_SIZE)
+            )
+            for table, columns in castable
+        ])
+
+        for (table, columns), sample in zip(castable, samples):
+            casted_columns = {
+                column: cast
+                for column in columns
+                if (cast := self._cast(table, sample, column))
+            }
+
+            schema = Schema({
+                **table.schema,
+                **{c: a for c, (_, a) in casted_columns.items()},
+            })
+
+            yield Table(
+                data=table.data.with_columns(**{c: e for c, (e, _) in casted_columns.items()}),
+                name=f"cast({table.name})",
+                schema=schema,
+            )
 
     def _cast(
         self,
         table: Table,
-        column: Column,
-    ) -> polars.Expr:
-        if (
-            isinstance(column.data_type, polars.String)
-            and not table.sample.select(column.expr.is_null().all()).item()
-        ):
-            date = column.expr.str.to_date("%Y-%m-%d")
-            if table.is_valid(date):
-                return date
+        sample: polars.DataFrame,
+        column: str,
+    ) -> tuple[polars.Expr, set[Attribute]] | None:
+        to_date = polars.col(column).str.to_date("%Y-%m-%d")
+        try:
+            sample.select(to_date)
+        except polars.exceptions.PolarsError:
+            pass
+        else:
+            return to_date, {Attribute.temporal}
 
-            datetime = column.expr.str.to_datetime()
-            if table.is_valid(datetime):
-                return datetime
+        to_datetime = polars.col(column).str.to_datetime()
+        try:
+            sample.select(to_datetime)
+        except polars.exceptions.PolarsError:
+            pass
+        else:
+            return to_datetime, {Attribute.temporal}
 
-            time = column.expr.str.to_time()
-            if table.is_valid(time):
-                return time
+        to_time = polars.col(column).str.to_time()
+        try:
+            sample.select(to_time)
+        except polars.exceptions.PolarsError:
+            pass
+        else:
+            return to_time, {Attribute.temporal}
 
-            largest_category = table.sample.select(column.expr.unique_counts().max()).item()
-            if largest_category > 1:
-                return column.expr.cast(polars.Categorical)
-
-        return column.expr
+        return None
