@@ -7,11 +7,16 @@ git config --global --add safe.directory /workspaces/autofeat
 
 # ipython
 mkdir -p ~/.ipython/profile_default/startup
+
 cat <<EOF >~/.ipython/profile_default/startup/01-autoreload.py
 import IPython
 ipython = IPython.get_ipython()
 ipython.run_line_magic(magic_name="load_ext", line="autoreload")
 ipython.run_line_magic(magic_name="autoreload", line="2")
+EOF
+
+cat <<EOF >~/.ipython/profile_default/startup/02-rich.py
+from rich.jupyter import print
 EOF
 
 # poetry
@@ -25,6 +30,7 @@ pre-commit install --install-hooks
 
 # streamlit
 mkdir ~/.streamlit
+
 cat >~/.streamlit/config.toml <<EOF
 [browser]
 gatherUsageStats = false
