@@ -5,6 +5,7 @@ __all__ = [
     "Cast",
     "Combine",
     "Encode",
+    "Extract",
     "Filter",
     "Identity",
     "Join",
@@ -22,6 +23,7 @@ from autofeat.transform.base import Transform
 from autofeat.transform.cast import Cast
 from autofeat.transform.combine import Combine
 from autofeat.transform.encode import Encode
+from autofeat.transform.extract import Extract
 from autofeat.transform.filter import Filter
 from autofeat.transform.identity import Identity
 from autofeat.transform.join import Join
