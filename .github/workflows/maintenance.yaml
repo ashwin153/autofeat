@@ -5,6 +5,8 @@ on:
   workflow_dispatch:
 jobs:
   github:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout head
