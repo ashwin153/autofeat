@@ -3,9 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, TypeAlias, Union
 
-from autofeat.dataset import Dataset
-
 if TYPE_CHECKING:
+    from autofeat.dataset import Dataset
     from autofeat.table import Table
 
 
@@ -29,6 +28,8 @@ def into_dataset(
     :param values: Values to convert.
     :return: Converted dataset.
     """
+    from autofeat.dataset import Dataset
+
     return Dataset(list(_tables(*values)))
 
 
@@ -46,4 +47,4 @@ def _tables(
         elif isinstance(value, Iterable):
             yield from (t for v in value for t in _tables(v))
         else:
-            raise NotImplementedError(f"`{type(value)}` cannot be converted to tables")
+            raise NotImplementedError(f"`{type(value)}` cannot be converted to a dataset")
