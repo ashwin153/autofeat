@@ -36,8 +36,8 @@ class Transform(abc.ABC):
         >>> transform = (
         ...     Rename(mapping={"old": "new"})
         ...     .then(Cast())
-        ...     .then(Aggregate(by={"group"}))
-        ...     .then(Identity(), Join(on={"group"}).then(Combine()))
+        ...     .then(Aggregate())
+        ...     .then(Identity(), Join().then(Combine()))
         ... )
 
         :param head: Transform to apply after this transform.

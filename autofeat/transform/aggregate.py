@@ -17,7 +17,7 @@ class Aggregate(Transform):
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
     """
 
-    max_pivots: int = 2
+    max_pivots: int = 1
 
     def apply(
         self,
