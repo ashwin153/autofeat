@@ -42,8 +42,9 @@ class Encode(Transform):
                     schema[column] = attributes | {Attribute.pivotable}
 
                 for category in categories:
-                    columns[f"{column} == {category}"] = polars.col(column) == category
-                    schema[column] = {Attribute.boolean, Attribute.pivotable}
+                    dummy_variable = f"{column} == {category}"
+                    columns[dummy_variable] = polars.col(column) == category
+                    schema[dummy_variable] = {Attribute.boolean, Attribute.pivotable}
 
             if columns:
                 yield Table(
