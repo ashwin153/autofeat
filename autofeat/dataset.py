@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING
 
 import polars
 
-from autofeat.attribute import Attribute
+from autofeat.transform.extract import Extract
 
 if TYPE_CHECKING:
+    from autofeat.convert import IntoDataFrame
     from autofeat.table import Table
     from autofeat.transform.base import Transform
 
@@ -36,9 +37,9 @@ class Dataset:
     def features(
         self,
         *,
-        where: polars.DataFrame,
+        given: IntoDataFrame,
     ) -> polars.DataFrame:
-        """Extract features from all tables in this dataset that are relevant to ``where``.
+        """Extract features from all tables in this dataset that are relevant to the ``given`` data.
 
         .. note::
 
@@ -48,23 +49,11 @@ class Dataset:
         :return: Extracted features.
         """
         features = [
-            (
-                where
-                .lazy()
-                .join(table.data, on=list(primary_key), how="left")
-                .select(polars.selectors.by_name(set(table.schema) - primary_key))
-                .select(polars.selectors.boolean() | polars.selectors.numeric())
-                .select(polars.all().name.suffix(f" from {table.name}"))
-            )
-            for table in self.tables
-            if (primary_key := set(table.schema.select(include={Attribute.primary_key})))
-            if primary_key.issubset(where.columns)
+            table.data.select(polars.all().name.suffix(f" from {table.name}"))
+            for table in Extract(given=given).apply(self.tables)
         ]
 
-        return polars.concat(
-            polars.collect_all(features),
-            how="horizontal",
-        )
+        return polars.concat(polars.collect_all(features), how="horizontal")
 
     def table(
         self,
