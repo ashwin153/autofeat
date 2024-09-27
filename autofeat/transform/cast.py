@@ -8,7 +8,7 @@ from autofeat.schema import Schema
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
-#
+# Number of rows to test casts on.
 SAMPLE_SIZE = 10
 
 

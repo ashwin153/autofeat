@@ -17,45 +17,39 @@ class Encode(Transform):
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        encodable = [
-            (table, categorical_columns)
+        all_tables = [
+            (table, table.schema.select(include={Attribute.categorical}))
             for table in tables
-            if (categorical_columns := table.schema.select(include={Attribute.categorical}))
         ]
 
-        categories = iter(
+        all_categories = iter(
             polars.collect_all([
                 table.data.select(polars.col(column).drop_nulls().unique())
-                for table, categorical_columns in encodable
+                for table, categorical_columns in all_tables
                 for column in categorical_columns
             ]),
         )
 
-        for table, categorical_columns in encodable:
-            key_columns = {
-                *table.schema.select(include={Attribute.primary_key}),
-                *table.schema.select(include={Attribute.pivotable}),
-            }
+        for table, categorical_columns in all_tables:
+            columns = {}
+            schema = Schema()
 
-            dummy_columns = {
-                f"{column} == {category}": polars.col(column) == category
-                for column in categorical_columns
-                for category in next(categories).to_series()
-            }
+            for column, attributes in categorical_columns.items():
+                categories = next(all_categories).to_series()
 
-            schema = Schema({
-                **{
-                    column: table.schema[column]
-                    for column in key_columns
-                },
-                **{
-                    column: {Attribute.boolean}
-                    for column in dummy_columns
-                },
-            })
+                if Attribute.textual in attributes:
+                    columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
+                    schema[column] = attributes | {Attribute.pivotable}
 
-            yield Table(
-                data=table.data.select(*key_columns, **dummy_columns),
-                name=f"encode({table.name})",
-                schema=schema,
-            )
+                for category in categories:
+                    columns[f"{column} == {category}"] = polars.col(column) == category
+                    schema[column] = {Attribute.boolean, Attribute.pivotable}
+
+            if columns:
+                yield Table(
+                    data=table.data.with_columns(**columns),
+                    name=f"encode({table.name})",
+                    schema=table.schema | schema,
+                )
+            else:
+                yield table
