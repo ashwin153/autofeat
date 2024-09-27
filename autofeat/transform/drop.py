@@ -7,15 +7,13 @@ from autofeat.transform.base import Transform
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class Select(Transform):
-    """Select a subset of columns from tables.
+class Drop(Transform):
+    """Drop any of the ``columns`` from all tables.
 
-    :param include: Column names to include.
-    :param exclude: Column names to exclude.
+    :param columns: Names of columns to drop.
     """
 
-    include: set[str] | None = None
-    exclude: set[str] | None = None
+    columns: set[str]
 
     def apply(
         self,
@@ -25,8 +23,7 @@ class Select(Transform):
             schema = Schema({
                 column: attributes
                 for column, attributes in table.schema.items()
-                if self.include is None or column in self.include
-                if self.exclude is None or column not in self.exclude
+                if column not in self.columns
             })
 
             yield Table(

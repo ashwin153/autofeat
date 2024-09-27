@@ -24,9 +24,9 @@ class Extract(Transform):
         given = into_data_frame(self.given)
 
         for table in tables:
-            primary_key = set(table.schema.select(include={Attribute.primary_key}))
+            primary_key = list(table.schema.select(include={Attribute.primary_key}))
 
-            if primary_key and primary_key.issubset(given.columns):
+            if primary_key and all(column in given.columns for column in primary_key):
                 schema = Schema({
                     **table.schema.select(
                         include={Attribute.boolean},
@@ -41,7 +41,7 @@ class Extract(Transform):
                 data = (
                     given
                     .lazy()
-                    .join(table.data, on=list(primary_key), how="left")
+                    .join(table.data, on=primary_key, how="left")
                     .select(schema.keys())
                 )
 
