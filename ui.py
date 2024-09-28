@@ -6,6 +6,7 @@ import streamlit
 import streamlit.runtime.caching.hashing
 
 from autofeat import Attribute, Dataset, Schema, Table, source
+from autofeat.transform import Aggregate, Cast, Encode, Identity, Transform
 
 streamlit.set_page_config(
     page_title="autofeat",
@@ -148,6 +149,22 @@ def schema_editor(
     return Dataset(edited_tables)
 
 
+def transform_editor(
+
+) -> Transform:
+    """Configure the transform used by feature selection.
+
+    :return: Transform.
+    """
+    # todo: make this configurable
+    return (
+        Cast()
+        .then(Encode())
+        .then(Identity(), Aggregate())
+    )
+
+
 if original_dataset := dataset_loader():
     dataset_explorer(original_dataset)
     edited_dataset = schema_editor(original_dataset)
+    transform = transform_editor()
