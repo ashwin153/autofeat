@@ -74,6 +74,3 @@ py-spy = "^0.3.14"
 name = "nvidia"
 url = "https://pypi.nvidia.com"
 priority = "supplemental"
-
-[tool.pytest.ini_options]
-addopts = "--ignore=streamlit"
