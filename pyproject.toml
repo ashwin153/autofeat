@@ -13,68 +13,71 @@ warn_unused_ignores = true
 module = "sklearn.*"
 ignore_missing_imports = true
 
-[tool.ruff]
-line-length = 100
-lint.select = [
-    # flake8
-    "ASYNC",
-    "C4",
-    "COM",
-    "FBT",
-    "INT",
-    "PIE",
-    "Q",
-    "RSE",
-    "T10",
-    "TCH",
-    "TID",
-    # isort
-    "I",
-    # numpy
-    "NPY",
-    # pycodestyle
-    "E",
-    "W",
-    # pyflakes
-    "F",
-    # pylint
-    "PLC",
-    "PLE",
-    # ruff
-    "RUF",
-]
-target-version = "py312"
-
 [tool.poetry]
-name = "autofeat"
-version = "0.1.0"
-readme = "README.md"
 authors = ["Ashwin Madavan <ashwin.madavan@gmail.com>"]
 description = "EDA Automation"
+name = "autofeat"
+readme = "README.md"
+version = "0.1.0"
 
 [tool.poetry.dependencies]
-cudf-polars-cu12 = {version = "^24.8.3", source = "nvidia"}
+cudf-polars-cu12 = {source = "nvidia", version = "^24.8.3"}
 kaggle = "^1.6.17"
 llvmlite = "^0.43.0"
 networkx = "^3.3"
 numba = "^0.60.0"
+ormsgpack = "^1.5.0"
 polars = "^1.6.0"
 python = "^3.11"
+rich = "^13.8.1"
 scikit-learn = "^1.5.2"
 shap = "^0.46.0"
-xgboost = "^2.1.1"
-ormsgpack = "^1.5.0"
 streamlit = "^1.38.0"
-rich = "^13.8.1"
+xgboost = "^2.1.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.11.2"
 notebook = "^7.2.2"
+py-spy = "^0.3.14"
 pytest = "^8.3.2"
 types-networkx = "^3.2.1.20240907"
-py-spy = "^0.3.14"
 
 [[tool.poetry.source]]
 name = "nvidia"
-url = "https://pypi.nvidia.com"
 priority = "supplemental"
+url = "https://pypi.nvidia.com"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+lint.select = [
+  # flake8
+  "ASYNC",
+  "C4",
+  "COM",
+  # pycodestyle
+  "E",
+  # pyflakes
+  "F",
+  "FBT",
+  # isort
+  "I",
+  "INT",
+  # numpy
+  "NPY",
+  "PIE",
+  # pylint
+  "PLC",
+  "PLE",
+  "Q",
+  "RSE",
+  # ruff
+  "RUF",
+  "T10",
+  "TCH",
+  "TID",
+  "W"
+]
+
+[tool.tomlsort]
+all = true
