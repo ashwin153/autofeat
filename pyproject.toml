@@ -10,7 +10,7 @@ warn_return_any = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = "sklearn.*"
+module = ["pygwalker.*", "sklearn.*"]
 ignore_missing_imports = true
 
 [tool.poetry]
@@ -42,6 +42,7 @@ notebook = "^7.2.2"
 py-spy = "^0.3.14"
 pytest = "^8.3.2"
 types-networkx = "^3.2.1.20240907"
+pandas-stubs = "^2.2.2.240909"
 
 [[tool.poetry.source]]
 name = "nvidia"

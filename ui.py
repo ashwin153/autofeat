@@ -1,3 +1,5 @@
+from typing import cast
+
 import pandas
 import pygwalker.api.streamlit
 import streamlit
@@ -126,7 +128,7 @@ def schema_editor(
             ])
 
             edited_schema = Schema({
-                row["column"]: {
+                cast(str, row["column"]): {
                     attribute
                     for attribute in Attribute
                     if row[attribute.name]
