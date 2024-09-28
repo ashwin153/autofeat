@@ -20,9 +20,9 @@ from rich.jupyter import print
 EOF
 
 # poetry
-poetry config cache-dir $(pwd)/.cache
+poetry config cache-dir "$(pwd)/.cache"
 poetry config virtualenvs.in-project true
-poetry completions bash >> ~/.bash_completion
+poetry completions bash >>~/.bash_completion
 poetry install
 
 # pre-commit
