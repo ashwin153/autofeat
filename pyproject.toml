@@ -78,6 +78,3 @@ lint.select = [
   "TID",
   "W"
 ]
-
-[tool.tomlsort]
-all = true
