@@ -1,3 +1,4 @@
+import os
 import pathlib
 from collections.abc import Iterable
 
@@ -11,7 +12,7 @@ DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 
 
 def from_csv(
-    files: Iterable[pathlib.Path],
+    files: Iterable[str | pathlib.Path],
     *,
     ignore_errors: bool = False,
     null_values: list[str] | None = None,
@@ -33,7 +34,7 @@ def from_csv(
 
         table = Table(
             data=data,
-            name=file.name,
+            name=os.path.basename(str(file)),
             schema=Schema.infer(data),
         )
 

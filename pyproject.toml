@@ -10,7 +10,7 @@ warn_return_any = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = "sklearn.*"
+module = ["pygwalker.*", "sklearn.*"]
 ignore_missing_imports = true
 
 [tool.poetry]
@@ -34,6 +34,7 @@ scikit-learn = "^1.5.2"
 shap = "^0.46.0"
 streamlit = "^1.38.0"
 xgboost = "^2.1.1"
+pygwalker = "^0.4.9.9"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.11.2"
@@ -41,6 +42,7 @@ notebook = "^7.2.2"
 py-spy = "^0.3.14"
 pytest = "^8.3.2"
 types-networkx = "^3.2.1.20240907"
+pandas-stubs = "^2.2.2.240909"
 
 [[tool.poetry.source]]
 name = "nvidia"
