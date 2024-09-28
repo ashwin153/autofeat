@@ -156,7 +156,7 @@ def transform_editor(
 
     :return: Transform.
     """
-    # todo: make this configurable
+    # TODO: make this configurable
     return (
         Cast()
         .then(Encode())
