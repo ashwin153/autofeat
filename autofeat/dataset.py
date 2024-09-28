@@ -34,7 +34,7 @@ class Dataset:
         """
         return Dataset(list(transform.apply(self.tables)))
 
-    def features(
+    def extract(
         self,
         *,
         given: IntoDataFrame,
