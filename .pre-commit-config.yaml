@@ -57,6 +57,13 @@ repos:
     rev: v4.6.0
     hooks:
       - id: check-toml
+  - repo: https://github.com/pappasam/toml-sort
+    rev: v0.23.1
+    hooks:
+      - id: toml-sort-fix
+        args:
+          - --all
+        files: pyproject.toml
   # YAML
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
