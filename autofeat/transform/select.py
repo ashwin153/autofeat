@@ -75,8 +75,8 @@ class Select(Transform):
         selection = collections.defaultdict(set)
         for i, selected in enumerate(selector.get_support()):
             if selected:
-                table, column = features.columns[i].split(SEPARATOR, 1)
-                selection[table].add(column)
+                table_name, column = features.columns[i].split(SEPARATOR, 1)
+                selection[table_name].add(column)
 
         # keep only the selected features
         for table in tables:
