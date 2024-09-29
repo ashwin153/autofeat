@@ -27,7 +27,11 @@ def dataset_explorer(
         _load_samples(dataset, sample_size),
     ):
         with tab:
-            renderer = pygwalker.api.streamlit.StreamlitRenderer(sample)
+            renderer = pygwalker.api.streamlit.StreamlitRenderer(
+                sample,
+                default_tab="data",
+            )
+
             renderer.explorer()
 
 
