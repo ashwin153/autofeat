@@ -33,7 +33,11 @@ def schema_editor(
 @streamlit.cache_resource(
     hash_funcs={
         Dataset: id,
-        list: lambda edits: tuple(tuple(row.values()) for edit in edits for row in edit),
+        list: lambda edits: tuple(
+            tuple(row.values())
+            for edit in cast(list, edits)
+            for row in edit
+        ),
     },
 )
 def _edit_dataset(
