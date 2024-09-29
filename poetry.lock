@@ -3864,6 +3864,20 @@ watchdog = {version = ">=2.1.5,<5", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python[modin] (>=1.17.0)"]
 
 [[package]]
+name = "streamlit-elements"
+version = "0.1.0"
+description = "React Components for Streamlit."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "streamlit-elements-0.1.0.tar.gz", hash = "sha256:5f9f116f22df3ce4a8636b1dee7c2fd3dc3cb0c66267fd28c3e0314aa1d303a7"},
+    {file = "streamlit_elements-0.1.0-py3-none-any.whl", hash = "sha256:593c4b88c399c55879aa76f7f42970f30106f66acaa4baada6338ae5571790df"},
+]
+
+[package.dependencies]
+streamlit = ">=1.4.0"
+
+[[package]]
 name = "tenacity"
 version = "8.5.0"
 description = "Retry code until it succeeds"
@@ -4260,4 +4274,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "60a6af54ce4e9b32cc20e4873ab6762a36a5d04e18685fd1cf2ed214152a33ad"
+content-hash = "ec6e56deac763c856ee5ef2c46ccea6116765be645465c06e38682283204857a"
