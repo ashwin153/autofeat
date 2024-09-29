@@ -49,16 +49,6 @@ class Solver:
 
 SOLVERS = [
     Solver(
-        factory=xgboost.XGBClassifier,
-        name="XGBoost",
-        problem=Problem.classification,
-    ),
-    Solver(
-        factory=xgboost.XGBRegressor,
-        name="XGBoost",
-        problem=Problem.regression,
-    ),
-    Solver(
         factory=sklearn.ensemble.RandomForestClassifier,
         name="Random Forest",
         problem=Problem.classification,
@@ -66,6 +56,16 @@ SOLVERS = [
     Solver(
         factory=sklearn.ensemble.RandomForestRegressor,
         name="Random Forest",
+        problem=Problem.regression,
+    ),
+    Solver(
+        factory=xgboost.XGBClassifier,
+        name="XGBoost",
+        problem=Problem.classification,
+    ),
+    Solver(
+        factory=xgboost.XGBRegressor,
+        name="XGBoost",
         problem=Problem.regression,
     ),
 ]
