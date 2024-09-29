@@ -18,6 +18,11 @@ class Table:
     :param schema: Structure of this table.
     """
 
-    data: polars.LazyFrame
+    data: polars.LazyFrame = dataclasses.field(compare=False)
     name: str
     schema: Schema
+
+    def __str__(
+        self,
+    ) -> str:
+        return self.name
