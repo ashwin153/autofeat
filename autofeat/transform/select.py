@@ -61,13 +61,12 @@ class Select(Transform):
         )
 
         # select the most important features
-        selection = collections.defaultdict(set)
+        selected: dict[str, set[str]] = collections.defaultdict(set)
+
         for i, selected in enumerate(selector.get_support()):
             if selected:
                 table_name, column = features.columns[i].split(SEPARATOR, 1)
-                selection[table_name].add(column)
+                selected[table_name].add(column)
 
         # keep only the selected features
-        for table in tables:
-            if columns := selection.get(table.name):
-                yield from Keep(columns=columns).apply([table])
+        yield from Keep(columns=selected).apply(tables)
