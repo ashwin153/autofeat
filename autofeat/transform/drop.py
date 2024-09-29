@@ -26,8 +26,9 @@ class Drop(Transform):
                 if column not in self.columns
             })
 
-            yield Table(
-                data=table.data.select(schema.keys()),
-                name=table.name,
-                schema=schema,
-            )
+            if schema:
+                yield Table(
+                    data=table.data.select(schema.keys()),
+                    name=table.name,
+                    schema=schema,
+                )
