@@ -36,6 +36,7 @@ streamlit = "^1.38.0"
 xgboost = "^2.1.1"
 pygwalker = "^0.4.9.9"
 streamlit-elements = "^0.1.0"
+catboost = "^1.2.7"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.11.2"

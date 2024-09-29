@@ -3,6 +3,7 @@ import enum
 from collections.abc import Callable
 from typing import Any, Protocol
 
+import catboost
 import numpy
 import sklearn.ensemble
 import xgboost
@@ -23,12 +24,14 @@ class Model(Protocol):
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
+        /,
     ) -> Any:
         ...
 
     def predict(
         self,
         X: numpy.ndarray,
+        /,
     ) -> numpy.ndarray:
         ...
 
@@ -48,6 +51,16 @@ class Solver:
 
 
 SOLVERS = [
+    Solver(
+        factory=catboost.CatBoostClassifier,
+        name="CatBoost",
+        problem=Problem.classification,
+    ),
+    Solver(
+        factory=catboost.CatBoostRegressor,
+        name="CatBoost",
+        problem=Problem.regression,
+    ),
     Solver(
         factory=sklearn.ensemble.RandomForestClassifier,
         name="Random Forest",
