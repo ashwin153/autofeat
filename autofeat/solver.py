@@ -17,6 +17,11 @@ class Problem(enum.Enum):
     classification = enum.auto()
     regression = enum.auto()
 
+    def __str__(
+        self,
+    ) -> str:
+        return self.name
+
 
 class Model(Protocol):
     """A supervised model that conforms to the sklearn estimator interface."""
@@ -49,6 +54,11 @@ class Solver:
     factory: Callable[[], Model]
     name: str
     problem: Problem
+
+    def __str__(
+        self,
+    ) -> str:
+        return self.name
 
 
 SOLVERS = [
