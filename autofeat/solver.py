@@ -32,7 +32,7 @@ class Model(Protocol):
         ...
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Solver:
     """A model constructor for a particular kind of prediction problem.
 
