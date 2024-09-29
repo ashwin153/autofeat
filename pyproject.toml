@@ -28,6 +28,7 @@ version = "0.1.0"
 catboost = "^1.2.7"
 cudf-polars-cu12 = {source = "nvidia", version = "^24.8.3"}
 kaggle = "^1.6.17"
+lightgbm = "^4.5.0"
 llvmlite = "^0.43.0"
 networkx = "^3.3"
 numba = "^0.60.0"
