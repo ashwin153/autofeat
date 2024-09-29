@@ -1,21 +1,23 @@
+from typing import Any
+
 import altair as alt
 import numpy as np
 import pandas as pd
-import shap
+import shap  # type: ignore
 import streamlit as st
 from sklearn.metrics import precision_score, recall_score
-from streamlit_shap import st_shap
+from streamlit_shap import st_shap  # type: ignore
 
 
 class BinaryClassificationAnalysis:
-    def __init__(self, model, X, y):
+    def __init__(self, model: Any, X: pd.DataFrame, y: pd.Series) -> None:
         self.model = model
         self.X = X
         self.y = y
         self.feature_names = self.get_feature_names()
         self.y_pred_proba = self.model.predict_proba(self.X)[:, 1]
 
-    def get_feature_names(self):
+    def get_feature_names(self) -> list[str]:
         if hasattr(self.model, "feature_names_in_"):
             return self.model.feature_names_in_
         elif isinstance(self.X, pd.DataFrame):
@@ -23,13 +25,13 @@ class BinaryClassificationAnalysis:
         else:
             return [f"Feature_{i}" for i in range(self.X.shape[1])]
 
-    def run(self):
+    def run(self) -> None:
         st.title("Analysis of model performance and predictors")
 
         self.section_1_model_performance()
         self.section_2_feature_importance()
 
-    def section_1_model_performance(self):
+    def section_1_model_performance(self) -> None:
         st.header("How good is your model?")
 
         # Allow user to set threshold
@@ -96,7 +98,7 @@ class BinaryClassificationAnalysis:
         with st.expander("Samples Under Threshold"):
             st.dataframe(df_under_threshold)  # Display the under-threshold data
 
-    def section_2_feature_importance(self):
+    def section_2_feature_importance(self) -> None:
         st.header("Feature Importance")
 
         # Calculate SHAP values
@@ -131,7 +133,7 @@ class BinaryClassificationAnalysis:
         current_feature_names = current_features["Feature"].values
 
         # Create a DataFrame for the current features and their SHAP values
-        shap_df = pd.DataFrame(current_shap_values, columns=current_feature_names)
+        shap_df = pd.DataFrame(current_shap_values, columns=current_feature_names) # type: ignore
 
         # Display SHAP summary plot
         st_shap(shap.summary_plot(shap_df.values, feature_names=current_feature_names, plot_type="bar")) # noqa: E501
@@ -140,7 +142,7 @@ class BinaryClassificationAnalysis:
         for feature in current_feature_names:
             self.create_chart(feature)
 
-    def create_chart(self, feature):
+    def create_chart(self, feature: str) -> None:
         st.write(f"#### {feature} Relationship with Target:")
 
         if self.is_quantitative(self.X, feature):
@@ -154,7 +156,7 @@ class BinaryClassificationAnalysis:
                 use_container_width=True,
             )
 
-    def is_quantitative(self, df, feature):
+    def is_quantitative(self, df: pd.DataFrame, feature: str) -> bool:
         return df[feature].dtype in ["int64", "float64"]
 
 
