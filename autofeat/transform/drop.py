@@ -11,24 +11,33 @@ class Drop(Transform):
     """Drop any of the ``columns`` from all tables.
 
     :param columns: Names of columns to drop.
+    :param tables: Names of tables to drop.
     """
 
-    columns: set[str]
+    columns: dict[str, set[str]] | None = None
+    tables: set[str] | None = None
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for table in tables:
-            schema = Schema({
-                column: attributes
-                for column, attributes in table.schema.items()
-                if column not in self.columns
-            })
-
-            if schema:
-                yield Table(
-                    data=table.data.select(schema.keys()),
-                    name=table.name,
-                    schema=schema,
+            if not self.tables or table.name not in self.tables:
+                dropped = (
+                    self.columns.get(table.name, set())
+                    if self.columns
+                    else set()
                 )
+
+                schema = Schema({
+                    column: attributes
+                    for column, attributes in table.schema.items()
+                    if column not in dropped
+                })
+
+                if schema:
+                    yield Table(
+                        data=table.data.select(schema.keys()),
+                        name=table.name,
+                        schema=schema,
+                    )
