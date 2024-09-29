@@ -1,13 +1,12 @@
 import collections
 import dataclasses
 from collections.abc import Iterable
-from typing import Protocol
 
-import numpy
 import polars
 import sklearn.feature_selection
 
 from autofeat.convert import IntoDataFrame, IntoSeries, into_series
+from autofeat.solver import Model
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 from autofeat.transform.extract import Extract
@@ -15,28 +14,17 @@ from autofeat.transform.keep import Keep
 
 SEPARATOR = "::@::"
 
-class Model(Protocol):
-    """Any supervised model that conforms to the sklearn estimator interface."""
-
-    def fit(
-        self,
-        X: numpy.ndarray,
-        y: numpy.ndarray,
-    ) -> None:
-        ...
-
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Select(Transform):
     """Select the most predictive features.
 
-    :param given: Known variables.
+    :param known: Known variables.
     :param limit: Maximum number of features to select.
     :param model: Model used to measure feature importance.
     :param target: Target variable.
     """
 
-    given: IntoDataFrame
+    known: IntoDataFrame
     limit: int
     model: Model
     target: IntoSeries
@@ -52,7 +40,7 @@ class Select(Transform):
             polars.collect_all(
                 [
                     table.data.select(polars.all().name.prefix(f"{table.name}{SEPARATOR}"))
-                    for table in Extract(given=self.given).apply(tables)
+                    for table in Extract(known=self.known).apply(tables)
                 ],
             ),
             how="horizontal",

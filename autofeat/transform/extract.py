@@ -10,23 +10,23 @@ from autofeat.transform.base import Transform
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Extract(Transform):
-    """Extract features that are relevant to the ``given`` table.
+    """Extract features that are relevant to the ``known`` data.
 
-    :param given: Data that is already known.
+    :param known: Data that is already known.
     """
 
-    given: IntoDataFrame
+    known: IntoDataFrame
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        given = into_data_frame(self.given)
+        known = into_data_frame(self.known)
 
         for table in tables:
             primary_key = list(table.schema.select(include={Attribute.primary_key}))
 
-            if primary_key and all(column in given.columns for column in primary_key):
+            if primary_key and all(column in known.columns for column in primary_key):
                 schema = Schema({
                     **table.schema.select(
                         include={Attribute.boolean},
@@ -39,7 +39,7 @@ class Extract(Transform):
                 })
 
                 data = (
-                    given
+                    known
                     .lazy()
                     .join(table.data, on=primary_key, how="left")
                     .select(schema.keys())
