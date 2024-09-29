@@ -75,8 +75,6 @@ repos:
     rev: v0.23.1
     hooks:
       - id: toml-sort-fix
-        args:
-          - --all
         files: pyproject.toml
   # YAML
   - repo: https://github.com/pre-commit/pre-commit-hooks

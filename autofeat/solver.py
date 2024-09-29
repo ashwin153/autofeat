@@ -1,9 +1,11 @@
 import dataclasses
 import enum
 from collections.abc import Callable
-from typing import Protocol
+from typing import Any, Protocol
 
+import catboost
 import numpy
+import sklearn.ensemble
 import xgboost
 
 
@@ -22,13 +24,15 @@ class Model(Protocol):
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
-    ) -> None:
+        /,
+    ) -> Any:
         ...
 
     def predict(
         self,
         X: numpy.ndarray,
-    ) -> None:
+        /,
+    ) -> numpy.ndarray:
         ...
 
 
@@ -48,13 +52,33 @@ class Solver:
 
 SOLVERS = [
     Solver(
+        factory=catboost.CatBoostClassifier,
+        name="CatBoost",
+        problem=Problem.classification,
+    ),
+    Solver(
+        factory=catboost.CatBoostRegressor,
+        name="CatBoost",
+        problem=Problem.regression,
+    ),
+    Solver(
+        factory=sklearn.ensemble.RandomForestClassifier,
+        name="Random Forest",
+        problem=Problem.classification,
+    ),
+    Solver(
+        factory=sklearn.ensemble.RandomForestRegressor,
+        name="Random Forest",
+        problem=Problem.regression,
+    ),
+    Solver(
         factory=xgboost.XGBClassifier,
-        name="xgboost",
+        name="XGBoost",
         problem=Problem.classification,
     ),
     Solver(
         factory=xgboost.XGBRegressor,
-        name="xgboost",
+        name="XGBoost",
         problem=Problem.regression,
     ),
 ]
