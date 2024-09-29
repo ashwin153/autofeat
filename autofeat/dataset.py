@@ -37,20 +37,20 @@ class Dataset:
     def extract(
         self,
         *,
-        given: IntoDataFrame,
+        known: IntoDataFrame,
     ) -> polars.DataFrame:
-        """Extract features from all tables in this dataset that are relevant to the ``given`` data.
+        """Extract features from all tables in this dataset that are relevant to the ``known`` data.
 
         .. note::
 
             Feature extraction is a computationally expensive operation.
 
-        :param where: Where clause.
+        :param known: Data that is already known.
         :return: Extracted features.
         """
         features = [
             table.data.select(polars.all().name.suffix(f" from {table.name}"))
-            for table in Extract(given=given).apply(self.tables)
+            for table in Extract(known=known).apply(self.tables)
         ]
 
         return polars.concat(polars.collect_all(features), how="horizontal")
