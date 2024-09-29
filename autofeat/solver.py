@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any, Protocol
 
 import catboost
+import lightgbm
 import numpy
 import sklearn.ensemble
 import xgboost
@@ -59,6 +60,16 @@ SOLVERS = [
     Solver(
         factory=catboost.CatBoostRegressor,
         name="CatBoost",
+        problem=Problem.regression,
+    ),
+    Solver(
+        factory=lightgbm.LGBMClassifier,  # pyright: ignore[reportArgumentType]
+        name="LightGBM",
+        problem=Problem.classification,
+    ),
+    Solver(
+        factory=lightgbm.LGBMRegressor,  # pyright: ignore[reportArgumentType]
+        name="LightGBM",
         problem=Problem.regression,
     ),
     Solver(

@@ -14,6 +14,7 @@ from autofeat.transform.keep import Keep
 
 SEPARATOR = "::@::"
 
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Select(Transform):
     """Select the most predictive features.
@@ -55,8 +56,8 @@ class Select(Transform):
         )
 
         selector.fit(
-            X=features.to_numpy(),
-            y=target.to_numpy(),
+            features.to_numpy(),
+            target.to_numpy(),
         )
 
         # select the most important features
