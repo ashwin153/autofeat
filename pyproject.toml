@@ -11,7 +11,11 @@ warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
-module = ["catboost.*", "pygwalker.*", "sklearn.*"]
+module = [
+  "catboost.*",
+  "pygwalker.*",
+  "sklearn.*"
+]
 
 [tool.poetry]
 authors = ["Ashwin Madavan <ashwin.madavan@gmail.com>"]
