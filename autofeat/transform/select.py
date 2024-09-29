@@ -62,6 +62,7 @@ class Select(Transform):
 
         # select the most important features
         selected = collections.defaultdict(set)
+
         for i, selected in enumerate(selector.get_support()):
             if selected:
                 table_name, column = features.columns[i].split(SEPARATOR, 1)
