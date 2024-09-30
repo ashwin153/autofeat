@@ -95,7 +95,7 @@ def _edit_dataset(
             (column, attribute)
             for schema in cast(list, schemas)
             for column, attributes in schema.items()
-            for attribute in sorted(attributes)
+            for attribute in sorted(attribute.name for attribute in attributes)
         ),
     },
     max_entries=1,
