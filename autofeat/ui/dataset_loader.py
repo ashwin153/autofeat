@@ -18,6 +18,8 @@ def dataset_loader(
     if dataset := _load_dataset():
         return _edit_schemas(dataset)
 
+    return None
+
 
 def _load_dataset() -> Dataset | None:
     source_type = streamlit.selectbox(
@@ -31,20 +33,19 @@ def _load_dataset() -> Dataset | None:
             accept_multiple_files=True,
         )
 
-        if not csv_files:
-            return None
+        if csv_files:
+            return _load_dataset_from_csv([file.name for file in csv_files])
 
-        return _load_dataset_from_csv([file.name for file in csv_files])
-    elif source_type == "Kaggle":
+    if source_type == "Kaggle":
         kaggle_name = streamlit.text_input(
             "Dataset / Competition",
             placeholder="house-prices-advanced-regression-techniques",
         )
 
-        if not kaggle_name:
-            return None
+        if kaggle_name:
+            return _load_dataset_from_kaggle(kaggle_name)
 
-        return _load_dataset_from_kaggle(kaggle_name)
+    return None
 
 
 @streamlit.cache_resource(
