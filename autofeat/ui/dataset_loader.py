@@ -16,7 +16,7 @@ def dataset_loader(
     streamlit.header("Load Dataset")
 
     if dataset := _load_dataset():
-        return _edit_dataset(dataset)
+        return _edit_schemas(dataset)
 
 
 def _load_dataset() -> Dataset | None:
@@ -65,10 +65,10 @@ def _load_dataset_from_kaggle(
     return source.from_kaggle(name)
 
 
-def _edit_dataset(
+def _edit_schemas(
     dataset: Dataset,
 ) -> Dataset:
-    with streamlit.expander("Edit Dataset"):
+    with streamlit.expander("Edit Schemas"):
         edited_schemas: list[Schema] = []
 
         for tab, table in zip(
