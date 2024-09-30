@@ -13,13 +13,14 @@ def dataset_explorer(
 
     :param dataset: Dataset to explore.
     """
-    streamlit.title("Explore Dataset")
+    streamlit.header("Explore Dataset")
 
     sample_size = streamlit.number_input(
         "Sample Size",
         min_value=1,
         max_value=10000,
         value=100,
+        step=50,
     )
 
     for tab, sample in zip(

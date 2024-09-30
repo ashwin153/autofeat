@@ -13,7 +13,7 @@ def feature_loader(
 
     :param dataset: Dataset to load features from.
     """
-    streamlit.title("Load Features")
+    streamlit.header("Load Features")
 
     table = streamlit.selectbox(
         "Table",
