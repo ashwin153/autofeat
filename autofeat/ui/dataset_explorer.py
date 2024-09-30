@@ -35,7 +35,10 @@ def dataset_explorer(
             renderer.explorer()
 
 
-@streamlit.cache_data(hash_funcs={Dataset: id})
+@streamlit.cache_data(
+    hash_funcs={Dataset: id},
+    max_entries=1,
+)
 def _load_samples(
     dataset: Dataset,
     sample_size: int,

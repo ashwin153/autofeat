@@ -39,14 +39,18 @@ def dataset_loader(
     return None
 
 
-@streamlit.cache_resource
+@streamlit.cache_resource(
+    max_entries=1,
+)
 def _load_dataset_from_csv(
     files: list[str],
 ) -> Dataset:
     return source.from_csv(files)
 
 
-@streamlit.cache_resource
+@streamlit.cache_resource(
+    max_entries=1,
+)
 def _load_dataset_from_kaggle(
     name: str,
 ) -> Dataset:

@@ -39,6 +39,7 @@ def schema_editor(
             for row in edit
         ),
     },
+    max_entries=1,
 )
 def _edit_dataset(
     dataset: Dataset,
