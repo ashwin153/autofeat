@@ -21,45 +21,46 @@ def dataset_loader(
     )
 
     if source_type == "CSV":
-        files = streamlit.file_uploader(
+        csv_files = streamlit.file_uploader(
             "Upload Files",
             accept_multiple_files=True,
         )
 
-        if not files:
+        if not csv_files:
             return None
 
-        dataset = _load_dataset_from_csv([file.name for file in files])
+        dataset = _load_dataset_from_csv([file.name for file in csv_files])
     elif source_type == "Kaggle":
-        name = streamlit.text_input(
+        kaggle_name = streamlit.text_input(
             "Dataset / Competition",
             placeholder="house-prices-advanced-regression-techniques",
         )
 
-        if not name:
+        if not kaggle_name:
             return None
 
-        dataset = _load_dataset_from_kaggle(name)
+        dataset = _load_dataset_from_kaggle(kaggle_name)
     else:
         raise NotImplementedError(f"{source_type} is not supported")
 
     with streamlit.expander("Edit Schema"):
-        edits = []
+        edited_schemas: list[Schema] = []
 
         for tab, table in zip(
             streamlit.tabs([table.name for table in dataset.tables]),
             dataset.tables,
         ):
             with tab:
-                old = _schema_into_rows(table.schema)
-                new = streamlit.data_editor(old)
+                edited_rows = streamlit.data_editor(
+                    _schema_into_rows(table.schema),
+                    hide_index=True,
+                )
 
-                if old == new:
-                    edits.append([])
-                else:
-                    edits.append(new)
+                edited_schema = _schema_from_rows(edited_rows)
 
-        return _edit_dataset(dataset, edits)
+                edited_schemas.append(edited_schema)
+
+        return _edit_dataset(dataset, edited_schemas)
 
 
 @streamlit.cache_resource(
@@ -83,31 +84,29 @@ def _load_dataset_from_kaggle(
 @streamlit.cache_resource(
     hash_funcs={
         Dataset: id,
-        list: lambda edits: tuple(
-            tuple(row.values())
-            for edit in cast(list, edits)
-            for row in edit
+        list: lambda schemas: tuple(
+            (column, attribute)
+            for schema in cast(list, schemas)
+            for column, attributes in schema.items()
+            for attribute in sorted(attributes)
         ),
     },
     max_entries=1,
 )
 def _edit_dataset(
     dataset: Dataset,
-    edits: list[list[dict[str, Any]]],
+    edited_schemas: list[Schema],
 ) -> Dataset:
     edited_tables = []
 
-    for table, edited_rows in zip(dataset.tables, edits):
-        if edited_schema := _schema_from_rows(edited_rows):
-            edited_table = Table(
-                data=table.data.select(edited_schema.keys()),
-                name=table.name,
-                schema=edited_schema,
-            )
+    for table, edited_schema in zip(dataset.tables, edited_schemas):
+        edited_table = Table(
+            data=table.data.select(edited_schema.keys()),
+            name=table.name,
+            schema=edited_schema,
+        )
 
-            edited_tables.append(edited_table)
-        else:
-            edited_tables.append(table)
+        edited_tables.append(edited_table)
 
     return Dataset(edited_tables)
 
