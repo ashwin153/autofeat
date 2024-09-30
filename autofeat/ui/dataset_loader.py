@@ -15,6 +15,13 @@ def dataset_loader(
     """
     streamlit.header("Load Dataset")
 
+    if dataset := _load_dataset():
+        return _edit_schemas(dataset)
+
+    return None
+
+
+def _load_dataset() -> Dataset | None:
     source_type = streamlit.selectbox(
         "Source Type",
         ["Kaggle", "CSV"],
@@ -26,41 +33,19 @@ def dataset_loader(
             accept_multiple_files=True,
         )
 
-        if not csv_files:
-            return None
+        if csv_files:
+            return _load_dataset_from_csv([file.name for file in csv_files])
 
-        dataset = _load_dataset_from_csv([file.name for file in csv_files])
-    elif source_type == "Kaggle":
+    if source_type == "Kaggle":
         kaggle_name = streamlit.text_input(
             "Dataset / Competition",
             placeholder="house-prices-advanced-regression-techniques",
         )
 
-        if not kaggle_name:
-            return None
+        if kaggle_name:
+            return _load_dataset_from_kaggle(kaggle_name)
 
-        dataset = _load_dataset_from_kaggle(kaggle_name)
-    else:
-        raise NotImplementedError(f"{source_type} is not supported")
-
-    with streamlit.expander("Edit Schema"):
-        edited_schemas: list[Schema] = []
-
-        for tab, table in zip(
-            streamlit.tabs([table.name for table in dataset.tables]),
-            dataset.tables,
-        ):
-            with tab:
-                edited_rows = streamlit.data_editor(
-                    _schema_into_rows(table.schema),
-                    hide_index=True,
-                )
-
-                edited_schema = _schema_from_rows(edited_rows)
-
-                edited_schemas.append(edited_schema)
-
-        return _edit_dataset(dataset, edited_schemas)
+    return None
 
 
 @streamlit.cache_resource(
@@ -81,6 +66,29 @@ def _load_dataset_from_kaggle(
     return source.from_kaggle(name)
 
 
+def _edit_schemas(
+    dataset: Dataset,
+) -> Dataset:
+    with streamlit.expander("Edit Schemas"):
+        edited_schemas: list[Schema] = []
+
+        for tab, table in zip(
+            streamlit.tabs([table.name for table in dataset.tables]),
+            dataset.tables,
+        ):
+            with tab:
+                edited_rows = streamlit.data_editor(
+                    _convert_schema_into_rows(table.schema),
+                    hide_index=True,
+                )
+
+                edited_schema = _convert_rows_into_schema(edited_rows)
+
+                edited_schemas.append(edited_schema)
+
+        return _apply_schema_changes(dataset, edited_schemas)
+
+
 @streamlit.cache_resource(
     hash_funcs={
         Dataset: id,
@@ -88,12 +96,12 @@ def _load_dataset_from_kaggle(
             (column, attribute)
             for schema in cast(list, schemas)
             for column, attributes in schema.items()
-            for attribute in sorted(attributes)
+            for attribute in sorted(attribute.name for attribute in attributes)
         ),
     },
     max_entries=1,
 )
-def _edit_dataset(
+def _apply_schema_changes(
     dataset: Dataset,
     edited_schemas: list[Schema],
 ) -> Dataset:
@@ -111,7 +119,17 @@ def _edit_dataset(
     return Dataset(edited_tables)
 
 
-def _schema_into_rows(
+@streamlit.cache_resource(
+    hash_funcs={
+        Schema: lambda schema: tuple(
+            (column, attribute)
+            for column, attributes in schema.items()
+            for attribute in sorted(attribute.name for attribute in attributes)
+        ),
+    },
+    max_entries=1,
+)
+def _convert_schema_into_rows(
     schema: Schema,
 ) -> list[dict[str, Any]]:
     return [
@@ -127,7 +145,16 @@ def _schema_into_rows(
     ]
 
 
-def _schema_from_rows(
+@streamlit.cache_resource(
+    hash_funcs={
+        list: lambda rows: tuple(
+            tuple(row.values())
+            for row in rows
+        ),
+    },
+    max_entries=1,
+)
+def _convert_rows_into_schema(
     rows: list[dict[str, Any]],
 ) -> Schema:
     return Schema({
