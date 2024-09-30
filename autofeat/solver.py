@@ -48,7 +48,7 @@ class Model(Protocol):
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Solver:
-    """A constructor of a model that solves a particular kind of prediction problem.
+    """A constructor for a model that solves a particular kind of prediction problem.
 
     :param factory: Model constructor.
     :param name: Name of the solver.
