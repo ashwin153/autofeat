@@ -131,9 +131,9 @@ class Solution:
     y_pred: polars.Series
 
     @functools.cached_property
-    def shap_values(
+    def shap_values(  # type: ignore[no-any-unimported]
         self,
-    ) -> shap.Explanation:  # type: ignore[no-any-unimported]
+    ) -> shap.Explanation:
         """Get the SHAP values associated with the model.
 
         :return: SHAP values.
