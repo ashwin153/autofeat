@@ -1,7 +1,6 @@
 from typing import Any, cast
 
 import streamlit
-import streamlit.runtime.caching.hashing
 
 from autofeat import Attribute, Dataset, Schema, Table, source
 
@@ -121,11 +120,7 @@ def _apply_schema_changes(
 
 @streamlit.cache_resource(
     hash_funcs={
-        Schema: lambda schema: tuple(
-            (column, attribute)
-            for column, attributes in schema.items()
-            for attribute in sorted(attribute.name for attribute in attributes)
-        ),
+        Schema: id,
     },
     max_entries=1,
 )
@@ -147,10 +142,7 @@ def _convert_schema_into_rows(
 
 @streamlit.cache_resource(
     hash_funcs={
-        list: lambda rows: tuple(
-            tuple(row.values())
-            for row in rows
-        ),
+        list: id,
     },
     max_entries=1,
 )

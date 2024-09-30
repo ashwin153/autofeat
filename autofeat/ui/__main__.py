@@ -1,5 +1,4 @@
 import streamlit
-import streamlit.runtime.caching.hashing
 
 from autofeat.ui.dataset_explorer import dataset_explorer
 from autofeat.ui.dataset_loader import dataset_loader

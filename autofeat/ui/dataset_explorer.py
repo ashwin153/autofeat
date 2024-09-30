@@ -1,7 +1,6 @@
 import pandas
 import pygwalker.api.streamlit
 import streamlit
-import streamlit.runtime.caching.hashing
 
 from autofeat import Dataset
 
