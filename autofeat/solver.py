@@ -133,10 +133,14 @@ class Solution:
     @functools.cached_property
     def shap_values(
         self,
-    ) -> shap.Explanation:
+    ) -> shap.Explanation:  # type: ignore[no-any-unimported]
         """Get the SHAP values associated with the model.
 
         :return: SHAP values.
         """
-        explainer = shap.Explainer(self.model)
+        explainer = shap.Explainer(
+            model=self.model,
+            feature_names=self.X_train.columns,
+        )
+
         return explainer(self.X_test.to_numpy())
