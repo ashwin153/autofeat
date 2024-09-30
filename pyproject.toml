@@ -14,6 +14,7 @@ ignore_missing_imports = true
 module = [
   "catboost.*",
   "pygwalker.*",
+  "shap.*",
   "sklearn.*"
 ]
 

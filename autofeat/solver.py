@@ -1,12 +1,16 @@
 import dataclasses
 import enum
+import functools
 from collections.abc import Callable
 from typing import Any, Protocol
 
 import catboost
 import lightgbm
 import numpy
+import polars
+import shap
 import sklearn.ensemble
+import sklearn.metrics
 import xgboost
 
 
@@ -44,7 +48,7 @@ class Model(Protocol):
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Solver:
-    """A model constructor for a particular kind of prediction problem.
+    """A constructor for a model that solves a particular kind of prediction problem.
 
     :param factory: Model constructor.
     :param name: Name of the solver.
@@ -103,3 +107,40 @@ SOLVERS = [
         problem=Problem.regression,
     ),
 ]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class Solution:
+    """A solution to a prediction problem.
+
+    :param model: Trained model.
+    :param problem: Type of problem.
+    :param X_test: Input variables used to test the ``model``.
+    :param X_train: Input variables used to train the ``model``.
+    :param y_test: Target variable used to test the ``model``.
+    :param y_train: Target variable used to train the ``model``.
+    :param y_pred: Target variable that was predicted by the ``model`` in the test.
+    """
+
+    model: Model
+    problem: Problem
+    X_test: polars.DataFrame
+    X_train: polars.DataFrame
+    y_test: polars.Series
+    y_train: polars.Series
+    y_pred: polars.Series
+
+    @functools.cached_property
+    def shap_values(  # type: ignore[no-any-unimported]
+        self,
+    ) -> shap.Explanation:
+        """Get the SHAP values associated with the model.
+
+        :return: SHAP values.
+        """
+        explainer = shap.Explainer(
+            model=self.model,
+            feature_names=self.X_train.columns,
+        )
+
+        return explainer(self.X_test.to_numpy())
