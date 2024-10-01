@@ -92,12 +92,12 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        prediction_model = prediction_method.model()
-        selection_model = selection_method.model(prediction_model)
-
         X = self.features(known).to_numpy(structured=True)
         y = into_series(target).to_numpy()
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y)
+
+        prediction_model = prediction_method.model()
+        selection_model = selection_method.model(prediction_model)
 
         selection_model.fit(X_train, y_train)
         X_train = selection_model.transform(X_train)
