@@ -83,8 +83,8 @@ class Dataset:
         known: IntoDataFrame,
         target: IntoSeries,
         *,
-        prediction_method: PredictionMethod = PREDICTION_METHODS[0],
-        selection_method: SelectionMethod = SELECTION_METHODS[0],
+        prediction_method: PredictionMethod = PREDICTION_METHODS["xgboost_classifier"],
+        selection_method: SelectionMethod = SELECTION_METHODS["feature_importance"],
     ) -> TrainedModel:
         """Train a model for predicting the ``target`` given the ``known`` information.
 
