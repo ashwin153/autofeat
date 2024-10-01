@@ -125,7 +125,7 @@ class Dataset:
         X = X.select(selected_features)
         dataset = self.apply(Keep(columns=selected_columns))
 
-        # train the prediction model on the selected features and evaluate it on the test data
+        # train the prediction model on the selected features
         prediction_model.fit(X_train, y_train)
 
         # collect all the intermediate outputs
