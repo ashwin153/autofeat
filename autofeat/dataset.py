@@ -4,6 +4,7 @@ import collections
 import dataclasses
 from typing import TYPE_CHECKING
 
+import numpy
 import polars
 import sklearn.model_selection
 
@@ -66,7 +67,7 @@ class Dataset:
                 .lazy()
                 .join(table.data, on=list(primary_key), how="left")
                 .select(polars.selectors.boolean() | polars.selectors.numeric())
-                .select(polars.all().name.suffix(f"::@::{table.name}"))
+                .select(polars.all().name.suffix(f"::{table.name}"))
             )
             for table in self.tables
             if (primary_key := set(table.schema.select(include={Attribute.primary_key})))
@@ -94,8 +95,11 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # load features and split into training and test data
-        X = self.features(known).to_numpy(structured=True)
+        # load features
+        features = self.features(known)
+
+        # split features and target into training and test data
+        X = features.to_numpy()
         y = into_series(target).to_numpy()
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y)
 
@@ -107,15 +111,15 @@ class Dataset:
         selection_model.fit(X_train, y_train)
 
         # apply feature selection to the training and test data
-        X = selection_model.transform(X)
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
 
         # apply feature selection to the source dataset
         selection = collections.defaultdict(set)
-        for feature in X.dtype.names:
-            column, table = feature.split("::@::", 1)
-            selection[table].add(column)
+        for i, selected in enumerate(selection_method.mask(selection_model)):
+            if selected:
+                column, table = features.columns[i].split("::", 1)
+                selection[table].add(column)
 
         dataset = self.apply(Keep(columns=selection))
 
