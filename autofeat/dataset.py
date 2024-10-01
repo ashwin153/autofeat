@@ -94,33 +94,36 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # load features from this dataset
-        features = self.features(known)
-
         # split features and target into training and test data
-        X = features.to_numpy()
-        y = into_series(target).to_numpy()
-        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y)
+        X = self.features(known)
+        y = into_series(target)
 
-        # create a model that predicts the target from the features
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
+            X.to_numpy(),
+            y.to_numpy(),
+        )
+
+        # train a model that selects the most important features to a prediction
         prediction_model = prediction_method.model()
-
-        # train a model that selects the most important features to the prediction model
         selection_model = selection_method.model(prediction_model)
         selection_model.fit(X_train, y_train)
 
         # apply feature selection to the training and test data
+        selected_features = [
+            X.columns[i]
+            for i, was_selected in enumerate(selection_method.mask(selection_model))
+            if was_selected
+        ]
+
+        selected_columns = collections.defaultdict(set)
+        for selected_feature in selected_features:
+            column, table = selected_feature.split("::", 1)
+            selected_columns[table].add(column)
+
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
-
-        # apply feature selection to this dataset
-        selection = collections.defaultdict(set)
-        for i, selected in enumerate(selection_method.mask(selection_model)):
-            if selected:
-                column, table = features.columns[i].split("::", 1)
-                selection[table].add(column)
-
-        dataset = self.apply(Keep(columns=selection))
+        X = X.select(selected_features)
+        dataset = self.apply(Keep(columns=selected_columns))
 
         # train the prediction model on the selected features
         prediction_model.fit(X_train, y_train)
@@ -135,8 +138,10 @@ class Dataset:
             prediction_model=prediction_model,
             selection_method=selection_method,
             selection_model=selection_model,
+            X=X,
             X_test=X_test,
             X_train=X_train,
+            y=y,
             y_pred=y_pred,
             y_test=y_test,
             y_train=y_train,
