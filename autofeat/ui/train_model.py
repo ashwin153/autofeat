@@ -23,76 +23,73 @@ def train_model(
     """
     streamlit.header("Train Model")
 
-    with streamlit.form("train_model"):
-        table = streamlit.selectbox(
-            "Table",
-            dataset.tables,
-            index=None,
-            key="table",
-            on_change=lambda: _clear_state("target_column"),
-        )
+    table = streamlit.selectbox(
+        "Table",
+        dataset.tables,
+        index=None,
+        key="table",
+        on_change=lambda: _clear_state("target_column"),
+    )
 
-        if not table:
-            return
+    if not table:
+        return
 
-        target_column = streamlit.selectbox(
-            "Target Column",
-            table.schema,
-            index=None,
-            key="target_column",
-            on_change=lambda: _clear_state("known_columns", "problem"),
-        )
+    target_column = streamlit.selectbox(
+        "Target Column",
+        table.schema,
+        index=None,
+        key="target_column",
+        on_change=lambda: _clear_state("known_columns", "problem"),
+    )
 
-        if not target_column:
-            return
+    if not target_column:
+        return
 
-        known_columns = streamlit.multiselect(
-            "Known Columns",
-            [column for column in table.schema if column != target_column],
-            key="known_columns",
-        )
+    known_columns = streamlit.multiselect(
+        "Known Columns",
+        [column for column in table.schema if column != target_column],
+        key="known_columns",
+    )
 
-        if not known_columns:
-            return
+    if not known_columns:
+        return
 
-        default_problem = (
-            PredictionProblem.classification
-            if Attribute.categorical in table.schema[target_column]
-            else PredictionProblem.regression
-        )
+    default_problem = (
+        PredictionProblem.classification
+        if Attribute.categorical in table.schema[target_column]
+        else PredictionProblem.regression
+    )
 
-        problem = streamlit.selectbox(
-            "Problem",
-            list(PredictionProblem),
-            index=default_problem.value - 1,
-            key="problem",
-            on_change=lambda: _clear_state("prediction_method"),
-        )
+    problem = streamlit.selectbox(
+        "Problem",
+        list(PredictionProblem),
+        index=default_problem.value - 1,
+        key="problem",
+        on_change=lambda: _clear_state("prediction_method"),
+    )
 
-        prediction_method = streamlit.selectbox(
-            "Prediction Method",
-            [method for method in PREDICTION_METHODS if method.problem == problem],
-            key="prediction_method",
-        )
+    prediction_method = streamlit.selectbox(
+        "Prediction Method",
+        [method for method in PREDICTION_METHODS if method.problem == problem],
+        key="prediction_method",
+    )
 
-        selection_method = streamlit.selectbox(
-            "Selection Method",
-            SELECTION_METHODS,
-            key="selection_method",
-        )
+    selection_method = streamlit.selectbox(
+        "Selection Method",
+        SELECTION_METHODS,
+        key="selection_method",
+    )
 
-        # todo: make this configurable
-        transform = (
-            Drop(columns={table.name: {target_column}})
-            .then(Cast())
-            .then(Encode())
-            .then(Identity(), Aggregate())
-        )
+    # todo: make this configurable
+    transform = (
+        Drop(columns={table.name: {target_column}})
+        .then(Cast())
+        .then(Encode())
+        .then(Identity(), Aggregate())
+    )
 
-        train_model = streamlit.form_submit_button("Train Model")
-
-        if not train_model:
-            return
+    if not streamlit.button("Train Model"):
+        return
 
     return _train_model(
         dataset=dataset,
