@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import functools
 from typing import TYPE_CHECKING, Any, Final, Generic, Protocol, TypeVar
 
 import boruta
@@ -57,6 +58,7 @@ class PredictionProblem(enum.Enum):
     ) -> str:
         return self.name
 
+    @functools.cached_property
     def baseline_method(
         self,
     ) -> PredictionMethod:
@@ -224,7 +226,6 @@ class TrainedModel:
     :param X_test: Input variables used to test this model.
     :param X_train: Input variables used to train this model.
     :param y: Target variable.
-    :param y_pred: Predicted target variable for each of the test input variables.
     :param y_test: Target variable used to test this model.
     :param y_train: Input variable used to train this model.
     """
@@ -239,9 +240,20 @@ class TrainedModel:
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     y: polars.Series
-    y_pred: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
+
+    @functools.cached_property
+    def baseline_model(
+        self,
+    ) -> PredictionModel:
+        """Get the baseline model used to benchmark the performance of the prediction model.
+
+        :return: Benchmark model.
+        """
+        baseline_model = self.prediction_method.problem.baseline_method.model()
+        baseline_model.fit(self.X_train, self.y_train)
+        return baseline_model
 
     def predict(
         self,
