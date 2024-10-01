@@ -32,7 +32,7 @@ def train_model(
     )
 
     if not table:
-        return
+        return None
 
     target_column = streamlit.selectbox(
         "Target Column",
@@ -43,7 +43,7 @@ def train_model(
     )
 
     if not target_column:
-        return
+        return None
 
     known_columns = streamlit.multiselect(
         "Known Columns",
@@ -52,7 +52,7 @@ def train_model(
     )
 
     if not known_columns:
-        return
+        return None
 
     default_problem = (
         PredictionProblem.classification
@@ -89,7 +89,7 @@ def train_model(
     )
 
     if not streamlit.button("Train Model"):
-        return
+        return None
 
     return _train_model(
         dataset=dataset,
