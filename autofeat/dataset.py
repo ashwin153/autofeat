@@ -4,7 +4,6 @@ import collections
 import dataclasses
 from typing import TYPE_CHECKING
 
-import numpy
 import polars
 import sklearn.model_selection
 
@@ -95,7 +94,7 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # load features
+        # load features from this dataset
         features = self.features(known)
 
         # split features and target into training and test data
@@ -114,7 +113,7 @@ class Dataset:
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
 
-        # apply feature selection to the source dataset
+        # apply feature selection to this dataset
         selection = collections.defaultdict(set)
         for i, selected in enumerate(selection_method.mask(selection_model)):
             if selected:
