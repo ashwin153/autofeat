@@ -287,6 +287,22 @@ files = [
 ]
 
 [[package]]
+name = "boruta"
+version = "0.4.3"
+description = "Python Implementation of Boruta Feature Selection"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Boruta-0.4.3-py3-none-any.whl", hash = "sha256:58cc1d7f180d0ee3aace5b171a25f00b7fd8e323a749954d899cc983b2924085"},
+    {file = "Boruta-0.4.3.tar.gz", hash = "sha256:abd67119bb88c7d1675b0dfc78072e50b5ba1d32b7cc7664258a640ad3a495a4"},
+]
+
+[package.dependencies]
+numpy = ">=1.10.4"
+scikit-learn = ">=0.17.1"
+scipy = ">=0.17.0"
+
+[[package]]
 name = "cachetools"
 version = "5.5.0"
 description = "Extensible memoizing collections and decorators"
@@ -4746,4 +4762,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "09a7a9f6ba726380da2fde77ba4308c873599fdcb40f855ae37826dd420304cf"
+content-hash = "b20f17b7b95a3253ebce6cc6ad20cac6861e62c2a77e7dcefc58a5868193b682"
