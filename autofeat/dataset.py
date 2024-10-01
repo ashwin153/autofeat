@@ -94,15 +94,15 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # split features and target into training and test data
+        # load features and split into training and test data
         X = self.features(known).to_numpy(structured=True)
         y = into_series(target).to_numpy()
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y)
 
-        # create a model that predicts the target from features
+        # create a model that predicts the target from the features
         prediction_model = prediction_method.model()
 
-        # train a model that selects the most important features for the prediction model
+        # train a model that selects the most important features to the prediction model
         selection_model = selection_method.model(prediction_model)
         selection_model.fit(X_train, y_train)
 
