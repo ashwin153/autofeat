@@ -57,18 +57,18 @@ class PredictionProblem(enum.Enum):
     ) -> str:
         return self.name
 
-    def baseline_model(
+    def baseline_method(
         self,
-    ) -> PredictionModel:
-        """Get the baseline model for this kind of prediction problem.
+    ) -> PredictionMethod:
+        """Get the baseline method for this kind of problem.
 
-        :return: Baseline model.
+        :return: Baseline method.
         """
         match self:
             case PredictionProblem.classification:
-                return PREDICTION_METHODS["most_frequent"].model()
+                return PREDICTION_METHODS["most_frequent"]
             case PredictionProblem.regression:
-                return PREDICTION_METHODS["linear_regression"].model()
+                return PREDICTION_METHODS["linear_regression"]
             case _:
                 raise NotImplementedError(f"{self} is not supported")
 
