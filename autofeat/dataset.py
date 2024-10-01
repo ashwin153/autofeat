@@ -94,13 +94,14 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # load features from this dataset
-        features = self.features(known)
-
         # split features and target into training and test data
-        X = features.to_numpy()
-        y = into_series(target).to_numpy()
-        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y)
+        X = self.features(known)
+        y = into_series(target)
+
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
+            X.to_numpy(),
+            y.to_numpy(),
+        )
 
         # create a model that predicts the target from the features
         prediction_model = prediction_method.model()
@@ -117,7 +118,7 @@ class Dataset:
         selection = collections.defaultdict(set)
         for i, selected in enumerate(selection_method.mask(selection_model)):
             if selected:
-                column, table = features.columns[i].split("::", 1)
+                column, table = X.columns[i].split("::", 1)
                 selection[table].add(column)
 
         dataset = self.apply(Keep(columns=selection))
@@ -131,13 +132,14 @@ class Dataset:
         # collect all the intermediate outputs
         return TrainedModel(
             dataset=dataset,
-            features=features,
             prediction_method=prediction_method,
             prediction_model=prediction_model,
             selection_method=selection_method,
             selection_model=selection_model,
+            X=X,
             X_test=X_test,
             X_train=X_train,
+            y=y,
             y_pred=y_pred,
             y_test=y_test,
             y_train=y_train,

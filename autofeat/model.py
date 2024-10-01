@@ -183,26 +183,29 @@ class TrainedModel:
     """A prediction model trained on select features in a ``dataset``.
 
     :param dataset: Dataset from which features are extracted.
-    :param features: Features that the model was trained and tested on.
     :param prediction_method: Method of prediction.
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
     :param selection_model: Model used to select relevant features from the ``prediction_model``.
-    :param X_test: Input variables that the ``prediction_model`` was tested on.
-    :param X_train: Input variables that the ``prediction_model`` was trained on.
-    :param y_pred: Target variable that the ``prediction_model`` predicted during the test.
-    :param y_test: Target variable that the ``prediction_model`` was tested on.
-    :param y_train: Input variable that the ``prediction_model`` was trained on.
+    :param X: Input variables.
+    :param X_test: Input variables used to test this model.
+    :param X_train: Input variables used to train this model.
+    :param y: Target variable.
+    :param y_pred: Predicted target variable for each of the test input variables.
+    :param y_test: Target variable used to test this model.
+    :param y_train: Input variable used to train this model.
     """
 
     dataset: Dataset
-    features: polars.DataFrame
     prediction_model: PredictionModel
     prediction_method: PredictionMethod
     selection_model: SelectionModel
     selection_method: SelectionMethod
+
+    X: polars.DataFrame
     X_test: numpy.ndarray
     X_train: numpy.ndarray
+    y: polars.Series
     y_pred: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
