@@ -1,5 +1,5 @@
 import dataclasses
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable, Mapping
 
 from autofeat.schema import Schema
 from autofeat.table import Table
@@ -14,7 +14,7 @@ class Keep(Transform):
     :param tables: Names of tables to keep.
     """
 
-    columns: dict[str, set[str]] | None = None
+    columns: Mapping[str, Collection[str]] | None = None
     tables: set[str] | None = None
 
     def apply(

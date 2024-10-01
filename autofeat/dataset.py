@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import dataclasses
 from typing import TYPE_CHECKING
 
@@ -15,6 +16,7 @@ from autofeat.model import (
     SelectionMethod,
     TrainedModel,
 )
+from autofeat.transform.keep import Keep
 
 if TYPE_CHECKING:
     from autofeat.convert import IntoDataFrame
@@ -64,7 +66,7 @@ class Dataset:
                 .lazy()
                 .join(table.data, on=list(primary_key), how="left")
                 .select(polars.selectors.boolean() | polars.selectors.numeric())
-                .select(polars.all().name.suffix(f" from {table.name}"))
+                .select(polars.all().name.suffix(f"::@::{table.name}"))
             )
             for table in self.tables
             if (primary_key := set(table.schema.select(include={Attribute.primary_key})))
@@ -92,22 +94,40 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
+        # split features and target into training and test data
         X = self.features(known).to_numpy(structured=True)
         y = into_series(target).to_numpy()
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y)
 
+        # create a model that predicts the target from features
         prediction_model = prediction_method.model()
-        selection_model = selection_method.model(prediction_model)
 
+        # train a model that selects the most important features for the prediction model
+        selection_model = selection_method.model(prediction_model)
         selection_model.fit(X_train, y_train)
+
+        # apply feature selection to the training and test data
+        X = selection_model.transform(X)
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
 
+        # apply feature selection to the source dataset
+        selection = collections.defaultdict(set)
+        for feature in X.dtype.names:
+            column, table = feature.split("::@::", 1)
+            selection[table].add(column)
+
+        dataset = self.apply(Keep(columns=selection))
+
+        # train the prediction model on the selected features
         prediction_model.fit(X_train, y_train)
+
+        # evaluate the prediction model on the test data
         y_pred = prediction_model.predict(X_test)
 
+        # collect all the intermediate outputs
         return TrainedModel(
-            dataset=self,
+            dataset=dataset,
             prediction_method=prediction_method,
             prediction_model=prediction_model,
             selection_method=selection_method,
