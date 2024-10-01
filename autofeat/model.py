@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Final, Generic, Protocol, TypeVar
 
 import boruta
 import catboost
 import lightgbm
+import numpy
+import sklearn.dummy
 import sklearn.ensemble
 import sklearn.feature_selection
+import sklearn.linear_model
 import sklearn.metrics
 import sklearn.model_selection
 import xgboost
@@ -74,48 +77,58 @@ class PredictionMethod:
         return self.name
 
 
-PREDICTION_METHODS = [
-    PredictionMethod(
+PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
+    "xgboost_classifier": PredictionMethod(
         model=xgboost.XGBClassifier,
         name="XGBoost",
         problem=PredictionProblem.classification,
     ),
-    PredictionMethod(
+    "xgboost_regressor": PredictionMethod(
         model=xgboost.XGBRegressor,
         name="XGBoost",
         problem=PredictionProblem.regression,
     ),
-    PredictionMethod(
+    "catboost_classifier": PredictionMethod(
         model=catboost.CatBoostClassifier,
         name="CatBoost",
         problem=PredictionProblem.classification,
     ),
-    PredictionMethod(
+    "catboost_regressor": PredictionMethod(
         model=catboost.CatBoostRegressor,
         name="CatBoost",
         problem=PredictionProblem.regression,
     ),
-    PredictionMethod(
+    "lightgbm_classifier": PredictionMethod(
         model=lightgbm.LGBMClassifier,  # pyright: ignore[reportArgumentType]
         name="LightGBM",
         problem=PredictionProblem.classification,
     ),
-    PredictionMethod(
+    "lightgbm_regressor": PredictionMethod(
         model=lightgbm.LGBMRegressor,  # pyright: ignore[reportArgumentType]
         name="LightGBM",
         problem=PredictionProblem.regression,
     ),
-    PredictionMethod(
+    "linear_regression": PredictionMethod(
+        model=sklearn.linear_model.LinearRegression,
+        name="Linear Regression",
+        problem=PredictionProblem.regression,
+    ),
+    "random_forest_classifier": PredictionMethod(
         model=sklearn.ensemble.RandomForestClassifier,
         name="Random Forest",
         problem=PredictionProblem.classification,
     ),
-    PredictionMethod(
+    "random_forest_regressor": PredictionMethod(
         model=sklearn.ensemble.RandomForestRegressor,
         name="Random Forest",
         problem=PredictionProblem.regression,
     ),
-]
+    "random_guess": PredictionMethod(
+        model=lambda: sklearn.dummy.DummyClassifier(strategy="uniform"),
+        name="Random Guess",
+        problem=PredictionProblem.classification,
+    ),
+}
 
 
 class SelectionModel(Protocol):
@@ -159,23 +172,23 @@ class SelectionMethod(Generic[AnySelectionModel]):
         return self.name
 
 
-SELECTION_METHODS = [
-    SelectionMethod(
+SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
+    "feature_importance": SelectionMethod(
         mask=lambda model: model.get_support(),
         model=sklearn.feature_selection.SelectFromModel,
         name="Feature Importance",
     ),
-    SelectionMethod(
+    "recursive_feature_elimination": SelectionMethod(
         mask=lambda model: model.get_support(),
         model=sklearn.feature_selection.RFE,  # pyright: ignore[reportArgumentType]
         name="Recursive Feature Elimination",
     ),
-    SelectionMethod(
+    "boruta": SelectionMethod(
         mask=lambda model: model.support_,
         model=boruta.BorutaPy,
         name="Boruta",
     ),
-]
+}
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

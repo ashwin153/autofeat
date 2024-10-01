@@ -70,13 +70,13 @@ def train_model(
 
     prediction_method = streamlit.selectbox(
         "Prediction Method",
-        [method for method in PREDICTION_METHODS if method.problem == problem],
+        [method for method in PREDICTION_METHODS.values() if method.problem == problem],
         key="prediction_method",
     )
 
     selection_method = streamlit.selectbox(
         "Selection Method",
-        SELECTION_METHODS,
+        SELECTION_METHODS.values(),
         key="selection_method",
     )
 
