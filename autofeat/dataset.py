@@ -111,17 +111,21 @@ class Dataset:
         selection_model.fit(X_train, y_train)
 
         # apply feature selection to the training and test data
+        selected_features = [
+            X.columns[i]
+            for i, was_selected in enumerate(selection_method.mask(selection_model))
+            if was_selected
+        ]
+
+        selected_columns = collections.defaultdict(set)
+        for selected_feature in selected_features:
+            column, table = selected_feature.split("::", 1)
+            selected_columns[table].add(column)
+
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
-
-        # apply feature selection to this dataset
-        selection = collections.defaultdict(set)
-        for i, selected in enumerate(selection_method.mask(selection_model)):
-            if selected:
-                column, table = X.columns[i].split("::", 1)
-                selection[table].add(column)
-
-        dataset = self.apply(Keep(columns=selection))
+        X = X.select(selected_features)
+        dataset = self.apply(Keep(columns=selected_columns))
 
         # train the prediction model on the selected features
         prediction_model.fit(X_train, y_train)
