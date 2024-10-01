@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar
 
 import boruta
 import catboost
@@ -75,6 +75,16 @@ class PredictionMethod:
 
 PREDICTION_METHODS = [
     PredictionMethod(
+        model=xgboost.XGBClassifier,
+        name="XGBoost",
+        problem=PredictionProblem.classification,
+    ),
+    PredictionMethod(
+        model=xgboost.XGBRegressor,
+        name="XGBoost",
+        problem=PredictionProblem.regression,
+    ),
+    PredictionMethod(
         model=catboost.CatBoostClassifier,
         name="CatBoost",
         problem=PredictionProblem.classification,
@@ -104,16 +114,6 @@ PREDICTION_METHODS = [
         name="Random Forest",
         problem=PredictionProblem.regression,
     ),
-    PredictionMethod(
-        model=xgboost.XGBClassifier,
-        name="XGBoost",
-        problem=PredictionProblem.classification,
-    ),
-    PredictionMethod(
-        model=xgboost.XGBRegressor,
-        name="XGBoost",
-        problem=PredictionProblem.regression,
-    ),
 ]
 
 
@@ -136,15 +136,20 @@ class SelectionModel(Protocol):
         ...
 
 
+AnySelectionModel = TypeVar("AnySelectionModel", bound=SelectionModel)
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class SelectionMethod:
+class SelectionMethod(Generic[AnySelectionModel]):
     """A method of solving feature selection problems.
 
+    :param mask: Extract the feature selection mask from the model.
     :param model: Model constructor.
     :param name: Name of this method.
     """
 
-    model: Callable[[PredictionModel], SelectionModel]
+    mask: Callable[[AnySelectionModel], numpy.ndarray]
+    model: Callable[[PredictionModel], AnySelectionModel]
     name: str
 
     def __str__(
@@ -155,14 +160,17 @@ class SelectionMethod:
 
 SELECTION_METHODS = [
     SelectionMethod(
+        mask=lambda model: model.get_support(),
         model=sklearn.feature_selection.SelectFromModel,
         name="Feature Importance",
     ),
     SelectionMethod(
+        mask=lambda model: model.get_support(),
         model=sklearn.feature_selection.RFE,  # pyright: ignore[reportArgumentType]
         name="Recursive Feature Elimination",
     ),
     SelectionMethod(
+        mask=lambda model: model.support_,
         model=boruta.BorutaPy,
         name="Boruta",
     ),
