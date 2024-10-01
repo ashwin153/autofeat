@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import functools
 from typing import TYPE_CHECKING, Any, Final, Generic, Protocol, TypeVar
 
 import boruta
@@ -56,6 +57,22 @@ class PredictionProblem(enum.Enum):
         self,
     ) -> str:
         return self.name
+
+    @functools.cached_property
+    def baseline_method(
+        self,
+    ) -> PredictionMethod:
+        """Get the baseline method for this kind of problem.
+
+        :return: Baseline method.
+        """
+        match self:
+            case PredictionProblem.classification:
+                return PREDICTION_METHODS["most_frequent"]
+            case PredictionProblem.regression:
+                return PREDICTION_METHODS["linear_regression"]
+            case _:
+                raise NotImplementedError(f"{self} is not supported")
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -112,6 +129,11 @@ PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
         model=sklearn.linear_model.LinearRegression,
         name="Linear Regression",
         problem=PredictionProblem.regression,
+    ),
+    "most_frequent": PredictionMethod(
+        model=lambda: sklearn.dummy.DummyClassifier(strategy="most_frequent"),
+        name="Most Frequent",
+        problem=PredictionProblem.classification,
     ),
     "random_forest_classifier": PredictionMethod(
         model=sklearn.ensemble.RandomForestClassifier,
@@ -204,7 +226,6 @@ class TrainedModel:
     :param X_test: Input variables used to test this model.
     :param X_train: Input variables used to train this model.
     :param y: Target variable.
-    :param y_pred: Predicted target variable for each of the test input variables.
     :param y_test: Target variable used to test this model.
     :param y_train: Input variable used to train this model.
     """
@@ -219,9 +240,20 @@ class TrainedModel:
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     y: polars.Series
-    y_pred: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
+
+    @functools.cached_property
+    def baseline_model(
+        self,
+    ) -> PredictionModel:
+        """Get the baseline model used to benchmark the performance of the prediction model.
+
+        :return: Benchmark model.
+        """
+        baseline_model = self.prediction_method.problem.baseline_method.model()
+        baseline_model.fit(self.X_train, self.y_train)
+        return baseline_model
 
     def predict(
         self,

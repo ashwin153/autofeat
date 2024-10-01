@@ -128,9 +128,6 @@ class Dataset:
         # train the prediction model on the selected features
         prediction_model.fit(X_train, y_train)
 
-        # evaluate the prediction model on the test data
-        y_pred = prediction_model.predict(X_test)
-
         # collect all the intermediate outputs
         return TrainedModel(
             dataset=dataset,
@@ -142,7 +139,6 @@ class Dataset:
             X_test=X_test,
             X_train=X_train,
             y=y,
-            y_pred=y_pred,
             y_test=y_test,
             y_train=y_train,
         )
