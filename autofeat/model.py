@@ -57,6 +57,21 @@ class PredictionProblem(enum.Enum):
     ) -> str:
         return self.name
 
+    def baseline_model(
+        self,
+    ) -> PredictionModel:
+        """Get the baseline model for this kind of prediction problem.
+
+        :return: Baseline model.
+        """
+        match self:
+            case PredictionProblem.classification:
+                return PREDICTION_METHODS["most_frequent"].model()
+            case PredictionProblem.regression:
+                return PREDICTION_METHODS["linear_regression"].model()
+            case _:
+                raise NotImplementedError(f"{self} is not supported")
+
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PredictionMethod:
@@ -112,6 +127,11 @@ PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
         model=sklearn.linear_model.LinearRegression,
         name="Linear Regression",
         problem=PredictionProblem.regression,
+    ),
+    "most_frequent": PredictionMethod(
+        model=lambda: sklearn.dummy.DummyClassifier(strategy="most_frequent"),
+        name="Most Frequent",
+        problem=PredictionProblem.classification,
     ),
     "random_forest_classifier": PredictionMethod(
         model=sklearn.ensemble.RandomForestClassifier,
