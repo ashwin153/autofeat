@@ -185,7 +185,6 @@ class TrainedModel:
     prediction_method: PredictionMethod
     selection_model: SelectionModel
     selection_method: SelectionMethod
-
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     y_pred: numpy.ndarray
