@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import numpy
+    import polars
 
     from autofeat.convert import IntoDataFrame
     from autofeat.dataset import Dataset
@@ -182,6 +183,7 @@ class TrainedModel:
     """A prediction model trained on select features in a ``dataset``.
 
     :param dataset: Dataset from which features are extracted.
+    :param features: Features that the model was trained and tested on.
     :param prediction_method: Method of prediction.
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
@@ -194,6 +196,7 @@ class TrainedModel:
     """
 
     dataset: Dataset
+    features: polars.DataFrame
     prediction_model: PredictionModel
     prediction_method: PredictionMethod
     selection_model: SelectionModel

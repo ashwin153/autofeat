@@ -131,6 +131,7 @@ class Dataset:
         # collect all the intermediate outputs
         return TrainedModel(
             dataset=dataset,
+            features=features,
             prediction_method=prediction_method,
             prediction_model=prediction_model,
             selection_method=selection_method,
