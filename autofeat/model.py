@@ -1,20 +1,25 @@
+from __future__ import annotations
+
 import dataclasses
 import enum
-from collections.abc import Callable
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import boruta
 import catboost
 import lightgbm
-import numpy
 import sklearn.ensemble
 import sklearn.feature_selection
 import sklearn.metrics
 import sklearn.model_selection
 import xgboost
 
-from autofeat.convert import IntoDataFrame
-from autofeat.dataset import Dataset
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import numpy
+
+    from autofeat.convert import IntoDataFrame
+    from autofeat.dataset import Dataset
 
 
 class PredictionModel(Protocol):
