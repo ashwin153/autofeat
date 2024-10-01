@@ -103,10 +103,8 @@ class Dataset:
             y.to_numpy(),
         )
 
-        # create a model that predicts the target from the features
+        # train a model that selects the most important features to a prediction
         prediction_model = prediction_method.model()
-
-        # train a model that selects the most important features to the prediction model
         selection_model = selection_method.model(prediction_model)
         selection_model.fit(X_train, y_train)
 
