@@ -5,7 +5,7 @@ import streamlit
 from autofeat import Dataset
 
 
-def dataset_explorer(
+def explore_dataset(
     dataset: Dataset,
 ) -> None:
     """Explore a sample of the ``dataset``.

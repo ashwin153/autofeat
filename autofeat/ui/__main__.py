@@ -1,14 +1,14 @@
 import streamlit
 
-from autofeat.ui.dataset_explorer import dataset_explorer
-from autofeat.ui.dataset_loader import dataset_loader
-from autofeat.ui.feature_loader import feature_loader
+from autofeat.ui.explore_dataset import load_dataset
+from autofeat.ui.load_dataset import explore_dataset
+from autofeat.ui.train_model import train_model
 
 streamlit.set_page_config(
     page_title="autofeat",
     layout="wide",
 )
 
-if dataset := dataset_loader():
-    dataset_explorer(dataset)
-    feature_loader(dataset)
+if dataset := load_dataset():
+    explore_dataset(dataset)
+    train_model(dataset)

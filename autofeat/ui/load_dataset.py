@@ -5,7 +5,7 @@ import streamlit
 from autofeat import Attribute, Dataset, Schema, Table, source
 
 
-def dataset_loader(
+def load_dataset(
 
 ) -> Dataset | None:
     """Load a dataset from a configurable source.
@@ -14,13 +14,13 @@ def dataset_loader(
     """
     streamlit.header("Load Dataset")
 
-    if dataset := _load_dataset():
+    if dataset := _source_dataset():
         return _edit_schemas(dataset)
 
     return None
 
 
-def _load_dataset() -> Dataset | None:
+def _source_dataset() -> Dataset | None:
     source_type = streamlit.selectbox(
         "Source Type",
         ["Kaggle", "CSV"],
@@ -33,7 +33,7 @@ def _load_dataset() -> Dataset | None:
         )
 
         if csv_files:
-            return _load_dataset_from_csv([file.name for file in csv_files])
+            return _source_dataset_from_csv([file.name for file in csv_files])
 
     if source_type == "Kaggle":
         kaggle_name = streamlit.text_input(
@@ -42,7 +42,7 @@ def _load_dataset() -> Dataset | None:
         )
 
         if kaggle_name:
-            return _load_dataset_from_kaggle(kaggle_name)
+            return _source_dataset_from_kaggle(kaggle_name)
 
     return None
 
@@ -50,7 +50,7 @@ def _load_dataset() -> Dataset | None:
 @streamlit.cache_resource(
     max_entries=1,
 )
-def _load_dataset_from_csv(
+def _source_dataset_from_csv(
     files: list[str],
 ) -> Dataset:
     return source.from_csv(files)
@@ -59,7 +59,7 @@ def _load_dataset_from_csv(
 @streamlit.cache_resource(
     max_entries=1,
 )
-def _load_dataset_from_kaggle(
+def _source_dataset_from_kaggle(
     name: str,
 ) -> Dataset:
     return source.from_kaggle(name)
