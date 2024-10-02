@@ -61,6 +61,7 @@ class Aggregate(Transform):
     ) -> Iterable[tuple[str, polars.Expr]]:
         aggregable_columns = table.schema.select(
             include={Attribute.numeric},
+            exclude={Attribute.pivotable, Attribute.primary_key},
         )
 
         yield "count(*)", polars.count()
