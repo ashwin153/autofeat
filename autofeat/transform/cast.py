@@ -54,7 +54,7 @@ class Cast(Transform):
 
             yield Table(
                 data=table.data.with_columns(**{c: e for c, (e, _) in casted_columns.items()}),
-                name=f"cast({table.name})",
+                name=table.name,
                 schema=schema,
             )
 

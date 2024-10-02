@@ -50,7 +50,7 @@ class Encode(Transform):
             if columns:
                 yield Table(
                     data=table.data.with_columns(**columns),
-                    name=f"encode({table.name})",
+                    name=table.name,
                     schema=table.schema | schema,
                 )
             else:
