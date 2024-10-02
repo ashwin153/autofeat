@@ -68,17 +68,18 @@ def train_model(
         on_change=lambda: _clear_state("prediction_method"),
     )
 
-    prediction_method = streamlit.selectbox(
-        "Prediction Method",
-        [method for method in PREDICTION_METHODS.values() if method.problem == problem],
-        key="prediction_method",
-    )
+    with streamlit.expander("Configure Methodology"):
+        prediction_method = streamlit.selectbox(
+            "Prediction Method",
+            [method for method in PREDICTION_METHODS.values() if method.problem == problem],
+            key="prediction_method",
+        )
 
-    selection_method = streamlit.selectbox(
-        "Selection Method",
-        SELECTION_METHODS.values(),
-        key="selection_method",
-    )
+        selection_method = streamlit.selectbox(
+            "Selection Method",
+            SELECTION_METHODS.values(),
+            key="selection_method",
+        )
 
     # todo: make this configurable
     transform = (
