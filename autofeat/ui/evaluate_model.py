@@ -109,7 +109,7 @@ def _regression_metrics(
     hash_funcs={TrainedModel: id},
     max_entries=1,
 )
-def _shap_explanation(
+def _shap_explanation(  # type: ignore[no-any-unimported]
     model: TrainedModel,
 ) -> shap.Explanation:
     shap_explainer = shap.Explainer(
