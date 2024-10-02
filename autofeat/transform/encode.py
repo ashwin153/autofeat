@@ -37,7 +37,7 @@ class Encode(Transform):
             for column in categorical_columns:
                 categories = next(all_categories).to_series()
 
-                # todo: known columns need to be cast to enum for this to work
+                # TODO: known columns need to be cast to enum for this to work
                 # if Attribute.textual in attributes:
                 #     columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
                 #     schema[column] = attributes | {Attribute.pivotable}
