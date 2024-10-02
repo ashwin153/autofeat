@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import polars
 import sklearn.model_selection
+import sklearn.preprocessing
 
 from autofeat.attribute import Attribute
 from autofeat.convert import IntoDataFrame, IntoSeries, into_data_frame, into_series
@@ -13,6 +14,7 @@ from autofeat.model import (
     PREDICTION_METHODS,
     SELECTION_METHODS,
     PredictionMethod,
+    PredictionProblem,
     SelectionMethod,
     TrainedModel,
 )
@@ -96,11 +98,15 @@ class Dataset:
         """
         # split features and target into training and test data
         X = self.features(known)
-        y = into_series(target)
+
+        y = into_series(target).to_numpy()
+        if prediction_method.problem == PredictionProblem.classification:
+            label_encoder = sklearn.preprocessing.LabelEncoder()
+            y = label_encoder.fit_transform(y)
 
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
             X.to_numpy(),
-            y.to_numpy(),
+            y,
         )
 
         # train a model that selects the most important features to a prediction
