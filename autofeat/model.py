@@ -239,7 +239,7 @@ class TrainedModel:
     X: polars.DataFrame
     X_test: numpy.ndarray
     X_train: numpy.ndarray
-    y: polars.Series
+    y: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
 
