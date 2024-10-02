@@ -107,13 +107,14 @@ def _apply_schema_changes(
     edited_tables = []
 
     for table, edited_schema in zip(dataset.tables, edited_schemas):
-        edited_table = Table(
-            data=table.data.select(edited_schema.keys()),
-            name=table.name,
-            schema=edited_schema,
-        )
+        if edited_schema:
+            edited_table = Table(
+                data=table.data.select(edited_schema.keys()),
+                name=table.name,
+                schema=edited_schema,
+            )
 
-        edited_tables.append(edited_table)
+            edited_tables.append(edited_table)
 
     return Dataset(edited_tables)
 
