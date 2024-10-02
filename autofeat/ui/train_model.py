@@ -92,14 +92,26 @@ def train_model(
         return None
 
     return _train_model(
-        dataset=dataset,
+        dataset=_apply_transform(dataset, transform),
         known_columns=tuple(known_columns),
         prediction_method=prediction_method,
         selection_method=selection_method,
         table=table,
         target_column=target_column,
-        transform=transform,
     )
+
+
+@streamlit.cache_resource(
+    hash_funcs={
+        Dataset: id,
+    },
+    max_entries=1,
+)
+def _apply_transform(
+    dataset: Dataset,
+    transform: Transform,
+) -> Dataset:
+    return dataset.apply(transform)
 
 
 @streamlit.cache_resource(
@@ -112,18 +124,14 @@ def train_model(
     max_entries=1,
 )
 def _train_model(
-    *,
     dataset: Dataset,
     known_columns: tuple[str, ...],
     prediction_method: PredictionMethod,
     selection_method: SelectionMethod,
     table: Table,
     target_column: str,
-    transform: Transform,
 ) -> TrainedModel:
-    inputs = dataset.apply(transform)
-
-    return inputs.train(
+    return dataset.train(
         known=table.data.select(known_columns),
         target=table.data.select(target_column),
         prediction_method=prediction_method,
