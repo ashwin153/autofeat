@@ -255,6 +255,26 @@ class TrainedModel:
         baseline_model.fit(self.X_train, self.y_train)
         return baseline_model
 
+    @functools.cached_property
+    def y_baseline(
+        self,
+    ) -> numpy.ndarray:
+        """Get the target variable predicted by the baseline model on the test data.
+
+        :return: Baseline output.
+        """
+        return self.baseline_model.predict(self.X_test)
+
+    @functools.cached_property
+    def y_predicted(
+        self,
+    ) -> numpy.ndarray:
+        """Get the target variable predicted by the prediction model on the test data.
+
+        :return: Predicted output.
+        """
+        return self.prediction_model.predict(self.X_test)
+
     def predict(
         self,
         known: IntoDataFrame,
