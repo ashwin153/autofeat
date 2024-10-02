@@ -14,21 +14,25 @@ def explore_dataset(
     """
     streamlit.header("Explore Dataset")
 
-    sample_size = streamlit.number_input(
-        "Sample Size",
-        min_value=1,
-        max_value=10000,
-        value=100,
-        step=50,
-    )
+    with streamlit.form("explore_dataset"):
+        sample_size = streamlit.number_input(
+            "Sample Size",
+            min_value=1,
+            max_value=10000,
+            value=100,
+            step=50,
+        )
 
-    for tab, sample in zip(
-        streamlit.tabs([table.name for table in dataset.tables]),
-        _load_samples(dataset, sample_size),
-    ):
-        with tab:
-            renderer = pygwalker.api.streamlit.StreamlitRenderer(sample)
-            renderer.explorer(default_tab="data")
+        load = streamlit.form_submit_button("Load")
+
+    if load:
+        for tab, sample in zip(
+            streamlit.tabs([table.name for table in dataset.tables]),
+            _load_samples(dataset, sample_size),
+        ):
+            with tab:
+                renderer = pygwalker.api.streamlit.StreamlitRenderer(sample)
+                renderer.explorer(default_tab="data")
 
 
 @streamlit.cache_data(
