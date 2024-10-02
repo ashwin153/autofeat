@@ -34,12 +34,13 @@ class Encode(Transform):
             columns = {}
             schema = Schema()
 
-            for column, attributes in categorical_columns.items():
+            for column in categorical_columns:
                 categories = next(all_categories).to_series()
 
-                if Attribute.textual in attributes:
-                    columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
-                    schema[column] = attributes | {Attribute.pivotable}
+                # todo: known columns need to be cast to enum for this to work
+                # if Attribute.textual in attributes:
+                #     columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
+                #     schema[column] = attributes | {Attribute.pivotable}
 
                 for category in categories:
                     dummy_variable = f"{column} == {category}"
