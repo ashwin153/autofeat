@@ -68,7 +68,7 @@ def _source_dataset_from_kaggle(
 def _edit_schemas(
     dataset: Dataset,
 ) -> Dataset:
-    with streamlit.expander("Edit Schemas"):
+    with streamlit.expander("Edit Schema"):
         edited_schemas: list[Schema] = []
 
         for tab, table in zip(

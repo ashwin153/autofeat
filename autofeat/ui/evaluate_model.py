@@ -25,19 +25,21 @@ def evaluate_model(
             with streamlit.expander(
                 f"✅ model is {improvement:.2f}% more accurate than always guessing the most frequent category",  # noqa: E501
             ):
-                streamlit.metric(
+                column1, column2, column3 = streamlit.columns(3)
+
+                column1.metric(
                     "Accuracy",
                     value=f"{metrics['accuracy']:.4f}",
                     delta=f"{_percent_change(baseline['accuracy'], metrics['accuracy']):.2f}%",
                 )
 
-                streamlit.metric(
+                column2.metric(
                     "Precision",
                     value=f"{metrics['precision']:.4f}",
                     delta=f"{_percent_change(baseline['precision'], metrics['precision']):.2f}%",
                 )
 
-                streamlit.metric(
+                column3.metric(
                     "Recall",
                     value=f"{metrics['recall']:.4f}",
                     delta=f"{_percent_change(baseline['recall'], metrics['recall']):.2f}%",
@@ -50,13 +52,15 @@ def evaluate_model(
             with streamlit.expander(
                 f"✅ model is {improvement:.2f}% more accurate than always guessing the mean",
             ):
-                streamlit.metric(
+                column1, column2 = streamlit.columns(2)
+
+                column1.metric(
                     "RMSE",
                     value=f"{metrics['rmse']:.4f}",
                     delta=f"{_percent_change(baseline['rmse'], metrics['rmse']):.2f}%",
                 )
 
-                streamlit.metric(
+                column2.metric(
                     "R2",
                     value=f"{metrics['r2']:.4f}",
                     delta=f"{_percent_change(baseline['r2'], metrics['r2']):.2f}%",
