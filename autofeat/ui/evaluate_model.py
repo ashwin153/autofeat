@@ -23,7 +23,7 @@ def evaluate_model(
             improvement = _percent_change(baseline["accuracy"], metrics["accuracy"])
 
             with streamlit.expander(
-                f"✅ model is {improvement:.2f}% more accurate than random guessing",
+                f"✅ model is {improvement:.2f}% more accurate than always guessing the most frequent category",  # noqa: E501
             ):
                 streamlit.metric(
                     "Accuracy",
@@ -48,12 +48,12 @@ def evaluate_model(
             improvement = -_percent_change(baseline["rmse"], metrics["rmse"])
 
             with streamlit.expander(
-                f"✅ model is {improvement:.2f}% more accurate than linear regression",
+                f"✅ model is {improvement:.2f}% more accurate than always guessing the mean",
             ):
                 streamlit.metric(
                     "RMSE",
                     value=f"{metrics['rmse']:.4f}",
-                    delta=f"{_percent_change(baseline['accuracy'], metrics['accuracy']):.2f}%",
+                    delta=f"{_percent_change(baseline['rmse'], metrics['rmse']):.2f}%",
                 )
 
                 streamlit.metric(
@@ -63,6 +63,7 @@ def evaluate_model(
                 )
         case _:
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+
 
     streamlit.altair_chart(
         (
@@ -108,16 +109,34 @@ def _regression_metrics(
     hash_funcs={TrainedModel: id},
     max_entries=1,
 )
+def _shap_explanation(
+    model: TrainedModel,
+) -> shap.Explanation:
+    shap_explainer = shap.Explainer(
+        model.prediction_model,
+        feature_names=model.X.columns,
+    )
+
+    return shap_explainer(model.X_test)
+
+
+@streamlit.cache_data(
+    hash_funcs={TrainedModel: id},
+    max_entries=1,
+)
 def _feature_importance(
     model: TrainedModel,
 ) -> pandas.DataFrame:
-    shap_explainer = shap.Explainer(model.prediction_model)
-    shap_explanation = shap_explainer(model.X_test)
+    importance = (
+        numpy.abs(_shap_explanation(model).values).mean((0, 2))
+        if model.prediction_method.problem == PredictionProblem.classification
+        else numpy.abs(_shap_explanation(model).values).mean(0)
+    )
 
     return pandas.DataFrame(
         {
             "Feature": model.X.columns,
-            "Importance": numpy.abs(shap_explanation.values).mean(0),
+            "Importance": importance,
         },
     )
 
