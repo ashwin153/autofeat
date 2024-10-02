@@ -96,7 +96,7 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # split features and target into training and test data
+        # split input and target variables into training and test data
         X = self.features(known)
 
         y = into_series(target).to_numpy()
