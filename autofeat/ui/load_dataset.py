@@ -79,14 +79,12 @@ def _edit_schemas(
                 if streamlit.toggle("Redacted", key=table.name):
                     edited_schemas.append(Schema())
                 else:
-                    edited_rows = streamlit.data_editor(
+                    edited_schema = streamlit.data_editor(
                         _convert_schema_into_rows(table.schema),
                         hide_index=True,
                     )
 
-                    edited_schema = _convert_rows_into_schema(edited_rows)
-
-                    edited_schemas.append(edited_schema)
+                    edited_schemas.append(_convert_rows_into_schema(edited_schema))
 
         return _apply_schema_changes(dataset, edited_schemas)
 

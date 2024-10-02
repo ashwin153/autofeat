@@ -26,6 +26,10 @@ if TYPE_CHECKING:
     from autofeat.transform.base import Transform
 
 
+# Delimiter used to separate column and table names in feature names.
+_SEPARATOR = " :: "
+
+
 @dataclasses.dataclass(frozen=True)
 class Dataset:
     """A collection of tables.
@@ -68,7 +72,7 @@ class Dataset:
                 .lazy()
                 .join(table.data, on=list(primary_key), how="left")
                 .select(polars.selectors.boolean() | polars.selectors.numeric())
-                .select(polars.all().name.suffix(f"::{table.name}"))
+                .select(polars.all().name.suffix(f"{_SEPARATOR}{table.name}"))
             )
             for table in self.tables
             if (primary_key := set(table.schema.select(include={Attribute.primary_key})))
@@ -123,7 +127,7 @@ class Dataset:
 
         selected_columns = collections.defaultdict(set)
         for selected_feature in selected_features:
-            column, table = selected_feature.split("::", 1)
+            column, table = selected_feature.split(_SEPARATOR, 1)
             selected_columns[table].add(column)
 
         X_train = selection_model.transform(X_train)
