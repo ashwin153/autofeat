@@ -70,7 +70,7 @@ class PredictionProblem(enum.Enum):
             case PredictionProblem.classification:
                 return PREDICTION_METHODS["most_frequent"]
             case PredictionProblem.regression:
-                return PREDICTION_METHODS["linear_regression"]
+                return PREDICTION_METHODS["mean"]
             case _:
                 raise NotImplementedError(f"{self} is not supported")
 
@@ -128,6 +128,11 @@ PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
     "linear_regression": PredictionMethod(
         model=sklearn.linear_model.LinearRegression,
         name="Linear Regression",
+        problem=PredictionProblem.regression,
+    ),
+    "mean": PredictionMethod(
+        model=lambda: sklearn.dummy.DummyRegressor(strategy="mean"),  # pyright: ignore[reportArgumentType]
+        name="Mean",
         problem=PredictionProblem.regression,
     ),
     "most_frequent": PredictionMethod(
