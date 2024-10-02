@@ -69,7 +69,7 @@ def evaluate_model(
         (
             altair.Chart(_feature_importance(model))
             .mark_bar()
-            .configure_axis(labelLimit=300)
+            .configure_axis(labelLimit=500)
             .encode(y=altair.Y("Feature:N", sort="-x"), x=altair.X("Importance:Q"))
         ),
         use_container_width=True,
@@ -127,10 +127,12 @@ def _shap_explanation(  # type: ignore[no-any-unimported]
 def _feature_importance(
     model: TrainedModel,
 ) -> pandas.DataFrame:
+    shap_explanation = _shap_explanation(model)
+
     importance = (
-        numpy.abs(_shap_explanation(model).values).mean((0, 2))
-        if model.prediction_method.problem == PredictionProblem.classification
-        else numpy.abs(_shap_explanation(model).values).mean(0)
+        numpy.abs(shap_explanation.values).mean((0, 2))
+        if len(shap_explanation.shape) == 3
+        else numpy.abs(shap_explanation.values).mean(0)
     )
 
     return pandas.DataFrame(
