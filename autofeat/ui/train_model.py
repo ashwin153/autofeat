@@ -36,7 +36,7 @@ def train_model(
 
     target_column = streamlit.selectbox(
         "Target Column",
-        table.schema,
+        table.schema.select(include={Attribute.not_null}),
         index=None,
         key="target_column",
         on_change=lambda: _clear_state("known_columns", "problem"),
