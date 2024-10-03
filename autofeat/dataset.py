@@ -83,7 +83,6 @@ class Dataset:
                     .select(polars.all().name.suffix(f"{_SEPARATOR}{table.name}")),
                 )
 
-
         return polars.concat(
             polars.collect_all(features, streaming=True),
             how="horizontal",

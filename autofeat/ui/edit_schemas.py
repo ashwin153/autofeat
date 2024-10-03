@@ -1,4 +1,3 @@
-import dataclasses
 from typing import cast
 
 import streamlit
@@ -33,8 +32,8 @@ def edit_schemas(
                     ])
 
                     edited_columns = [
-                        dataclasses.replace(
-                            table.columns[i],
+                        Column(
+                            name=value["column"],
                             attributes={
                                 attribute
                                 for attribute in Attribute
