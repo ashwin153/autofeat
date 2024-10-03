@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, cast
 
 import streamlit
@@ -28,19 +29,19 @@ def edit_schemas(
                                 for attribute in Attribute
                             },
                         }
-                        for column in sorted(table.columns, key=lambda x: x.name)
+                        for column in table.columns
                     ])
 
                     edited_columns = [
-                        Column(
-                            name=value["column"],
+                        dataclasses.replace(
+                            table.columns[i],
                             attributes={
                                 attribute
                                 for attribute in Attribute
                                 if value[attribute.name]
                             },
                         )
-                        for value in edited_values
+                        for i, value in enumerate(edited_values)
                         if not value["redacted"]
                     ]
 
