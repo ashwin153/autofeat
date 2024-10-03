@@ -79,7 +79,7 @@ class Cast(Transform):
         casts = [
             (column.expr.str.to_date("%Y-%m-%d"), {Attribute.temporal}),
             (column.expr.str.to_datetime(), {Attribute.temporal}),
-            (column.expr.str.to_time("%Y-%m-%d"), {Attribute.temporal}),
+            (column.expr.str.to_time(), {Attribute.temporal}),
         ]
 
         for expr, attributes in casts:
