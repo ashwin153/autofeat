@@ -1,6 +1,7 @@
 import contextlib
 import os
 import pathlib
+import re
 import shutil
 import zipfile
 
@@ -9,9 +10,8 @@ from autofeat.source.from_csv import from_csv
 
 DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 
-
 def from_kaggle(
-    name: str,
+    name_or_url: str,
     *,
     cache: pathlib.Path = DEFAULT_CACHE,
 ) -> Dataset:
@@ -42,12 +42,18 @@ def from_kaggle(
             echo '{"username":"$USER", "key":"$KEY"}' >~/.config/kaggle/kaggle.json
             chmod 600 ~/.config/kaggle/kaggle.json
 
-    :param name: Name of the competition or dataset.
+    :param name_or_url: Name of the competition or dataset or Kaggle URL to extract it from.
     :param cache: Path where data is locally cached.
     :return: Dataset.
     """
-    path = cache / "data" / name
+    if match := re.match(r"^.*kaggle\.com/competitions/([^\/\?\#]+).*$", name_or_url):
+        name = match.group(1)
+    elif match := re.match(r"^.*kaggle\.com/datasets/([^\/]+/[^\/\?\#]+).*$", name_or_url):
+        name = match.group(1)
+    else:
+        name = name_or_url
 
+    path = cache / "data" / name
     path.mkdir(parents=True, exist_ok=True)
 
     if not any(path.iterdir()):
