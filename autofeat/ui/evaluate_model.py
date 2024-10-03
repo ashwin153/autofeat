@@ -70,7 +70,7 @@ def evaluate_model(
 
 @streamlit.fragment
 def _create_feature_charts(
-        model: TrainedModel,
+    model: TrainedModel,
 ) -> None:
 
     #generate feature importances and sort them in descending order
@@ -116,7 +116,7 @@ def _create_feature_charts(
     hash_funcs={TrainedModel: id},
     max_entries=1,
 )
-def _create_classification_feature_chart(
+def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
     feature: str,
 ) -> go.Figure:
@@ -168,7 +168,7 @@ def _create_classification_feature_chart(
     hash_funcs={TrainedModel: id},
     max_entries=1,
 )
-def _create_regression_feature_chart(
+def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
     feature: str,
 ) -> go.Figure:
@@ -318,7 +318,10 @@ def _percent_change(
 
 
 
-def _clean_data(x, y):
+def _clean_data(
+    x: Any,
+    y: Any,
+) -> tuple[numpy.ndarray, numpy.ndarray]:
     # Convert to numpy arrays if they aren't already
     x = numpy.array(x)
     y = numpy.array(y)
