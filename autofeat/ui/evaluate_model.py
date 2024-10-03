@@ -99,20 +99,41 @@ def _create_feature_charts(
         yaxis={"autorange": "reversed"},
     )
 
-    # Display the chart, with clickable event (which we can use to do dynamic things in the future)
     streamlit.plotly_chart(fig, use_container_width=True)
+    ordered_list = feature_importance["Feature"].tolist()
 
-    for feature in feature_importance["Feature"]:
-        with streamlit.expander(f"Feature Analysis: {feature}"):
+    with streamlit.form("feature_selection_form"):
+        # Create a dropdown for feature selection
+        selected_feature = streamlit.selectbox(
+            "Select a feature to analyze:",
+            ordered_list,
+        )
+
+        submit_button = streamlit.form_submit_button("Show Chart")
+
+        fig = go.Figure()
+
+        if submit_button:
+            # Create the corresponding chart based on the selected feature
             match model.prediction_method.problem:
                 case PredictionProblem.classification:
-                    chart = _create_classification_feature_chart(model, feature)
-                    streamlit.plotly_chart(chart, use_container_width=True)
+                    fig = _create_classification_feature_chart(model, selected_feature)
+                    streamlit.plotly_chart(fig, use_container_width=True)
                 case PredictionProblem.regression:
-                    chart = _create_regression_feature_chart(model, feature)
-                    streamlit.plotly_chart(chart, use_container_width=True)
+                    fig = _create_regression_feature_chart(model, selected_feature)
+                    streamlit.plotly_chart(fig, use_container_width=True)
+                case _:
+                    raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
 
 
+@streamlit.cache_data(
+    hash_funcs={TrainedModel: id},
+    max_entries=1,
+)
+def feature_selection_form(
+    model: TrainedModel,
+) -> None:
+    return
 
 @streamlit.cache_data(
     hash_funcs={TrainedModel: id},
