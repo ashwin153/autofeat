@@ -111,7 +111,7 @@ def _train_model(
     table: Table,
     target_column: Column,
 ) -> TrainedModel:
-    related_columns={
+    related_columns = {
         table.name: {
             column.name
             for column in table.columns
