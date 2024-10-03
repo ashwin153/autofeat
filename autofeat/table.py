@@ -13,11 +13,11 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Column:
-    """
+    """A column in a table.
 
-    :param attributes:
-    :param derived_from:
-    :param name:
+    :param attributes: Metadata associated with this column.
+    :param derived_from: Columns that this column was derived from.
+    :param name: Unique name of the column within the table.
     """
 
     attributes: set[Attribute] = dataclasses.field(default_factory=set)
@@ -33,9 +33,9 @@ class Column:
     def expr(
         self,
     ) -> polars.Expr:
-        """
+        """Convert this column to a Polars expression.
 
-        :return:
+        :return: Polars expression.
         """
         return polars.col(self.name)
 
@@ -47,7 +47,7 @@ class Column:
         """Whether or not the columns are derived from a common ancestor.
 
         :param other: Other column.
-        :return: Whether or not the columns share a common ancestor.
+        :return: Has common ancestor.
         """
         return not self._ancestors.isdisjoint(other._ancestors)
 
@@ -66,9 +66,9 @@ class Column:
 class Table:
     """A lazily-loaded data table.
 
+    :param columns: Columns in this table.
     :param data: Contents of this table.
     :param name: Name of this table.
-    :param schema: Structure of this table.
     """
 
     columns: list[Column]
@@ -83,25 +83,25 @@ class Table:
     def column(
         self,
         name: str,
-    ) -> Column | None:
-        """
+    ) -> Column:
+        """Get the column with the corresponding ``name``.
 
-        :param name:
-        :return:
+        :param name: Name of the column.
+        :return: Corresponding column.
         """
         for column in self.columns:
             if column.name == name:
                 return column
 
-        return None
+        raise ValueError(f"column {name} does not exist")
 
     def select(
         self,
         columns: list[Column],
     ) -> Table:
-        """
+        """Project the ``columns`` from this table.
 
-        :return:
+        :return: Projected table.
         """
         return Table(
             columns=columns,
