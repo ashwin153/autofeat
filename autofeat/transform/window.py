@@ -2,8 +2,6 @@ import dataclasses
 import datetime
 from collections.abc import Iterable
 
-import polars
-
 from autofeat.attribute import Attribute
 from autofeat.table import Table
 from autofeat.transform import Transform
@@ -25,10 +23,16 @@ class Window(Transform):
         now = datetime.datetime.now(datetime.UTC)
 
         for table in tables:
+            temporal_columns = [
+                column
+                for column in table.columns
+                if Attribute.temporal in column.attributes
+            ]
+
             for period in self.periods:
-                for column in table.schema.select(include={Attribute.temporal}):
+                for temporal_column in temporal_columns:
                     yield Table(
-                        data=table.data.filter(polars.col(column) >= now - period),
+                        data=table.data.filter(temporal_column.expr >= now - period),
                         name=f"window({table.name}, {period})",
-                        schema=table.schema,
+                        columns=table.columns,
                     )

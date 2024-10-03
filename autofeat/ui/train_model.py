@@ -1,5 +1,3 @@
-import re
-
 import streamlit
 
 from autofeat.attribute import Attribute
@@ -112,13 +110,15 @@ def _train_model(
     table: Table,
     target_column: str,
 ) -> TrainedModel:
+    table.column(target_column)
+
     input_dataset = dataset.apply(
         Drop(
             columns={
                 table.name: {
                     column
-                    for column in table.schema
-                    if _derived_from(column) & _derived_from(target_column)
+                    for column in table.columns
+                    if column.is_related(target_column)
                 }
                 for table in dataset.tables
             },
@@ -139,13 +139,3 @@ def _clear_state(
     for key in keys:
         if key in streamlit.session_state:
             del streamlit.session_state[key]
-
-
-@streamlit.cache_data
-def _derived_from(
-    column: str,
-) -> set[str]:
-    return {
-        ancestor.split(" == ", 1)[0]
-        for ancestor in re.findall(r"\(([^\(]+?)\)", column) or [column]
-    }

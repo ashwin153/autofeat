@@ -1,7 +1,6 @@
 import dataclasses
 from collections.abc import Collection, Iterable, Mapping
 
-from autofeat.schema import Schema
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
@@ -29,15 +28,11 @@ class Drop(Transform):
                     else set()
                 )
 
-                schema = Schema({
-                    column: attributes
-                    for column, attributes in table.schema.items()
-                    if column not in dropped
-                })
+                columns = [
+                    column
+                    for column in table.columns
+                    if column.name not in dropped
+                ]
 
-                if schema:
-                    yield Table(
-                        data=table.data.select(schema.keys()),
-                        name=table.name,
-                        schema=schema,
-                    )
+                if columns:
+                    yield table.select(columns)

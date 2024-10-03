@@ -42,9 +42,9 @@ class Filter(Transform):
 
             if predicates:
                 yield Table(
+                    columns=table.columns,
                     data=table.data.filter(predicates),
                     name=table.name,
-                    schema=table.schema,
                 )
 
     def _as_of_predicates(
@@ -52,41 +52,42 @@ class Filter(Transform):
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.as_of:
-            for column in table.schema.select(include={Attribute.temporal}):
-                yield polars.col(column) < self.as_of
+            for column in table.columns:
+                if Attribute.temporal in column.attributes:
+                    yield column.expr < self.as_of
 
     def _eq_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.eq:
-            for column, value in self.eq.items():
-                if column in table.schema:
-                    yield polars.col(column).eq(value)
+            for column in table.columns:
+                if value := self.eq.get(column.name):
+                    yield column.expr.eq(value)
 
     def _gt_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.gt:
-            for column, value in self.gt.items():
-                if column in table.schema:
-                    yield polars.col(column).gt(value)
+            for column in table.columns:
+                if value := self.gt.get(column.name):
+                    yield column.expr.gt(value)
 
     def _is_in_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.is_in:
-            for column, values in self.is_in.items():
-                if column in table.schema:
-                    yield polars.col(column).is_in(values)
+            for column in table.columns:
+                if values := self.is_in.get(column.name):
+                    yield column.expr.is_in(values)
 
     def _lt_predicates(
         self,
         table: Table,
     ) -> Iterable[polars.Expr]:
         if self.lt:
-            for column, value in self.lt.items():
-                if column in table.schema:
-                    yield polars.col(column).lt(value)
+            for column in table.columns:
+                if value := self.lt.get(column.name):
+                    yield column.expr.lt(value)

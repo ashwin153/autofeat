@@ -4,8 +4,8 @@ from collections.abc import Iterable
 import polars
 
 from autofeat.attribute import Attribute
-from autofeat.schema import Schema
-from autofeat.table import Table
+from autofeat.convert import into_exprs, into_named_exprs
+from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 # Number of rows to test casts on.
@@ -25,68 +25,75 @@ class Cast(Transform):
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        castable = [
-            (
-                table,
-                table.schema.select(include={Attribute.textual, Attribute.not_null}),
-            )
-            for table in tables
-        ]
+        tables = list(tables)
 
         samples = polars.collect_all([
             (
                 table.data
-                .select(columns)
+                .select(**into_named_exprs(self._castable_columns(table)))
                 .head(SAMPLE_SIZE)
             )
-            for table, columns in castable
+            for table in tables
         ])
 
-        for (table, columns), sample in zip(castable, samples):
-            casted_columns = {
-                column: cast
-                for column in columns
-                if (cast := self._cast(sample, column))
-            }
+        for table, sample in zip(tables, samples):
+            casts = [
+                self._cast(table, sample, column)
+                for column in self._castable_columns(table)
+            ]
 
-            schema = Schema({
-                **table.schema,
-                **{c: a for c, (_, a) in casted_columns.items()},
-            })
+            extra_columns = [
+                column
+                for column in table.columns
+                if all(column.name != casted_column.name for casted_column, _ in casts)
+            ]
+
+            columns = [
+                *extra_columns,
+                *[column for column, _ in casts],
+            ]
 
             yield Table(
-                data=table.data.with_columns(**{c: e for c, (e, _) in casted_columns.items()}),
+                data=table.data.select(*into_exprs(extra_columns), **into_named_exprs(casts)),
                 name=table.name,
-                schema=schema,
+                columns=columns,
             )
+
+    def _castable_columns(
+        self,
+        table: Table,
+    ) -> list[Column]:
+        return [
+            column
+            for column in table.columns
+            if Attribute.textual in column.attributes
+            if Attribute.not_null in column.attributes
+        ]
 
     def _cast(
         self,
+        table: Table,
         sample: polars.DataFrame,
-        column: str,
-    ) -> tuple[polars.Expr, set[Attribute]] | None:
-        to_date = polars.col(column).str.to_date("%Y-%m-%d")
-        try:
-            sample.select(to_date)
-        except polars.exceptions.PolarsError:
-            pass
-        else:
-            return to_date, {Attribute.temporal}
+        column: Column,
+    ) -> tuple[Column, polars.Expr]:
+        casts = [
+            (column.expr.str.to_date("%Y-%m-%d"), {Attribute.temporal}),
+            (column.expr.str.to_datetime(), {Attribute.temporal}),
+            (column.expr.str.to_time("%Y-%m-%d"), {Attribute.temporal}),
+        ]
 
-        to_datetime = polars.col(column).str.to_datetime()
-        try:
-            sample.select(to_datetime)
-        except polars.exceptions.PolarsError:
-            pass
-        else:
-            return to_datetime, {Attribute.temporal}
+        for expr, attributes in casts:
+            try:
+                sample.select(expr)
+            except polars.exceptions.PolarsError:
+                pass
+            else:
+                column = Column(
+                    name=column.name,
+                    attributes=attributes,
+                    derived_from=[(column, table)],
+                )
 
-        to_time = polars.col(column).str.to_time()
-        try:
-            sample.select(to_time)
-        except polars.exceptions.PolarsError:
-            pass
-        else:
-            return to_time, {Attribute.temporal}
+                return column, expr
 
-        return None
+        return column, column.expr
