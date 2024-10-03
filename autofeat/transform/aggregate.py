@@ -14,9 +14,11 @@ from autofeat.transform.base import Transform
 class Aggregate(Transform):
     """Group by a set of columns and aggregate the remaining columns in various ways.
 
+    :param allowed_pivots: Columns that are allowed to be pivoted.
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
     """
 
+    allowed_pivots: set[str] | None = None
     max_pivots: int = 1
 
     def apply(
@@ -52,8 +54,14 @@ class Aggregate(Transform):
             exclude={Attribute.primary_key},
         )
 
+        pivots = (
+            self.allowed_pivots & pivotable_columns.keys()
+            if self.allowed_pivots
+            else pivotable_columns.keys()
+        )
+
         for count in range(1, self.max_pivots + 1):
-            yield from itertools.combinations(pivotable_columns, count)
+            yield from itertools.combinations(pivots, count)
 
     def _aggregations(
         self,
