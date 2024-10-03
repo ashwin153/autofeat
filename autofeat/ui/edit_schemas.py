@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Any, cast
 
 import streamlit
 
@@ -19,7 +19,7 @@ def edit_schemas(
                 if streamlit.toggle("Redacted", key=table.name):
                     edited_schemas.append([])
                 else:
-                    edited_values = streamlit.data_editor([
+                    edited_values: list[dict[str, Any]] = streamlit.data_editor([
                         {
                             "column": column.name,
                             "redacted": False,
