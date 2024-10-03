@@ -33,7 +33,7 @@ def edit_schemas(
 
                     edited_columns = [
                         Column(
-                            name=value["column"],
+                            name=table.columns[i].name,
                             attributes={
                                 attribute
                                 for attribute in Attribute
