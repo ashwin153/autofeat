@@ -18,7 +18,10 @@ class Encode(Transform):
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         all_tables = [
-            (table, table.schema.select(include={Attribute.categorical}))
+            (
+                table,
+                table.schema.select(include={Attribute.categorical}),
+            )
             for table in tables
         ]
 
@@ -34,18 +37,17 @@ class Encode(Transform):
             columns = {}
             schema = Schema()
 
-            for column in categorical_columns:
+            for column, attributes in categorical_columns.items():
                 categories = next(all_categories).to_series()
 
-                # TODO: known columns need to be cast to enum for this to work
-                # if Attribute.textual in attributes:
-                #     columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
-                #     schema[column] = attributes | {Attribute.pivotable}
+                if Attribute.textual in attributes:
+                    columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
+                    schema[column] = attributes | {Attribute.pivotable}
 
                 for category in categories:
                     dummy_variable = f"{column} == {category}"
                     columns[dummy_variable] = polars.col(column) == category
-                    schema[dummy_variable] = {Attribute.boolean, Attribute.pivotable}
+                    schema[dummy_variable] = {Attribute.boolean, Attribute.not_null}
 
             if columns:
                 yield Table(

@@ -12,8 +12,6 @@ def explore_dataset(
 
     :param dataset: Dataset to explore.
     """
-    streamlit.header("Explore Dataset")
-
     with streamlit.form("explore_dataset"):
         sample_size = streamlit.number_input(
             "Sample Size",
@@ -36,7 +34,9 @@ def explore_dataset(
 
 
 @streamlit.cache_data(
-    hash_funcs={Dataset: id},
+    hash_funcs={
+        Dataset: id,
+    },
     max_entries=1,
 )
 def _load_samples(

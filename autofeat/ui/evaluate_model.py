@@ -14,8 +14,6 @@ from autofeat.model import PredictionProblem, TrainedModel
 def evaluate_model(
     model: TrainedModel,
 ) -> None:
-    streamlit.header("Evaluate Model")
-
     match model.prediction_method.problem:
         case PredictionProblem.classification:
             metrics = _classification_metrics(model.y_test, model.y_predicted)
