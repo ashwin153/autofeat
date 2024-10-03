@@ -68,7 +68,7 @@ class PredictionProblem(enum.Enum):
         """
         match self:
             case PredictionProblem.classification:
-                return PREDICTION_METHODS["most_frequent"]
+                return PREDICTION_METHODS["random_guess"]
             case PredictionProblem.regression:
                 return PREDICTION_METHODS["mean"]
             case _:
@@ -202,7 +202,7 @@ class SelectionMethod(Generic[AnySelectionModel]):
 SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
     "feature_importance": SelectionMethod(
         mask=lambda model: model.get_support(),
-        model=sklearn.feature_selection.SelectFromModel,
+        model=lambda model: sklearn.feature_selection.SelectFromModel(model, max_features=50),
         name="Feature Importance",
     ),
     "recursive_feature_elimination": SelectionMethod(
