@@ -22,32 +22,35 @@ def train_model(
     :param dataset: Dataset to load features from.
     """
     table = streamlit.selectbox(
-        "Table",
-        dataset.tables,
+        help="Table that contains your training data",
         index=None,
         key="table",
+        label="Table",
         on_change=lambda: _clear_state("target_column"),
+        options=dataset.tables,
     )
 
     if not table:
         return None
 
     target_column = streamlit.selectbox(
-        "Target Column",
-        [column for column in table.columns if Attribute.not_null in column.attributes],
+        help="Column that you are trying to predict",
         index=None,
         key="target_column",
+        label="Target Column",
         on_change=lambda: _clear_state("known_columns", "problem"),
+        options=[column for column in table.columns if Attribute.not_null in column.attributes],
     )
 
     if not target_column:
         return None
 
     known_columns = streamlit.multiselect(
-        "Known Columns",
-        [column for column in table.columns if column.name != target_column],
-        [column for column in table.columns if Attribute.primary_key in column.attributes],
+        default=[column for column in table.columns if Attribute.primary_key in column.attributes],
+        help="Columns that are known at the time of prediction",
         key="known_columns",
+        label="Known Columns",
+        options=[column for column in table.columns if column.name != target_column],
     )
 
     if not known_columns:
@@ -60,24 +63,27 @@ def train_model(
     )
 
     problem = streamlit.selectbox(
-        "Problem",
-        list(PredictionProblem),
+        help="Whether the target variable is categorical (classification) or numeric (regression)",
         index=default_problem.value - 1,
         key="problem",
+        label="Problem",
         on_change=lambda: _clear_state("prediction_method"),
+        options=list(PredictionProblem),
     )
 
     with streamlit.expander("Configure Methodology"):
         prediction_method = streamlit.selectbox(
-            "Prediction Method",
-            [method for method in PREDICTION_METHODS.values() if method.problem == problem],
+            help="Method of predicting the target variable given the input features",
             key="prediction_method",
+            label="Prediction Method",
+            options=[method for method in PREDICTION_METHODS.values() if method.problem == problem],
         )
 
         selection_method = streamlit.selectbox(
-            "Selection Method",
-            SELECTION_METHODS.values(),
+            help="Method of selecting the most important features to the prediction model",
             key="selection_method",
+            label="Selection Method",
+            options=SELECTION_METHODS.values(),
         )
 
     if not streamlit.button("Train Model"):

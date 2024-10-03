@@ -12,14 +12,14 @@ def load_dataset(
     :return: Loaded dataset.
     """
     source_type = streamlit.selectbox(
-        "Source Type",
-        ["Kaggle", "CSV"],
+        label="Source Type",
+        options=["Kaggle", "CSV"],
     )
 
     if source_type == "CSV":
         csv_files = streamlit.file_uploader(
-            "Upload Files",
             accept_multiple_files=True,
+            label="Upload Files",
             type="csv",
         )
 
@@ -28,7 +28,7 @@ def load_dataset(
 
     if source_type == "Kaggle":
         kaggle_name = streamlit.text_input(
-            "Dataset / Competition",
+            label="Dataset / Competition",
             placeholder="house-prices-advanced-regression-techniques",
         )
 

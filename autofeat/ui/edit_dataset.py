@@ -5,10 +5,10 @@ import streamlit
 from autofeat import Attribute, Column, Dataset
 
 
-def edit_schemas(
+def edit_dataset(
     dataset: Dataset,
 ) -> Dataset:
-    with streamlit.expander("Edit Schemas"):
+    with streamlit.expander("Edit Dataset"):
         edited_schemas: list[list[Column]] = []
 
         for tab, table in zip(
