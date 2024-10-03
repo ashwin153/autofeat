@@ -33,7 +33,7 @@ def test_apply(
     expected: list[polars.DataFrame],
 ) -> None:
     tables = [
-        Table(data=df, name=str(i), schema=convert.into_columns(df))
+        Table(data=df, name=str(i), columns=convert.into_columns(df))
         for i, df in enumerate(given)
     ]
 
