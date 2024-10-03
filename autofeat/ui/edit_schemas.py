@@ -33,15 +33,14 @@ def edit_schemas(
 
                     edited_columns = [
                         Column(
-                            name=table.columns[i].name,
+                            name=value["column"],
                             attributes={
                                 attribute
                                 for attribute in Attribute
                                 if value[attribute.name]
                             },
-                            derived_from=[(table.columns[i], table)],
                         )
-                        for i, value in enumerate(edited_values)
+                        for value in edited_values
                         if not value["redacted"]
                     ]
 
