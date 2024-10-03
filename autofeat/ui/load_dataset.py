@@ -1,8 +1,7 @@
-from typing import Any, cast
-
 import streamlit
 
-from autofeat import Attribute, Dataset, Schema, Table, source
+from autofeat import Dataset, source
+from autofeat.transform import Cast, Encode
 
 
 def load_dataset(
@@ -12,15 +11,6 @@ def load_dataset(
 
     :return: Loaded dataset.
     """
-    streamlit.header("Load Dataset")
-
-    if dataset := _source_dataset():
-        return _edit_schemas(dataset)
-
-    return None
-
-
-def _source_dataset() -> Dataset | None:
     source_type = streamlit.selectbox(
         "Source Type",
         ["Kaggle", "CSV"],
@@ -30,6 +20,7 @@ def _source_dataset() -> Dataset | None:
         csv_files = streamlit.file_uploader(
             "Upload Files",
             accept_multiple_files=True,
+            type="csv",
         )
 
         if csv_files:
@@ -53,7 +44,7 @@ def _source_dataset() -> Dataset | None:
 def _source_dataset_from_csv(
     files: list[str],
 ) -> Dataset:
-    return source.from_csv(files)
+    return _clean_dataset(source.from_csv(files))
 
 
 @streamlit.cache_resource(
@@ -62,101 +53,10 @@ def _source_dataset_from_csv(
 def _source_dataset_from_kaggle(
     name: str,
 ) -> Dataset:
-    return source.from_kaggle(name)
+    return _clean_dataset(source.from_kaggle(name))
 
 
-def _edit_schemas(
+def _clean_dataset(
     dataset: Dataset,
 ) -> Dataset:
-    with streamlit.expander("Edit Schema"):
-        edited_schemas: list[Schema] = []
-
-        for tab, table in zip(
-            streamlit.tabs([table.name for table in dataset.tables]),
-            dataset.tables,
-        ):
-            with tab:
-                if streamlit.toggle("Redacted", key=table.name):
-                    edited_schemas.append(Schema())
-                else:
-                    edited_schema = streamlit.data_editor(
-                        _convert_schema_into_rows(table.schema),
-                        hide_index=True,
-                    )
-
-                    edited_schemas.append(_convert_rows_into_schema(edited_schema))
-
-        return _apply_schema_changes(dataset, edited_schemas)
-
-
-@streamlit.cache_resource(
-    hash_funcs={
-        Dataset: id,
-        list: lambda schemas: tuple(
-            (column, attribute)
-            for schema in cast(list, schemas)
-            for column, attributes in schema.items()
-            for attribute in sorted(attribute.name for attribute in attributes)
-        ),
-    },
-    max_entries=1,
-)
-def _apply_schema_changes(
-    dataset: Dataset,
-    edited_schemas: list[Schema],
-) -> Dataset:
-    edited_tables = []
-
-    for table, edited_schema in zip(dataset.tables, edited_schemas):
-        if edited_schema:
-            edited_table = Table(
-                data=table.data.select(edited_schema.keys()),
-                name=table.name,
-                schema=edited_schema,
-            )
-
-            edited_tables.append(edited_table)
-
-    return Dataset(edited_tables)
-
-
-@streamlit.cache_resource(
-    hash_funcs={
-        Schema: id,
-    },
-    max_entries=1,
-)
-def _convert_schema_into_rows(
-    schema: Schema,
-) -> list[dict[str, Any]]:
-    return [
-        {
-            "column": column,
-            "redacted": False,
-            **{
-                attribute.name: attribute in schema[column]
-                for attribute in Attribute
-            },
-        }
-        for column in sorted(schema)
-    ]
-
-
-@streamlit.cache_resource(
-    hash_funcs={
-        list: id,
-    },
-    max_entries=1,
-)
-def _convert_rows_into_schema(
-    rows: list[dict[str, Any]],
-) -> Schema:
-    return Schema({
-        cast(str, row["column"]): {
-            attribute
-            for attribute in Attribute
-            if row[attribute.name]
-        }
-        for row in rows
-        if not row["redacted"]
-    })
+    return dataset.apply(Cast().then(Encode()))

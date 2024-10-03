@@ -1,3 +1,5 @@
+import re
+
 import streamlit
 
 from autofeat.attribute import Attribute
@@ -11,7 +13,7 @@ from autofeat.model import (
     TrainedModel,
 )
 from autofeat.table import Table
-from autofeat.transform import Aggregate, Cast, Drop, Encode, Identity, Transform
+from autofeat.transform import Drop
 
 
 def train_model(
@@ -21,8 +23,6 @@ def train_model(
 
     :param dataset: Dataset to load features from.
     """
-    streamlit.header("Train Model")
-
     table = streamlit.selectbox(
         "Table",
         dataset.tables,
@@ -48,6 +48,7 @@ def train_model(
     known_columns = streamlit.multiselect(
         "Known Columns",
         [column for column in table.schema if column != target_column],
+        table.schema.select(include={Attribute.primary_key}),
         key="known_columns",
     )
 
@@ -81,38 +82,17 @@ def train_model(
             key="selection_method",
         )
 
-    # todo: make this configurable
-    transform = (
-        Drop(columns={table.name: {target_column}})
-        .then(Cast())
-        .then(Encode())
-        .then(Identity(), Aggregate())
-    )
-
     if not streamlit.button("Train Model"):
         return None
 
     return _train_model(
-        dataset=_apply_transform(dataset, transform),
+        dataset=dataset,
         known_columns=tuple(known_columns),
         prediction_method=prediction_method,
         selection_method=selection_method,
         table=table,
         target_column=target_column,
     )
-
-
-@streamlit.cache_resource(
-    hash_funcs={
-        Dataset: id,
-    },
-    max_entries=1,
-)
-def _apply_transform(
-    dataset: Dataset,
-    transform: Transform,
-) -> Dataset:
-    return dataset.apply(transform)
 
 
 @streamlit.cache_resource(
@@ -132,7 +112,20 @@ def _train_model(
     table: Table,
     target_column: str,
 ) -> TrainedModel:
-    return dataset.train(
+    input_dataset = dataset.apply(
+        Drop(
+            columns={
+                table.name: {
+                    column
+                    for column in table.schema
+                    if _derived_from(column) & _derived_from(target_column)
+                }
+                for table in dataset.tables
+            },
+        ),
+    )
+
+    return input_dataset.train(
         known=table.data.select(known_columns),
         target=table.data.select(target_column),
         prediction_method=prediction_method,
@@ -146,3 +139,13 @@ def _clear_state(
     for key in keys:
         if key in streamlit.session_state:
             del streamlit.session_state[key]
+
+
+@streamlit.cache_data
+def _derived_from(
+    column: str,
+) -> set[str]:
+    return {
+        ancestor.split(" == ", 1)[0]
+        for ancestor in re.findall(r"\(([^\(]+?)\)", column) or [column]
+    }
