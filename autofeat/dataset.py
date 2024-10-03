@@ -80,7 +80,7 @@ class Dataset:
         ]
 
         return polars.concat(
-            polars.collect_all(features),
+            polars.collect_all(features, streaming=True),
             how="horizontal",
         )
 
