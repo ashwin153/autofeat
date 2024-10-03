@@ -84,12 +84,6 @@ def _infer_columns(
         if data_type.is_numeric():
             attributes.add(Attribute.numeric)
 
-        if (
-            profile["n_unique"][column_name] < profile["len"][column_name] * 0.10
-            and (data_type.is_integer() or isinstance(data_type, polars.String))
-        ):
-            attributes.add(Attribute.pivotable)
-
         if profile["n_unique"][column_name] == profile["len"][column_name]:
             attributes.add(Attribute.primary_key)
 

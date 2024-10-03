@@ -18,7 +18,7 @@ class Aggregate(Transform):
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
     """
 
-    is_pivotable: Collection[str | Column] | None = None
+    is_pivotable: Collection[str | Column]
     max_pivots: int = 1
 
     def apply(
@@ -26,56 +26,45 @@ class Aggregate(Transform):
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for table in tables:
-            if aggregations := list(self._aggregations(table)):
-                for pivoted_columns in list(self._pivoted_columns(table)):
-                    pivots = ", ".join(
-                        str(column)
-                        for column in pivoted_columns
-                    )
+            pivotable_columns = [
+                Column(
+                    name=column.name,
+                    attributes=column.attributes | {Attribute.primary_key},
+                    derived_from=[(column, table)],
+                )
+                for column in table.columns
+                if Attribute.primary_key not in column.attributes
+                if any(column.name == str(c) for c in self.is_pivotable)
+            ]
 
-                    columns = [
-                        *pivoted_columns,
-                        *[column for column, _ in aggregations],
-                    ]
+            aggregations = [
+                *self._aggregations(table, pivotable_columns),
+            ]
 
-                    data = (
-                        table.data
-                        .group_by(into_exprs(pivoted_columns))
-                        .agg(**into_named_exprs(aggregations))
-                    )
+            if aggregations and pivotable_columns:
+                for num_pivots in range(1, self.max_pivots + 1):
+                    for pivots in itertools.combinations(pivotable_columns, num_pivots):
+                        columns = [
+                            *pivots,
+                            *[column for column, _ in aggregations],
+                        ]
 
-                    yield Table(
-                        columns=columns,
-                        data=data,
-                        name=f"group_by({table.name}, {pivots})",
-                    )
+                        data = (
+                            table.data
+                            .group_by(into_exprs(pivots))
+                            .agg(**into_named_exprs(aggregations))
+                        )
 
-    def _pivoted_columns(
-        self,
-        table: Table,
-    ) -> Iterable[tuple[Column, ...]]:
-        is_pivotable = {
-            str(column)
-            for column in self.is_pivotable or []
-        }
-
-        pivotable_columns = [
-            Column(
-                name=column.name,
-                attributes=column.attributes | {Attribute.primary_key},
-                derived_from=[(column, table)],
-            )
-            for column in table.columns
-            if Attribute.primary_key not in column.attributes
-            if Attribute.pivotable in column.attributes or column.name in is_pivotable
-        ]
-
-        for count in range(1, self.max_pivots + 1):
-            yield from itertools.combinations(pivotable_columns, count)
+                        yield Table(
+                            columns=columns,
+                            data=data,
+                            name=f"group_by({table.name}, {', '.join(str(c) for c in pivots)})",
+                        )
 
     def _aggregations(
         self,
         table: Table,
+        pivotable_columns: list[Column],
     ) -> Iterable[tuple[Column, polars.Expr]]:
         yield (
             Column(name="count(*)", attributes={Attribute.numeric, Attribute.not_null}),
@@ -87,7 +76,7 @@ class Aggregate(Transform):
             for column in table.columns
             if Attribute.numeric in column.attributes
             if Attribute.primary_key not in column.attributes
-            if Attribute.pivotable not in column.attributes
+            if all(column.name != c.name for c in pivotable_columns)
         ]
 
         for x in numeric_columns:

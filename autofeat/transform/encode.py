@@ -76,7 +76,7 @@ class Encode(Transform):
             if Attribute.textual in column.attributes:
                 column = Column(
                     name=column.name,
-                    attributes=column.attributes | {Attribute.pivotable},
+                    attributes=column.attributes,
                     derived_from=[(column, table)],
                 )
 

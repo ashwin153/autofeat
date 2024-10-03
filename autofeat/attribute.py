@@ -17,9 +17,6 @@ class Attribute(enum.Enum):
     numeric = enum.auto()
     """Contains numbers."""
 
-    pivotable = enum.auto()
-    """Has low cardinality."""
-
     primary_key = enum.auto()
     """Is a component of the primary key."""
 
