@@ -1,4 +1,3 @@
-import dataclasses
 from typing import Any, cast
 
 import streamlit
@@ -33,13 +32,14 @@ def edit_schemas(
                     ])
 
                     edited_columns = [
-                        dataclasses.replace(
-                            table.columns[i],
+                        Column(
+                            name=table.columns[i].name,
                             attributes={
                                 attribute
                                 for attribute in Attribute
                                 if value[attribute.name]
                             },
+                            derived_from=table.columns[i].derived_from,
                         )
                         for i, value in enumerate(edited_values)
                         if not value["redacted"]

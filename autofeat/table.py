@@ -49,17 +49,20 @@ class Column:
         :param other: Other column.
         :return: Has common ancestor.
         """
-        return self.name == other.name or not self._ancestors.isdisjoint(other._ancestors)
+        return not self._ancestors.isdisjoint(other._ancestors)
 
     @functools.cached_property
     def _ancestors(
         self,
-    ) -> set[tuple[str, str]]:
-        return {
-            ancestor
-            for parent, table in self.derived_from
-            for ancestor in ((parent.name, table.name), *parent._ancestors)
-        }
+    ) -> set[tuple[str, str | None]]:
+        if self.derived_from:
+            return {
+                ancestor
+                for parent, table in self.derived_from
+                for ancestor in ((parent.name, table.name), *parent._ancestors)
+            }
+        else:
+            return {(self.name, None)}
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
