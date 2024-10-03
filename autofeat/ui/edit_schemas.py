@@ -39,6 +39,7 @@ def edit_schemas(
                                 for attribute in Attribute
                                 if value[attribute.name]
                             },
+                            derived_from=[(table.columns[i], table)],
                         )
                         for i, value in enumerate(edited_values)
                         if not value["redacted"]
