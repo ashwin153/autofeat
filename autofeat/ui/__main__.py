@@ -11,7 +11,7 @@ streamlit.set_page_config(
 )
 
 
-streamlit.header("Configure Dataset")
+streamlit.header("Setup Dataset")
 if dataset := load_dataset():
     dataset = edit_dataset(dataset)
     explore_dataset(dataset)

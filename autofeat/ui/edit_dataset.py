@@ -19,7 +19,7 @@ def edit_dataset(
                 if streamlit.toggle("Redacted", key=table.name):
                     edited_schemas.append([])
                 else:
-                    edited_values: list[dict[str, Any]] = streamlit.data_editor([
+                    values = [
                         {
                             "column": column.name,
                             "redacted": False,
@@ -29,7 +29,12 @@ def edit_dataset(
                             },
                         }
                         for column in table.columns
-                    ])
+                    ]
+
+                    edited_values: list[dict[str, Any]] = streamlit.data_editor(
+                        data=values,
+                        hide_index=True,
+                    )
 
                     edited_columns = [
                         Column(

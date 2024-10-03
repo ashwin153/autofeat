@@ -21,16 +21,16 @@ def train_model(
 
     :param dataset: Dataset to load features from.
     """
-    table = streamlit.selectbox(
+    training_data = streamlit.selectbox(
         help="Table that contains your training data",
         index=None,
-        key="table",
-        label="Table",
+        key="training_data",
+        label="Training Data",
         on_change=lambda: _clear_state("target_column"),
         options=dataset.tables,
     )
 
-    if not table:
+    if not training_data:
         return None
 
     target_column = streamlit.selectbox(
@@ -39,18 +39,18 @@ def train_model(
         key="target_column",
         label="Target Column",
         on_change=lambda: _clear_state("known_columns", "problem"),
-        options=[column for column in table.columns if Attribute.not_null in column.attributes],
+        options=[c for c in training_data.columns if Attribute.not_null in c.attributes],
     )
 
     if not target_column:
         return None
 
     known_columns = streamlit.multiselect(
-        default=[column for column in table.columns if Attribute.primary_key in column.attributes],
+        default=[c for c in training_data.columns if Attribute.primary_key in c.attributes],
         help="Columns that are known at the time of prediction",
         key="known_columns",
         label="Known Columns",
-        options=[column for column in table.columns if column.name != target_column],
+        options=[c for c in training_data.columns if c.name != target_column],
     )
 
     if not known_columns:
@@ -94,7 +94,7 @@ def train_model(
         known_columns=tuple(known_columns),
         prediction_method=prediction_method,
         selection_method=selection_method,
-        table=table,
+        training_data=training_data,
         target_column=target_column,
     )
 
@@ -110,11 +110,12 @@ def train_model(
     max_entries=1,
 )
 def _train_model(
+    *,
     dataset: Dataset,
     known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
     selection_method: SelectionMethod,
-    table: Table,
+    training_data: Table,
     target_column: Column,
 ) -> TrainedModel:
     related_columns = {
@@ -132,8 +133,8 @@ def _train_model(
     )
 
     return input_dataset.train(
-        known=table.data.select([column.name for column in known_columns]),
-        target=table.data.select(target_column.name),
+        known=training_data.data.select([column.name for column in known_columns]),
+        target=training_data.data.select(target_column.name),
         prediction_method=prediction_method,
         selection_method=selection_method,
     )
