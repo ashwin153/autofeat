@@ -1,5 +1,4 @@
 import math
-from collections import Counter
 from typing import Any
 
 import numpy
@@ -72,28 +71,30 @@ def evaluate_model(
 @streamlit.fragment
 def _create_feature_charts(
         model: TrainedModel,
-    ) -> None:
+) -> None:
 
     #generate feature importances and sort them in descending order
     feature_importance = _feature_importance(model)
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
 
     # Create the Plotly bar chart
-    fig = go.Figure(go.Bar(
-        x=feature_importance["Importance"],
-        y=feature_importance["Feature"],
-        orientation="h",
-        marker_color="steelblue",
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=feature_importance["Importance"],
+            y=feature_importance["Feature"],
+            orientation="h",
+            marker_color="steelblue",
+        ),
+    )
 
     # Update layout for better appearance
     fig.update_layout(
         title="Feature Importance",
         xaxis_title="Importance",
         yaxis_title="Feature",
-        margin=dict(l=0, r=0, t=30, b=0),
+        margin={"l": 0, "r": 0, "t": 30, "b": 0},
         height= max(600, 40*len(feature_importance)),
-        yaxis=dict(autorange="reversed"),
+        yaxis={"autorange": "reversed"},
     )
 
     # Display the chart, with clickable event (which we can use to do dynamic things in the future)
@@ -128,32 +129,36 @@ def _create_classification_feature_chart(
         return go.Figure()
 
     fig = go.Figure()
-    df = pandas.DataFrame({'feature': x, 'target': y_true})
+    df = pandas.DataFrame({"feature": x, "target": y_true})
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
         # Numerical feature: create a histogram
-        fig = px.histogram(df, x='feature', color='target', 
-                           hover_data=df.columns,
-                           title=f"Feature Analysis: {feature} vs Target",
-                           labels={'feature': feature, 'target': 'Target Class'},
-                           height=600, width=800)
+        fig = px.histogram(
+            df, x="feature", color="target",
+            hover_data=df.columns,
+            title=f"Feature Analysis: {feature} vs Target",
+            labels={"feature": feature, "target": "Target Class"},
+            height=600, width=800,
+        )
 
         fig.update_layout(bargap=0.2)
     else:
         # Categorical feature: create a normalized stacked bar chart
-        df_counts = df.groupby(['feature', 'target']).size().unstack(fill_value=0)
+        df_counts = df.groupby(["feature", "target"]).size().unstack(fill_value=0)
         df_percentages = df_counts.apply(lambda x: x / x.sum() * 100, axis=1)
 
-        fig = px.bar(df_percentages, barmode='stack',
-                     labels={'value': 'Percentage', 'target': 'Target Class'},
-                     title=f"Feature Analysis: {feature} vs. Target")
+        fig = px.bar(
+            df_percentages, barmode="stack",
+            labels={"value": "Percentage", "target": "Target Class"},
+            title=f"Feature Analysis: {feature} vs. Target",
+        )
 
         fig.update_layout(
             xaxis_title=feature,
             yaxis_title="Percentage",
             height=600,
             width=800,
-            yaxis=dict(tickformat=".1f", range=[0, 100])  # Ensure y-axis is 0-100%
+            yaxis={"tickformat": ".1f", "range": [0, 100]},  # Ensure y-axis is 0-100%
         )
 
     return fig
@@ -181,45 +186,51 @@ def _create_regression_feature_chart(
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
         # Numerical feature: create a scatter plot
-        x = pandas.to_numeric(x, errors='coerce')
+        x = pandas.to_numeric(x, errors="coerce")
         mask = ~numpy.isnan(x)
         x = x[mask]
         y_true = y_true[mask]
 
-        fig.add_trace(go.Scatter(
-            x=x,
-            y=y_true,
-            mode='markers',
-            name='Data Points',
-            marker=dict(
-                size=5,
-                color='blue',
-                opacity=0.6
-            )
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y_true,
+                mode="markers",
+                name="Data Points",
+                marker={
+                    "size": 5,
+                    "color": "blue",
+                    "opacity": 0.6,
+                },
+            ),
+        )
         # Add line of best fit
         coeffs = numpy.polyfit(x, y_true, 1)
         line_x = numpy.array([numpy.min(x), numpy.max(x)])
         line_y = coeffs[0] * line_x + coeffs[1]
 
-        fig.add_trace(go.Scatter(
-            x=line_x,
-            y=line_y,
-            mode='lines',
-            name='Line of Best Fit',
-            line=dict(color='red', width=2)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=line_x,
+                y=line_y,
+                mode="lines",
+                name="Line of Best Fit",
+                line={"color": "red", "width": 2},
+            ),
+        )
 
     else:
         # Non-numerical feature: create a box plot
-        fig.add_trace(go.Box(
-            x=x,
-            y=y_true,
-            name="Distribution",
-            boxpoints="all",
-            jitter=0.3,
-            pointpos=-1.8
-        ))
+        fig.add_trace(
+            go.Box(
+                x=x,
+                y=y_true,
+                name="Distribution",
+                boxpoints="all",
+                jitter=0.3,
+                pointpos=-1.8,
+            ),
+        )
 
     # Customize the layout
     fig.update_layout(
