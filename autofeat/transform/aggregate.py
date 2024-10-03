@@ -28,6 +28,11 @@ class Aggregate(Transform):
         for table in tables:
             if aggregations := list(self._aggregations(table)):
                 for pivoted_columns in list(self._pivoted_columns(table)):
+                    pivots = ", ".join(
+                        str(column)
+                        for column in pivoted_columns
+                    )
+
                     columns = [
                         *pivoted_columns,
                         *[column for column, _ in aggregations],
@@ -42,7 +47,7 @@ class Aggregate(Transform):
                     yield Table(
                         columns=columns,
                         data=data,
-                        name=f"group_by({table.name}, {pivoted_columns})",
+                        name=f"group_by({table.name}, {pivots})",
                     )
 
     def _pivoted_columns(
@@ -61,9 +66,8 @@ class Aggregate(Transform):
                 derived_from=[(column, table)],
             )
             for column in table.columns
-            if Attribute.pivotable in column.attributes
             if Attribute.primary_key not in column.attributes
-            if not is_pivotable or column.name in is_pivotable
+            if Attribute.pivotable in column.attributes or column.name in is_pivotable
         ]
 
         for count in range(1, self.max_pivots + 1):
