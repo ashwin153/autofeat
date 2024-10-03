@@ -86,21 +86,22 @@ class Aggregate(Transform):
             if Attribute.pivotable not in column.attributes
         ]
 
-        for x, y in itertools.combinations(numeric_columns, 2):
+        for x in numeric_columns:
             aggregations = [
-                (f"{x} + {y}", x.expr + y.expr),
-                (f"{x} - {y}", x.expr - y.expr),
-                (f"{y} - {x}", y.expr - x.expr),
-                (f"{x} * {y}", x.expr * y.expr),
-                (f"{x} / {y}", x.expr / y.expr),
-                (f"{y} / {x}", y.expr / x.expr),
+                (f"max({x})", x.expr.max()),
+                (f"mean({x})", x.expr.mean()),
+                (f"median({x})", x.expr.median()),
+                (f"min({x})", x.expr.min()),
+                (f"std({x})", x.expr.std()),
+                (f"sum({x})", x.expr.sum()),
+                (f"var({x})", x.expr.var()),
             ]
 
             for name, expr in aggregations:
                 column = Column(
                     name=name,
-                    attributes=(x.attributes & y.attributes) | {Attribute.not_null},
-                    derived_from=[(x, table), (y, table)],
+                    attributes=x.attributes | {Attribute.not_null},
+                    derived_from=[(x, table)],
                 )
 
                 yield column, expr
