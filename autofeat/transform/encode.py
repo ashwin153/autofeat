@@ -85,7 +85,7 @@ class Encode(Transform):
             for category in categories:
                 encoded_column = Column(
                     name=f"{column} == {category}",
-                    attributes={Attribute.boolean, Attribute.not_null},
+                    attributes={Attribute.boolean, Attribute.categorical, Attribute.not_null},
                     derived_from=[(column, table)],
                 )
 
