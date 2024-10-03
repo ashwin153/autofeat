@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, TypeAlias, Union
 
 import polars
 
-from autofeat.convert.into_lazy_frame import IntoLazyFrame, into_lazy_frame
-
 if TYPE_CHECKING:
     from autofeat.table import Column
 
 IntoColumns: TypeAlias = Union[
-    IntoLazyFrame,
+    polars.LazyFrame,
+    polars.DataFrame,
     "Column",
     Iterable["Column"],
 ]
@@ -33,8 +32,10 @@ def into_columns(
 
     if isinstance(value, Column):
         return [value]
-    elif isinstance(value, IntoLazyFrame):
-        return _infer_columns(into_lazy_frame(value))
+    elif isinstance(value, polars.LazyFrame):
+        return _infer_columns(value)
+    elif isinstance(value, polars.DataFrame):
+        return _infer_columns(value.lazy())
     elif isinstance(value, Iterable):
         return list(value)
     else:
