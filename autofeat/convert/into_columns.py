@@ -37,7 +37,7 @@ def into_columns(
     elif isinstance(value, polars.DataFrame):
         return _infer_columns(value.lazy())
     elif isinstance(value, Iterable):
-        return list(value)
+        return list(value)  # type: ignore[arg-type]
     else:
         raise NotImplementedError(f"{type(value)} is not supported")
 
