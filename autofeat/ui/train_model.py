@@ -55,7 +55,7 @@ def train_model(
 
     default_problem = (
         PredictionProblem.classification
-        if Attribute.categorical in table.schema[target_column]
+        if Attribute.categorical in target_column.attributes
         else PredictionProblem.regression
     )
 
