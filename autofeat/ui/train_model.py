@@ -10,7 +10,7 @@ from autofeat.model import (
     SelectionMethod,
     TrainedModel,
 )
-from autofeat.table import Table
+from autofeat.table import Column, Table
 from autofeat.transform import Drop
 
 
@@ -110,19 +110,9 @@ def _train_model(
     table: Table,
     target_column: str,
 ) -> TrainedModel:
-    table.column(target_column)
-
-    input_dataset = dataset.apply(
-        Drop(
-            columns={
-                table.name: {
-                    column
-                    for column in table.columns
-                    if column.is_related(target_column)
-                }
-                for table in dataset.tables
-            },
-        ),
+    input_dataset = _input_dataset(
+        dataset,
+        table.column(target_column),
     )
 
     return input_dataset.train(
@@ -131,6 +121,29 @@ def _train_model(
         prediction_method=prediction_method,
         selection_method=selection_method,
     )
+
+
+@streamlit.cache_resource(
+    hash_funcs={
+        Dataset: id,
+        Column: id,
+    },
+    max_entries=1,
+)
+def _input_dataset(
+    dataset: Dataset,
+    target_column: Column,
+) -> Dataset:
+    related_columns={
+        table.name: {
+            column.name
+            for column in table.columns
+            if column.is_related(target_column)
+        }
+        for table in dataset.tables
+    }
+
+    return dataset.apply(Drop(columns=related_columns))
 
 
 def _clear_state(
