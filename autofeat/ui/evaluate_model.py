@@ -4,6 +4,7 @@ from typing import Any
 
 import numpy
 import pandas
+import plotly.express as px
 import plotly.graph_objects as go
 import shap
 import sklearn.metrics
@@ -110,7 +111,6 @@ def _create_feature_charts(
 
 
 
-
 @streamlit.cache_data(
     hash_funcs={TrainedModel: id},
     max_entries=1,
@@ -121,60 +121,39 @@ def _create_classification_feature_chart(
 ) -> go.Figure:
     # Get the index of the feature
     i = model.X.columns.index(feature)
-
-    # Get the feature values from X_test
-    x = model.X_test[:, i]
-
-    # Get the corresponding actual y values (class labels)
-    y_true = model.y_test
+    # Clean the data
+    x, y_true = _clean_data(model.X_test[:, i], model.y_test)
+    # Check if we have any data left after cleaning
+    if len(x) == 0:
+        return go.Figure()
 
     fig = go.Figure()
-
+    df = pandas.DataFrame({'feature': x, 'target': y_true})
     # Check if the feature is numerical
-    if numpy.issubdtype(x.dtype, numpy.number):
-        for cls in numpy.unique(y_true):
-            fig.add_trace(go.Box(
-                y=x[y_true == cls],
-                name=f"Class {cls}",
-                boxpoints="all",
-                jitter=0.3,
-                pointpos=-1.8,
-            ))
+    if model.X.schema[feature].is_numeric():
+        # Numerical feature: create a histogram
+        fig = px.histogram(df, x='feature', color='target', 
+                           hover_data=df.columns,
+                           title=f"Feature Analysis: {feature} vs Target",
+                           labels={'feature': feature, 'target': 'Target Class'},
+                           height=600, width=800)
 
-        fig.update_layout(
-            title=f"Feature Analysis: {feature} vs Target",
-            yaxis_title=feature,
-            xaxis_title="Class",
-            height=600,
-            width=800,
-        )
+        fig.update_layout(bargap=0.2)
     else:
-        # Calculate percentages
-        percentages = {}
-        classes = numpy.unique(y_true)
-        categories = numpy.unique(x)
+        # Categorical feature: create a normalized stacked bar chart
+        df_counts = df.groupby(['feature', 'target']).size().unstack(fill_value=0)
+        df_percentages = df_counts.apply(lambda x: x / x.sum() * 100, axis=1)
 
-        for cls in classes:
-            class_data = x[y_true == cls]
-            counts = Counter(class_data)
-            total = len(class_data)
-            percentages[cls] = {cat: counts[cat] / total * 100 for cat in categories}
-
-        for cls in percentages:
-            fig.add_trace(go.Bar(
-                x=list(categories),
-                y=[percentages[cls][cat] for cat in categories],
-                name=f"Class {cls}"
-            ))
+        fig = px.bar(df_percentages, barmode='stack',
+                     labels={'value': 'Percentage', 'target': 'Target Class'},
+                     title=f"Feature Analysis: {feature} vs. Target")
 
         fig.update_layout(
-            title=f"Feature Analysis: {feature} (Categorical)",
             xaxis_title=feature,
             yaxis_title="Percentage",
-            barmode="stack",
             height=600,
             width=800,
-            yaxis=dict(tickformat=".0%")
+            yaxis=dict(tickformat=".1f", range=[0, 100])  # Ensure y-axis is 0-100%
         )
 
     return fig
@@ -190,23 +169,47 @@ def _create_regression_feature_chart(
 ) -> go.Figure:
     # Get the index of the feature
     i = model.X.columns.index(feature)
-
-    # Get the feature values from X_test
-    x = model.X_test[:, i]
-
-    # Get the corresponding actual y values
-    y_true = model.y_test
+    # Clean the data
+    x, y_true = _clean_data(model.X_test[:, i], model.y_test)
+    # Check if we have any data left after cleaning
+    if len(x) == 0:
+        return go.Figure()
 
     # Create the Plotly figure
     fig = go.Figure()
 
     # Check if the feature is numerical
-    if numpy.issubdtype(x.dtype, numpy.number):
+    if model.X.schema[feature].is_numeric():
         # Numerical feature: create a scatter plot
+        x = pandas.to_numeric(x, errors='coerce')
+        mask = ~numpy.isnan(x)
+        x = x[mask]
+        y_true = y_true[mask]
+
         fig.add_trace(go.Scatter(
             x=x,
             y=y_true,
+            mode='markers',
+            name='Data Points',
+            marker=dict(
+                size=5,
+                color='blue',
+                opacity=0.6
+            )
         ))
+        # Add line of best fit
+        coeffs = numpy.polyfit(x, y_true, 1)
+        line_x = numpy.array([numpy.min(x), numpy.max(x)])
+        line_y = coeffs[0] * line_x + coeffs[1]
+
+        fig.add_trace(go.Scatter(
+            x=line_x,
+            y=line_y,
+            mode='lines',
+            name='Line of Best Fit',
+            line=dict(color='red', width=2)
+        ))
+
     else:
         # Non-numerical feature: create a box plot
         fig.add_trace(go.Box(
@@ -301,3 +304,15 @@ def _percent_change(
     new: float,
 ) -> float:
     return (new - old) / old * 100
+
+
+
+def _clean_data(x, y):
+    # Convert to numpy arrays if they aren't already
+    x = numpy.array(x)
+    y = numpy.array(y)
+
+    # Create a mask for non-null and non-NaN values
+    mask = ~(pandas.isnull(x) | pandas.isnull(y))
+
+    return x[mask], y[mask]
