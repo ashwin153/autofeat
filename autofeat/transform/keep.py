@@ -1,7 +1,7 @@
 import dataclasses
 from collections.abc import Collection, Iterable, Mapping
 
-from autofeat.table import Table
+from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
@@ -13,7 +13,7 @@ class Keep(Transform):
     :param tables: Names of tables to keep.
     """
 
-    columns: Mapping[str, Collection[str]] | None = None
+    columns: Mapping[str, Collection[str | Column]] | None = None
     tables: set[str] | None = None
 
     def apply(
@@ -22,11 +22,10 @@ class Keep(Transform):
     ) -> Iterable[Table]:
         for table in tables:
             if not self.tables or table.name in self.tables:
-                kept = (
-                    self.columns.get(table.name, set())
-                    if self.columns
-                    else set()
-                )
+                kept = {
+                    str(column)
+                    for column in (self.columns.get(table.name, []) if self.columns else [])
+                }
 
                 columns = [
                     column

@@ -22,11 +22,10 @@ class Drop(Transform):
     ) -> Iterable[Table]:
         for table in tables:
             if not self.tables or table.name not in self.tables:
-                dropped = (
-                    self.columns.get(table.name, set())
-                    if self.columns
-                    else set()
-                )
+                dropped = {
+                    str(column)
+                    for column in (self.columns.get(table.name, []) if self.columns else [])
+                }
 
                 columns = [
                     column

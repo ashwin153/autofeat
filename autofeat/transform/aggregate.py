@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 
 import polars
 
@@ -18,7 +18,7 @@ class Aggregate(Transform):
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
     """
 
-    is_pivotable: set[str] | None = None
+    is_pivotable: Collection[str | Column] | None = None
     max_pivots: int = 1
 
     def apply(
@@ -49,6 +49,11 @@ class Aggregate(Transform):
         self,
         table: Table,
     ) -> Iterable[tuple[Column, ...]]:
+        is_pivotable = {
+            str(column)
+            for column in self.is_pivotable or []
+        }
+
         pivotable_columns = [
             Column(
                 name=column.name,
@@ -58,7 +63,7 @@ class Aggregate(Transform):
             for column in table.columns
             if Attribute.pivotable in column.attributes
             if Attribute.primary_key not in column.attributes
-            if not self.is_pivotable or column.name in self.is_pivotable
+            if not is_pivotable or column.name in is_pivotable
         ]
 
         for count in range(1, self.max_pivots + 1):

@@ -11,7 +11,7 @@ from autofeat.model import (
     TrainedModel,
 )
 from autofeat.table import Column, Table
-from autofeat.transform import Drop
+from autofeat.transform import Aggregate, Drop, Identity
 
 
 def train_model(
@@ -34,7 +34,7 @@ def train_model(
 
     target_column = streamlit.selectbox(
         "Target Column",
-        table.schema.select(include={Attribute.not_null}),
+        [column for column in table.columns if Attribute.not_null in column],
         index=None,
         key="target_column",
         on_change=lambda: _clear_state("known_columns", "problem"),
@@ -45,8 +45,8 @@ def train_model(
 
     known_columns = streamlit.multiselect(
         "Known Columns",
-        [column for column in table.schema if column != target_column],
-        table.schema.select(include={Attribute.primary_key}),
+        [column for column in table.columns if column.name != target_column],
+        [column for column in table.columns if Attribute.primary_key in column],
         key="known_columns",
     )
 
@@ -99,41 +99,18 @@ def train_model(
         PredictionMethod: lambda x: x.name,
         SelectionMethod: lambda x: x.name,
         Table: id,
+        Column: id,
     },
     max_entries=1,
 )
 def _train_model(
     dataset: Dataset,
-    known_columns: tuple[str, ...],
+    known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
     selection_method: SelectionMethod,
     table: Table,
-    target_column: str,
-) -> TrainedModel:
-    input_dataset = _input_dataset(
-        dataset,
-        table.column(target_column),
-    )
-
-    return input_dataset.train(
-        known=table.data.select(known_columns),
-        target=table.data.select(target_column),
-        prediction_method=prediction_method,
-        selection_method=selection_method,
-    )
-
-
-@streamlit.cache_resource(
-    hash_funcs={
-        Dataset: id,
-        Column: id,
-    },
-    max_entries=1,
-)
-def _input_dataset(
-    dataset: Dataset,
     target_column: Column,
-) -> Dataset:
+) -> TrainedModel:
     related_columns={
         table.name: {
             column.name
@@ -143,7 +120,17 @@ def _input_dataset(
         for table in dataset.tables
     }
 
-    return dataset.apply(Drop(columns=related_columns))
+    input_dataset = dataset.apply(
+        Drop(columns=related_columns)
+        .then(Identity(), Aggregate(is_pivotable=known_columns)),
+    )
+
+    return input_dataset.train(
+        known=table.data.select([column.name for column in known_columns]),
+        target=table.data.select(target_column.name),
+        prediction_method=prediction_method,
+        selection_method=selection_method,
+    )
 
 
 def _clear_state(
