@@ -66,18 +66,22 @@ class Dataset:
         """
         known = into_data_frame(known)
 
-        features = [
-            (
-                known
-                .lazy()
-                .join(table.data, on=list(primary_key), how="left")
-                .select(polars.selectors.boolean() | polars.selectors.numeric())
-                .select(polars.all().name.suffix(f"{_SEPARATOR}{table.name}"))
-            )
-            for table in self.tables
-            if (primary_key := set(table.schema.select(include={Attribute.primary_key})))
-            if primary_key.issubset(known.columns)
-        ]
+        features = []
+        for table in self.tables:
+            primary_key = {
+                column.name
+                for column in table.columns
+                if Attribute.primary_key in column.attributes
+            }
+
+            if primary_key and primary_key.issubset(known.columns):
+                features.append(
+                    known
+                    .lazy()
+                    .join(table.data, on=list(primary_key), how="left")
+                    .select(polars.selectors.boolean() | polars.selectors.numeric())
+                    .select(polars.all().name.suffix(f"{_SEPARATOR}{table.name}")),
+                )
 
         return polars.concat(
             polars.collect_all(features, streaming=True),

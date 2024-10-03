@@ -1,6 +1,6 @@
 import streamlit
 
-from autofeat.ui.edit_schema import edit_schema
+from autofeat.ui.edit_schemas import edit_schemas
 from autofeat.ui.evaluate_model import evaluate_model
 from autofeat.ui.explore_dataset import explore_dataset
 from autofeat.ui.load_dataset import load_dataset
@@ -14,7 +14,7 @@ streamlit.set_page_config(
 
 streamlit.header("Load Dataset")
 if dataset := load_dataset():
-    dataset = edit_schema(dataset)
+    dataset = edit_schemas(dataset)
     explore_dataset(dataset)
 
     streamlit.header("Train Model")

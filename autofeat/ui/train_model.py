@@ -1,5 +1,3 @@
-import re
-
 import streamlit
 
 from autofeat.attribute import Attribute
@@ -12,8 +10,8 @@ from autofeat.model import (
     SelectionMethod,
     TrainedModel,
 )
-from autofeat.table import Table
-from autofeat.transform import Drop
+from autofeat.table import Column, Table
+from autofeat.transform import Aggregate, Drop, Identity
 
 
 def train_model(
@@ -36,7 +34,7 @@ def train_model(
 
     target_column = streamlit.selectbox(
         "Target Column",
-        table.schema.select(include={Attribute.not_null}),
+        [column for column in table.columns if Attribute.not_null in column.attributes],
         index=None,
         key="target_column",
         on_change=lambda: _clear_state("known_columns", "problem"),
@@ -47,8 +45,8 @@ def train_model(
 
     known_columns = streamlit.multiselect(
         "Known Columns",
-        [column for column in table.schema if column != target_column],
-        table.schema.select(include={Attribute.primary_key}),
+        [column for column in table.columns if column.name != target_column],
+        [column for column in table.columns if Attribute.primary_key in column.attributes],
         key="known_columns",
     )
 
@@ -57,7 +55,7 @@ def train_model(
 
     default_problem = (
         PredictionProblem.classification
-        if Attribute.categorical in table.schema[target_column]
+        if Attribute.categorical in target_column.attributes
         else PredictionProblem.regression
     )
 
@@ -101,33 +99,35 @@ def train_model(
         PredictionMethod: lambda x: x.name,
         SelectionMethod: lambda x: x.name,
         Table: id,
+        Column: id,
     },
     max_entries=1,
 )
 def _train_model(
     dataset: Dataset,
-    known_columns: tuple[str, ...],
+    known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
     selection_method: SelectionMethod,
     table: Table,
-    target_column: str,
+    target_column: Column,
 ) -> TrainedModel:
+    related_columns = {
+        table.name: {
+            column.name
+            for column in table.columns
+            if column.is_related(target_column)
+        }
+        for table in dataset.tables
+    }
+
     input_dataset = dataset.apply(
-        Drop(
-            columns={
-                table.name: {
-                    column
-                    for column in table.schema
-                    if _derived_from(column) & _derived_from(target_column)
-                }
-                for table in dataset.tables
-            },
-        ),
+        Drop(columns=related_columns)
+        .then(Identity(), Aggregate(is_pivotable=known_columns)),
     )
 
     return input_dataset.train(
-        known=table.data.select(known_columns),
-        target=table.data.select(target_column),
+        known=table.data.select([column.name for column in known_columns]),
+        target=table.data.select(target_column.name),
         prediction_method=prediction_method,
         selection_method=selection_method,
     )
@@ -139,13 +139,3 @@ def _clear_state(
     for key in keys:
         if key in streamlit.session_state:
             del streamlit.session_state[key]
-
-
-@streamlit.cache_data
-def _derived_from(
-    column: str,
-) -> set[str]:
-    return {
-        ancestor.split(" == ", 1)[0]
-        for ancestor in re.findall(r"\(([^\(]+?)\)", column) or [column]
-    }

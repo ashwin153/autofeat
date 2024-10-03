@@ -1,12 +1,12 @@
 import dataclasses
 import itertools
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 
 import polars
 
 from autofeat.attribute import Attribute
-from autofeat.schema import Schema
-from autofeat.table import Table
+from autofeat.convert import into_exprs, into_named_exprs
+from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
@@ -18,7 +18,7 @@ class Aggregate(Transform):
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
     """
 
-    allowed_pivots: set[str] | None = None
+    is_pivotable: Collection[str | Column] | None = None
     max_pivots: int = 1
 
     def apply(
@@ -26,59 +26,81 @@ class Aggregate(Transform):
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for table in tables:
-            if aggregations := dict(self._aggregations(table)):
-                for primary_key in self._primary_keys(table):
-                    schema = Schema({
-                        **{
-                            column: table.schema[column] | {Attribute.primary_key}
-                            for column in primary_key
-                        },
-                        **{
-                            column: {Attribute.numeric, Attribute.not_null}
-                            for column in aggregations
-                        },
-                    })
+            if aggregations := list(self._aggregations(table)):
+                for pivoted_columns in list(self._pivoted_columns(table)):
+                    columns = [
+                        *pivoted_columns,
+                        *[column for column, _ in aggregations],
+                    ]
 
-                    yield Table(
-                        name=f"group_by({table.name}, {', '.join(sorted(primary_key))})",
-                        schema=schema,
-                        data=table.data.group_by(primary_key).agg(**aggregations),
+                    data = (
+                        table.data
+                        .group_by(into_exprs(pivoted_columns))
+                        .agg(**into_named_exprs(aggregations))
                     )
 
-    def _primary_keys(
+                    yield Table(
+                        columns=columns,
+                        data=data,
+                        name=f"group_by({table.name}, {pivoted_columns})",
+                    )
+
+    def _pivoted_columns(
         self,
         table: Table,
-    ) -> Iterable[tuple[str, ...]]:
-        pivotable_columns = table.schema.select(
-            include={Attribute.pivotable},
-            exclude={Attribute.primary_key},
-        )
+    ) -> Iterable[tuple[Column, ...]]:
+        is_pivotable = {
+            str(column)
+            for column in self.is_pivotable or []
+        }
 
-        pivots = (
-            self.allowed_pivots & pivotable_columns.keys()
-            if self.allowed_pivots
-            else pivotable_columns.keys()
-        )
+        pivotable_columns = [
+            Column(
+                name=column.name,
+                attributes=column.attributes | {Attribute.primary_key},
+                derived_from=[(column, table)],
+            )
+            for column in table.columns
+            if Attribute.pivotable in column.attributes
+            if Attribute.primary_key not in column.attributes
+            if not is_pivotable or column.name in is_pivotable
+        ]
 
         for count in range(1, self.max_pivots + 1):
-            yield from itertools.combinations(pivots, count)
+            yield from itertools.combinations(pivotable_columns, count)
 
     def _aggregations(
         self,
         table: Table,
-    ) -> Iterable[tuple[str, polars.Expr]]:
-        aggregable_columns = table.schema.select(
-            include={Attribute.numeric},
-            exclude={Attribute.pivotable, Attribute.primary_key},
+    ) -> Iterable[tuple[Column, polars.Expr]]:
+        yield (
+            Column(name="count(*)", attributes={Attribute.numeric, Attribute.not_null}),
+            polars.count(),
         )
 
-        yield "count(*)", polars.count()
+        numeric_columns = [
+            column
+            for column in table.columns
+            if Attribute.numeric in column.attributes
+            if Attribute.primary_key not in column.attributes
+            if Attribute.pivotable not in column.attributes
+        ]
 
-        for column in aggregable_columns:
-            yield f"max({column})", polars.col(column).max()
-            yield f"mean({column})", polars.col(column).mean()
-            yield f"median({column})", polars.col(column).median()
-            yield f"min({column})", polars.col(column).min()
-            yield f"std({column})", polars.col(column).std()
-            yield f"sum({column})", polars.col(column).sum()
-            yield f"var({column})", polars.col(column).var()
+        for x, y in itertools.combinations(numeric_columns, 2):
+            aggregations = [
+                (f"{x} + {y}", x.expr + y.expr),
+                (f"{x} - {y}", x.expr - y.expr),
+                (f"{y} - {x}", y.expr - x.expr),
+                (f"{x} * {y}", x.expr * y.expr),
+                (f"{x} / {y}", x.expr / y.expr),
+                (f"{y} / {x}", y.expr / x.expr),
+            ]
+
+            for name, expr in aggregations:
+                column = Column(
+                    name=name,
+                    attributes=(x.attributes & y.attributes) | {Attribute.not_null},
+                    derived_from=[(x, table), (y, table)],
+                )
+
+                yield column, expr

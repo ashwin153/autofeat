@@ -1,11 +1,11 @@
 import dataclasses
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 
 import polars
 
 from autofeat.attribute import Attribute
-from autofeat.schema import Schema
-from autofeat.table import Table
+from autofeat.convert import into_exprs, into_named_exprs
+from autofeat.table import Column, Table
 from autofeat.transform import Transform
 
 
@@ -17,43 +17,76 @@ class Encode(Transform):
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        all_tables = [
-            (
-                table,
-                table.schema.select(include={Attribute.categorical}),
-            )
-            for table in tables
-        ]
+        tables = list(tables)
 
-        all_categories = iter(
+        category_iterator = iter(
             polars.collect_all([
-                table.data.select(polars.col(column).drop_nulls().unique())
-                for table, categorical_columns in all_tables
-                for column in categorical_columns
+                table.data.select(column.expr.drop_nulls().unique())
+                for table in tables
+                for column in self._categorical_columns(table)
             ]),
         )
 
-        for table, categorical_columns in all_tables:
-            columns = {}
-            schema = Schema()
+        for table in tables:
+            encodings = [
+                *self._encodings(table, category_iterator),
+            ]
 
-            for column, attributes in categorical_columns.items():
-                categories = next(all_categories).to_series()
+            extra_columns = [
+                column
+                for column in table.columns
+                if all(column.name != encoded_column.name for encoded_column, _ in encodings)
+            ]
 
-                if Attribute.textual in attributes:
-                    columns[column] = polars.col(column).cast(polars.Enum(categories=categories))
-                    schema[column] = attributes | {Attribute.pivotable}
-
-                for category in categories:
-                    dummy_variable = f"{column} == {category}"
-                    columns[dummy_variable] = polars.col(column) == category
-                    schema[dummy_variable] = {Attribute.boolean, Attribute.not_null}
+            columns = [
+                *extra_columns,
+                *[column for column, _ in encodings],
+            ]
 
             if columns:
                 yield Table(
-                    data=table.data.with_columns(**columns),
+                    data=table.data.select(
+                        *into_exprs(extra_columns),
+                        **into_named_exprs(encodings),
+                    ),
                     name=table.name,
-                    schema=table.schema | schema,
+                    columns=columns,
                 )
             else:
                 yield table
+
+    def _categorical_columns(
+        self,
+        table: Table,
+    ) -> list[Column]:
+        return [
+            column
+            for column in table.columns
+            if Attribute.categorical in column.attributes
+        ]
+
+    def _encodings(
+        self,
+        table: Table,
+        category_iterator: Iterator[polars.DataFrame],
+    ) -> Iterable[tuple[Column, polars.Expr]]:
+        for column in self._categorical_columns(table):
+            categories = next(category_iterator).to_series()
+
+            if Attribute.textual in column.attributes:
+                column = Column(
+                    name=column.name,
+                    attributes=column.attributes | {Attribute.pivotable},
+                    derived_from=[(column, table)],
+                )
+
+                yield column, column.expr.cast(polars.Enum(categories=categories))
+
+            for category in categories:
+                encoded_column = Column(
+                    name=f"{column} == {category}",
+                    attributes={Attribute.boolean, Attribute.categorical, Attribute.not_null},
+                    derived_from=[(column, table)],
+                )
+
+                yield encoded_column, column.expr == category

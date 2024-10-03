@@ -4,8 +4,8 @@ from collections.abc import Iterable
 
 import polars
 
+from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
-from autofeat.schema import Schema
 from autofeat.table import Table
 
 DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
@@ -33,9 +33,9 @@ def from_csv(
         )
 
         table = Table(
+            columns=into_columns(data),
             data=data,
             name=os.path.basename(str(file)),
-            schema=Schema.infer(data),
         )
 
         tables.append(table)
