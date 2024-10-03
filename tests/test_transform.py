@@ -3,7 +3,7 @@ import datetime
 import polars.testing
 import pytest
 
-from autofeat import Schema, Table
+from autofeat import Table, convert
 from autofeat.transform import AllOf, AnyOf, Cast, Combine, Encode, Identity, Transform
 
 
@@ -33,7 +33,7 @@ def test_apply(
     expected: list[polars.DataFrame],
 ) -> None:
     tables = [
-        Table(data=df, name=str(i), schema=Schema.infer(df))
+        Table(data=df, name=str(i), schema=convert.into_columns(df))
         for i, df in enumerate(given)
     ]
 
