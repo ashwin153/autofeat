@@ -117,27 +117,28 @@ class Dataset:
             y,
         )
 
-        # train a model that selects the most important features to a prediction
+        # train a model that selects the most important features to a prediction model
         prediction_model = prediction_method.model()
+
         selection_model = selection_method.model(prediction_model)
         selection_model.fit(X_train, y_train)
 
         # apply feature selection to the training and test data
-        selected_features = [
+        selection = [
             X.columns[i]
-            for i, was_selected in enumerate(selection_method.mask(selection_model))
-            if was_selected
+            for i, is_selected in enumerate(selection_method.mask(selection_model))
+            if is_selected
         ]
 
-        selected_columns = collections.defaultdict(set)
-        for selected_feature in selected_features:
-            column, table = selected_feature.split(_SEPARATOR, 1)
-            selected_columns[table].add(column)
+        selection_by_table = collections.defaultdict(set)
+        for selected in selection:
+            column, table = selected.split(_SEPARATOR, 1)
+            selection_by_table[table].add(column)
 
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
-        X = X.select(selected_features)
-        dataset = self.apply(Keep(columns=selected_columns))
+        X = X.select(selection)
+        dataset = self.apply(Keep(columns=selection_by_table))
 
         # train the prediction model on the selected features
         prediction_model.fit(X_train, y_train)

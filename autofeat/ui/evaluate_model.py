@@ -1,9 +1,10 @@
 import math
 from typing import Any
 
-import altair
 import numpy
 import pandas
+import plotly.express as px
+import plotly.graph_objects as go
 import shap
 import sklearn.metrics
 import streamlit
@@ -66,17 +67,183 @@ def evaluate_model(
         case _:
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
 
+    _create_feature_charts(model)
 
-    streamlit.altair_chart(
-        (
-            altair.Chart(_feature_importance(model))
-            .mark_bar()
-            .configure_axis(labelLimit=500)
-            .encode(y=altair.Y("Feature:N", sort="-x"), x=altair.X("Importance:Q"))
+
+@streamlit.fragment
+def _create_feature_charts(
+    model: TrainedModel,
+) -> None:
+
+    #generate feature importances and sort them in descending order
+    feature_importance = _feature_importance(model)
+    feature_importance = feature_importance.sort_values("Importance", ascending=False)
+
+    # Create the Plotly bar chart
+    fig = go.Figure(
+        go.Bar(
+            x=feature_importance["Importance"],
+            y=feature_importance["Feature"],
+            orientation="h",
+            marker_color="steelblue",
         ),
-        use_container_width=True,
     )
 
+    # Update layout for better appearance
+    fig.update_layout(
+        title="Feature Importance",
+        xaxis_title="Importance",
+        yaxis_title="Feature",
+        margin={"l": 0, "r": 0, "t": 30, "b": 0},
+        height= max(600, 40*len(feature_importance)),
+        yaxis={"autorange": "reversed"},
+    )
+
+    # Display the chart, with clickable event (which we can use to do dynamic things in the future)
+    streamlit.plotly_chart(fig, use_container_width=True)
+
+    for feature in feature_importance["Feature"]:
+        with streamlit.expander(f"Feature Analysis: {feature}"):
+            match model.prediction_method.problem:
+                case PredictionProblem.classification:
+                    chart = _create_classification_feature_chart(model, feature)
+                    streamlit.plotly_chart(chart, use_container_width=True)
+                case PredictionProblem.regression:
+                    chart = _create_regression_feature_chart(model, feature)
+                    streamlit.plotly_chart(chart, use_container_width=True)
+
+
+
+@streamlit.cache_data(
+    hash_funcs={TrainedModel: id},
+    max_entries=1,
+)
+def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
+    model: TrainedModel,
+    feature: str,
+) -> go.Figure:
+    # Get the index of the feature
+    i = model.X.columns.index(feature)
+    # Clean the data
+    x, y_true = _clean_data(model.X_test[:, i], model.y_test)
+    # Check if we have any data left after cleaning
+    if len(x) == 0:
+        return go.Figure()
+
+    fig = go.Figure()
+    df = pandas.DataFrame({"feature": x, "target": y_true})
+    # Check if the feature is numerical
+    if model.X.schema[feature].is_numeric():
+        # Numerical feature: create a histogram
+        fig = px.histogram(
+            df, x="feature", color="target",
+            hover_data=df.columns,
+            title=f"Feature Analysis: {feature} vs Target",
+            labels={"feature": feature, "target": "Target Class"},
+            height=600, width=800,
+        )
+
+        fig.update_layout(bargap=0.2)
+    else:
+        # Categorical feature: create a normalized stacked bar chart
+        df_counts = df.groupby(["feature", "target"]).size().unstack(fill_value=0)
+        df_percentages = df_counts.apply(lambda x: x / x.sum() * 100, axis=1)
+
+        fig = px.bar(
+            df_percentages, barmode="stack",
+            labels={"value": "Percentage", "target": "Target Class"},
+            title=f"Feature Analysis: {feature} vs. Target",
+        )
+
+        fig.update_layout(
+            xaxis_title=feature,
+            yaxis_title="Percentage",
+            height=600,
+            width=800,
+            yaxis={"tickformat": ".1f", "range": [0, 100]},  # Ensure y-axis is 0-100%
+        )
+
+    return fig
+
+
+@streamlit.cache_data(
+    hash_funcs={TrainedModel: id},
+    max_entries=1,
+)
+def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
+    model: TrainedModel,
+    feature: str,
+) -> go.Figure:
+    # Get the index of the feature
+    i = model.X.columns.index(feature)
+    # Clean the data
+    x, y_true = _clean_data(model.X_test[:, i], model.y_test)
+    # Check if we have any data left after cleaning
+    if len(x) == 0:
+        return go.Figure()
+
+    # Create the Plotly figure
+    fig = go.Figure()
+
+    # Check if the feature is numerical
+    if model.X.schema[feature].is_numeric():
+        # Numerical feature: create a scatter plot
+        x = pandas.to_numeric(x, errors="coerce")
+        mask = ~numpy.isnan(x)
+        x = x[mask]
+        y_true = y_true[mask]
+
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y_true,
+                mode="markers",
+                name="Data Points",
+                marker={
+                    "size": 5,
+                    "color": "blue",
+                    "opacity": 0.6,
+                },
+            ),
+        )
+        # Add line of best fit
+        coeffs = numpy.polyfit(x, y_true, 1)
+        line_x = numpy.array([numpy.min(x), numpy.max(x)])
+        line_y = coeffs[0] * line_x + coeffs[1]
+
+        fig.add_trace(
+            go.Scatter(
+                x=line_x,
+                y=line_y,
+                mode="lines",
+                name="Line of Best Fit",
+                line={"color": "red", "width": 2},
+            ),
+        )
+
+    else:
+        # Non-numerical feature: create a box plot
+        fig.add_trace(
+            go.Box(
+                x=x,
+                y=y_true,
+                name="Distribution",
+                boxpoints="all",
+                jitter=0.3,
+                pointpos=-1.8,
+            ),
+        )
+
+    # Customize the layout
+    fig.update_layout(
+        title=f"Feature Analysis: {feature}",
+        xaxis_title=feature,
+        yaxis_title="Target Variable",
+        height=400,
+        width=600,
+    )
+
+    return fig
 
 @streamlit.cache_data(
     hash_funcs={TrainedModel: id},
@@ -150,3 +317,18 @@ def _percent_change(
     new: float,
 ) -> float:
     return (new - old) / old * 100
+
+
+
+def _clean_data(
+    x: Any,
+    y: Any,
+) -> tuple[numpy.ndarray, numpy.ndarray]:
+    # Convert to numpy arrays if they aren't already
+    x = numpy.array(x)
+    y = numpy.array(y)
+
+    # Create a mask for non-null and non-NaN values
+    mask = ~(pandas.isnull(x) | pandas.isnull(y))
+
+    return x[mask], y[mask]
