@@ -70,7 +70,7 @@ class Schema(collections.UserDict[str, set[Attribute]]):
             if isinstance(data_type, polars.Boolean):
                 attributes.add(Attribute.boolean)
 
-            if profile["n_unique"][column] < 100:
+            if profile["n_unique"][column] <= 50:
                 attributes.add(Attribute.categorical)
 
             if profile["null_count"][column] == 0:
