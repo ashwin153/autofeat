@@ -54,15 +54,15 @@ class Column:
     @functools.cached_property
     def _ancestors(
         self,
-    ) -> set[tuple[str, str | None]]:
+    ) -> set[str]:
         if self.derived_from:
             return {
                 ancestor
-                for parent, table in self.derived_from
-                for ancestor in ((parent.name, table.name), *parent._ancestors)
+                for parent, _ in self.derived_from
+                for ancestor in parent._ancestors
             }
         else:
-            return {(self.name, None)}
+            return {self.name}
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
