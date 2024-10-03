@@ -34,7 +34,7 @@ def train_model(
 
     target_column = streamlit.selectbox(
         "Target Column",
-        [column for column in table.columns if Attribute.not_null in column],
+        [column for column in table.columns if Attribute.not_null in column.attributes],
         index=None,
         key="target_column",
         on_change=lambda: _clear_state("known_columns", "problem"),
@@ -46,7 +46,7 @@ def train_model(
     known_columns = streamlit.multiselect(
         "Known Columns",
         [column for column in table.columns if column.name != target_column],
-        [column for column in table.columns if Attribute.primary_key in column],
+        [column for column in table.columns if Attribute.primary_key in column.attributes],
         key="known_columns",
     )
 
