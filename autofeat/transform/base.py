@@ -36,7 +36,7 @@ class Transform(abc.ABC):
         >>> transform = (
         ...     Rename(mapping={"old": "new"})
         ...     .then(Cast())
-        ...     .then(Aggregate())
+        ...     .then(Encode())
         ...     .then(Identity(), Join().then(Combine()))
         ... )
 

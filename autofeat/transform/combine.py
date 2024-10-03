@@ -24,7 +24,6 @@ class Combine(Transform):
                     column
                     for column in table.columns
                     if Attribute.primary_key in column.attributes
-                    if Attribute.pivotable in column.attributes
                 ]
 
                 columns = [
@@ -47,7 +46,6 @@ class Combine(Transform):
             for column in table.columns
             if Attribute.numeric in column.attributes
             if Attribute.primary_key not in column.attributes
-            if Attribute.pivotable not in column.attributes
         ]
 
         for x, y in itertools.combinations(numeric_columns, 2):
