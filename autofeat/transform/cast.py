@@ -26,9 +26,11 @@ class Cast(Transform):
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         castable = [
-            (table, columns)
+            (
+                table,
+                table.schema.select(include={Attribute.textual, Attribute.not_null}),
+            )
             for table in tables
-            if (columns := table.schema.select(include={Attribute.textual}))
         ]
 
         samples = polars.collect_all([
@@ -44,7 +46,7 @@ class Cast(Transform):
             casted_columns = {
                 column: cast
                 for column in columns
-                if (cast := self._cast(table, sample, column))
+                if (cast := self._cast(sample, column))
             }
 
             schema = Schema({
@@ -60,7 +62,6 @@ class Cast(Transform):
 
     def _cast(
         self,
-        table: Table,
         sample: polars.DataFrame,
         column: str,
     ) -> tuple[polars.Expr, set[Attribute]] | None:
