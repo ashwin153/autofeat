@@ -89,4 +89,4 @@ class Encode(Transform):
                     derived_from=[(column, table)],
                 )
 
-                yield encoded_column, column == category
+                yield encoded_column, column.expr == category
