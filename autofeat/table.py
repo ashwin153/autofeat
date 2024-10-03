@@ -49,7 +49,7 @@ class Column:
         :param other: Other column.
         :return: Has common ancestor.
         """
-        return not self._ancestors.isdisjoint(other._ancestors)
+        return self.name == other.name or not self._ancestors.isdisjoint(other._ancestors)
 
     @functools.cached_property
     def _ancestors(
