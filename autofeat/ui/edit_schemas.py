@@ -10,7 +10,7 @@ def edit_schemas(
     dataset: Dataset,
 ) -> Dataset:
     with streamlit.expander("Edit Schemas"):
-        edited_schemas = []
+        edited_schemas: list[list[Column]] = []
 
         for tab, table in zip(
             streamlit.tabs([table.name for table in dataset.tables]),
