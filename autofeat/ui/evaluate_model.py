@@ -22,7 +22,7 @@ def evaluate_model(
             improvement = _percent_change(baseline["accuracy"], metrics["accuracy"])
 
             with streamlit.expander(
-                f"✅ model is {improvement:.2f}% more accurate than always guessing the most frequent category",  # noqa: E501
+                f"✅ model is {improvement:.2f}% more accurate than always guessing randomly",
             ):
                 column1, column2, column3 = streamlit.columns(3)
 
