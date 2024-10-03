@@ -38,7 +38,7 @@ def into_columns(
     elif isinstance(value, Iterable):
         return list(value)
     else:
-        raise NotImplementedError("")
+        raise NotImplementedError(f"{type(value)} is not supported")
 
 
 def _infer_columns(

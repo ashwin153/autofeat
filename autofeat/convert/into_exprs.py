@@ -45,4 +45,4 @@ def _into_exprs(
         elif isinstance(value, Iterable):
             yield from (y for x in value for y in _into_exprs(x))
         else:
-            raise NotImplementedError("")
+            raise NotImplementedError(f"{type(value)} is not supported")

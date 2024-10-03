@@ -40,4 +40,4 @@ def _into_named_exprs(
         elif isinstance(value, tuple):
             yield (value[0].name, value[1])
         else:
-            raise NotImplementedError("")
+            raise NotImplementedError(f"{type(value)} is not supported")
