@@ -47,7 +47,7 @@ def generate_accounts_data(
     return pd.DataFrame(accounts_data)
 
 def generate_session_flow(
-    is_churned: bool,  #noqa 
+    is_churned: bool,  #noqa
 ) -> list[tuple[str,str]]:
     pages = ["homepage", "report_generation", "data_tables"]
     flow = []
