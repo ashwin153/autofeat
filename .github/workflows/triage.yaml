@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - run: echo "MILESTONE=$(date +"%Y.%m")" >>$GITHUB_ENV
+      - run: echo "MILESTONE=$(date +"%Y.%m")" >>"$GITHUB_ENV"
       - uses: zoispag/action-assign-milestone@v2
         with:
           milestone: ${{ env.MILESTONE }}
