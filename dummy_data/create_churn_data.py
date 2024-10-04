@@ -6,11 +6,10 @@ import pandas as pd
 from faker import Faker
 
 # Set up the random number generator
-rng = np.random.Generator(np.random.PCG64(42))  # 42 is the seed
+rng = np.random.Generator(np.random.PCG64())
 
 # Set up Faker
 fake = Faker()
-Faker.seed(42)  # Set seed for reproducibility
 
 # Generate accounts data
 num_companies = 250
