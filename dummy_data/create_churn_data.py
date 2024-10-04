@@ -15,7 +15,8 @@ Faker.seed(42)  # Set seed for reproducibility
 # Generate accounts data
 num_companies = 250
 
-def generate_accounts_data() -> pd.DataFrame:
+def generate_accounts_data(
+) -> pd.DataFrame:
     accounts_data = []
     for i in range(1, num_companies + 1):
         company_name = fake.company()
