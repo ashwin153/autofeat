@@ -1,0 +1,78 @@
+name: triage
+on:
+  pull_request_target:
+    types:
+      - opened
+jobs:
+  author:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: toshimaru/auto-author-assign@v2.1.1
+  labels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labels.yaml
+          repo-token: ${{ github.token }}
+          dot: true
+      - uses: mauroalderete/action-assign-labels@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          conventional-commits: |
+            conventional-commits:
+              - type: bug
+                nouns:
+                  - fix
+                labels:
+                  - kind/bug
+              - type: chore
+                nouns:
+                  - chore
+                  - refactor
+                labels:
+                  - kind/chore
+              - type: docs
+                nouns:
+                  - docs
+                labels:
+                  - kind/docs
+              - type: feature
+                nouns:
+                  - feat
+                labels:
+                  - kind/feature
+          maintain-labels-not-matched: true
+          apply-changes: true
+      - uses: pascalgn/size-label-action@v0.5.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IGNORED: |
+            poetry.lock
+        with:
+          sizes: |
+            {
+              "0": "small",
+              "100": "medium",
+              "250": "large"
+            }
+  milestone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: echo "MILESTONE=$(date +"%Y.%m")" >>"$GITHUB_ENV"
+      - uses: zoispag/action-assign-milestone@v2
+        with:
+          milestone: ${{ env.MILESTONE }}
+          repo-token: ${{ github.token }}
+  reviewers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Assign reviewers
+        uses: totallymoney/assign-reviewers-by-labels-action@v1
+        with:
+          config-file: .github/reviewers.yaml
+          repo-token: ${{ github.token }}

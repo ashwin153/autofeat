@@ -1,0 +1,69 @@
+name: release
+on:
+  schedule:
+    - cron: '5 0 1 * *'
+  workflow_dispatch:
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            // Get the last milestone.
+            const milestones = await github.paginate(github.rest.issues.listMilestones, {
+              ...context.repo,
+              sort: "due_on",
+              direction: "desc",
+            });
+
+            const lastMilestone = milestones[0];
+
+            // Create the next milestone.
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            const nextMonth = new Date(now);
+            nextMonth.setMonth(now.getMonth() + 1);
+
+            const nextMilestone = github.rest.issues.createMilestone({
+              ...context.repo,
+              due_on: nextMonth.toISOString(),
+              state: "open",
+              title: `${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, "0")}`,
+            });
+
+            // Verify that the last and next milestones are distinct.
+            if (lastMilestone.number === nextMilestone.number) {
+              throw new Error(`Milestone ${nextMilestone.title} already exists.`)
+            }
+
+            // Roll open issues from the last milestone over to the next milestone.
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo,
+              milestone: lastMilestone.number,
+            });
+
+            for (const issue of issues) {
+              github.rest.issues.update({
+                ...context.repo,
+                issue_number: issue.number,
+                milestone: nextMilestone.number,
+              });
+            }
+
+            // Close the last milestone.
+            github.rest.issues.updateMilestone({
+              ...context.repo,
+              milestone_number: lastMilestone.number,
+              state: "closed",
+            });
+
+            // Create a release.
+            github.rest.repos.createRelease({
+              ...context.repo,
+              generate_release_notes: true,
+              name: lastMilestone.title,
+              tag_name: lastMilestone.title,
+            });
