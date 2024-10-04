@@ -46,7 +46,7 @@ def generate_accounts_data() -> pd.DataFrame:
         })
     return pd.DataFrame(accounts_data)
 
-def generate_session_flow(is_churned) -> list[str]:
+def generate_session_flow(is_churned) -> list[tuple[str,str]]:
     pages = ["homepage", "report_generation", "data_tables"]
     flow = []
 
