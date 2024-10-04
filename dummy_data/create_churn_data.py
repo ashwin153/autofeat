@@ -23,7 +23,7 @@ def generate_accounts_data():
         first_name = fake.first_name()
         last_name = fake.last_name()
         account_owner = f"{first_name} {last_name}"
-        email = f"{first_name.lower()}.{last_name.lower()}@{company_name.lower().replace(' ', '')}.com"
+        email = f"{first_name.lower()}.{last_name.lower()}@{company_name.lower().replace(' ', '')}.com" # noqa: E501
         seats_available = rng.integers(2, 21)
         contract_start_date = datetime(2023, 1, 1) + timedelta(days=int(rng.integers(0, 366)))
         contract_size = int(rng.integers(1, 11)) * 1000
@@ -111,18 +111,18 @@ def generate_events_data(accounts_df):
         if is_churned:
             max_active_users = max(0, int(rng.beta(2, 5) * total_seats))  # Right-skewed for churned
         else:
-            max_active_users = max(0, int(rng.beta(5, 2) * total_seats))  # Left-skewed for non-churned
+            max_active_users = max(0, int(rng.beta(5, 2) * total_seats))  # Left-skewed for non-churned # noqa: E501
 
         active_users = rng.integers(0, max_active_users + 1)
         user_ids = [f"{company_id}_USER{i:02d}" for i in range(1, active_users + 1)]
         print (f"number of users for this account: {len(user_ids)}")
 
         # Ensure all usage happens within a year of renewal_or_churn_date
-        usage_start_date = max(account["Start Date"], account["Renewal or Churn Date"] - timedelta(days=365))
+        usage_start_date = max(account["Start Date"], account["Renewal or Churn Date"] - timedelta(days=365)) # noqa: E501
         usage_period = (account["Renewal or Churn Date"] - usage_start_date).days
 
         for user_id in user_ids:
-            # Determine number of sessions for this user (up to ~365, but less for churned on average)
+            # Determine number of sessions for this user (up to ~365, but less for churned on average) # noqa: E501
             if is_churned:
                 max_sessions = int(rng.beta(2, 5) * 90)  # Right-skewed for churned
             else:
@@ -203,4 +203,4 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 accounts_df.to_csv(os.path.join(current_dir, "accounts_data.csv"), index=False)
 events_df.to_csv(os.path.join(current_dir, "events_data.csv"), index=False)
 
-print(f"\nData has been generated and saved to 'accounts_data.csv' and 'events_data.csv' in {current_dir}")
+print(f"\nData has been generated and saved to 'accounts_data.csv' and 'events_data.csv' in {current_dir}") # noqa: E501
