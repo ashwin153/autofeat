@@ -247,7 +247,7 @@ class TrainedModel:
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
     :param selection_model: Model used to select relevant features from the ``prediction_model``.
-    :param transformer:
+    :param transformer: Transformation applied by the model to the target variable.
     :param X: Input variables.
     :param X_test: Input variables used to test this model.
     :param X_train: Input variables used to train this model.
