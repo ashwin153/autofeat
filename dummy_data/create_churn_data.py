@@ -15,7 +15,7 @@ Faker.seed(42)  # Set seed for reproducibility
 # Generate accounts data
 num_companies = 250
 
-def generate_accounts_data():
+def generate_accounts_data() -> pd.DataFrame:
     accounts_data = []
     for i in range(1, num_companies + 1):
         company_name = fake.company()
@@ -46,7 +46,7 @@ def generate_accounts_data():
         })
     return pd.DataFrame(accounts_data)
 
-def generate_session_flow(is_churned):
+def generate_session_flow(is_churned) -> list[str]:
     pages = ["homepage", "report_generation", "data_tables"]
     flow = []
 
@@ -99,7 +99,7 @@ def generate_session_flow(is_churned):
 
     return flow
 
-def generate_events_data(accounts_df):
+def generate_events_data(accounts_df) -> pd.DataFrame:
     events_data = []
 
     for _, account in accounts_df.iterrows():
