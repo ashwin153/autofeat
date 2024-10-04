@@ -48,7 +48,7 @@ def generate_accounts_data() -> pd.DataFrame:
 
 def generate_session_flow(
         is_churned: bool,  #noqa 
-    ) -> list[tuple[str,str]]:
+) -> list[tuple[str,str]]:
     pages = ["homepage", "report_generation", "data_tables"]
     flow = []
 
@@ -103,7 +103,7 @@ def generate_session_flow(
 
 def generate_events_data(
         accounts_df: pd.DataFrame,
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     events_data = []
 
     for _, account in accounts_df.iterrows():
