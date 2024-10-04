@@ -15,6 +15,7 @@ import sklearn.feature_selection
 import sklearn.linear_model
 import sklearn.metrics
 import sklearn.model_selection
+import sklearn.preprocessing
 import xgboost
 
 if TYPE_CHECKING:
@@ -218,67 +219,61 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
 }
 
 
+class Transformer(Protocol):
+    """Any invertible sklearn transformer."""
+
+    def fit_transform(
+        self,
+        y: numpy.ndarray,
+        /,
+    ) -> Any:
+        ...
+
+    def inverse_transform(
+        self,
+        y: numpy.ndarray,
+        /,
+    ) -> numpy.ndarray:
+        ...
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class TrainedModel:
     """A prediction model trained on select features in a ``dataset``.
 
+    :param baseline_model: Model used to benchmark the performance of this model.
     :param dataset: Dataset from which features are extracted.
     :param prediction_method: Method of prediction.
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
     :param selection_model: Model used to select relevant features from the ``prediction_model``.
+    :param transformer:
     :param X: Input variables.
     :param X_test: Input variables used to test this model.
     :param X_train: Input variables used to train this model.
     :param y: Target variable.
+    :param y_baseline: Target variable predicted by the baseline model on the test input variables.
+    :param y_predicted: Target variable predicted by this model on the test input variables.
     :param y_test: Target variable used to test this model.
     :param y_train: Input variable used to train this model.
     """
 
+    baseline_model: PredictionModel
     dataset: Dataset
     prediction_model: PredictionModel
     prediction_method: PredictionMethod
     selection_model: SelectionModel
     selection_method: SelectionMethod
+    transformer: Transformer
 
     X: polars.DataFrame
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     y: polars.Series
+    y_baseline: numpy.ndarray
+    y_predicted: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
-
-    @functools.cached_property
-    def baseline_model(
-        self,
-    ) -> PredictionModel:
-        """Get the baseline model used to benchmark the performance of the prediction model.
-
-        :return: Benchmark model.
-        """
-        baseline_model = self.prediction_method.problem.baseline_method.model()
-        baseline_model.fit(self.X_train, self.y_train)
-        return baseline_model
-
-    @functools.cached_property
-    def y_baseline(
-        self,
-    ) -> numpy.ndarray:
-        """Get the target variable predicted by the baseline model on the test data.
-
-        :return: Baseline output.
-        """
-        return self.baseline_model.predict(self.X_test)
-
-    @functools.cached_property
-    def y_predicted(
-        self,
-    ) -> numpy.ndarray:
-        """Get the target variable predicted by the prediction model on the test data.
-
-        :return: Predicted output.
-        """
-        return self.prediction_model.predict(self.X_test)
 
     def predict(
         self,
@@ -289,5 +284,6 @@ class TrainedModel:
         :param known: Data that is already known.
         :return: Target variable.
         """
-        features = self.dataset.features(known)
-        return self.prediction_model.predict(features.to_numpy())
+        X = self.dataset.features(known)
+        y = self.prediction_model.predict(X.to_numpy())
+        return self.transformer.inverse_transform(y)
