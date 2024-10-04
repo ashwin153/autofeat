@@ -1,0 +1,15 @@
+area/dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.pre-commit-config.yaml'
+          - 'poetry.lock'
+          - 'pyproject.toml'
+          - 'renovate.json'
+area/ui:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'autofeat/ui/**/*'
+priority/low:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**'
