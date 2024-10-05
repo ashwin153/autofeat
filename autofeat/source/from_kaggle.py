@@ -8,12 +8,11 @@ import zipfile
 from autofeat.dataset import Dataset
 from autofeat.source.from_csv import from_csv
 
-DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 
 def from_kaggle(
     name_or_url: str,
     *,
-    cache: pathlib.Path = DEFAULT_CACHE,
+    cache: pathlib.Path = pathlib.Path.home() / ".cache" / "kaggle",
 ) -> Dataset:
     """Load from Kaggle.
 

@@ -8,8 +8,6 @@ from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
-DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
-
 
 def from_csv(
     files: Iterable[str | pathlib.Path],
