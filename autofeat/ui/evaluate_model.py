@@ -159,12 +159,13 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
         fig = px.histogram(
             df, x="feature", color="target",
             hover_data=df.columns,
-            title=f"Feature Analysis: {feature} vs Target",
-            labels={"feature": feature, "target": "Target Class"},
+            title=f"{feature} vs {model.y.name}",
+            labels={"feature": feature, "target": f"{model.y.name} Class"},
             height=600, width=800,
         )
 
         fig.update_layout(bargap=0.2)
+        fig.update_yaxes(title_text=f"{model.y.name} Frequency")
     else:
         # Categorical feature: create a normalized stacked bar chart
         df_counts = df.groupby(["feature", "target"]).size().unstack(fill_value=0)
@@ -172,13 +173,13 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
 
         fig = px.bar(
             df_percentages, barmode="stack",
-            labels={"value": "Percentage", "target": "Target Class"},
-            title=f"Feature Analysis: {feature} vs. Target",
+            labels={"value": "Percentage", "target": f"{model.y.name} Class"},
+            title=f"{feature} vs. {model.y.name}",
         )
 
         fig.update_layout(
             xaxis_title=feature,
-            yaxis_title="Percentage",
+            yaxis_title=f"{model.y.name} Distribution (%)",
             height=600,
             width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},  # Ensure y-axis is 0-100%
@@ -219,7 +220,7 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
                 x=x,
                 y=y_true,
                 mode="markers",
-                name="Data Points",
+                name=f"{model.y.name}",
                 marker={
                     "size": 5,
                     "color": "blue",
@@ -257,9 +258,9 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
 
     # Customize the layout
     fig.update_layout(
-        title=f"Feature Analysis: {feature}",
+        title=f"{feature} vs {model.y.name}",
         xaxis_title=feature,
-        yaxis_title="Target Variable",
+        yaxis_title=f"{model.y.name}",
         height=400,
         width=600,
     )
