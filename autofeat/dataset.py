@@ -146,6 +146,7 @@ class Dataset:
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
         X = X.select(selection)
+        X_transformer.fit_transform(X_train)
         dataset = self.apply(Keep(columns=selection_by_table))
 
         # train the prediction model on the selected features and evaluate it against the test data
