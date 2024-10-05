@@ -104,22 +104,23 @@ class Dataset:
         :param selection_method: Method of feature selection.
         :return: Trained model.
         """
-        # split input and target variables into training and test data
+        # pre-process the input and target variables and split them into training and test data
         X = self.features(known)
         y = into_series(target)
 
+        transformer = (
+            sklearn.preprocessing.LabelEncoder()
+            if prediction_method.problem == PredictionProblem.classification
+            else sklearn.preprocessing.FunctionTransformer()
+        )
+
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
             X.to_numpy(),
-            (
-                sklearn.preprocessing.LabelEncoder().fit_transform(y.to_numpy())
-                if prediction_method.problem == PredictionProblem.classification
-                else y.to_numpy()
-            ),
+            transformer.fit_transform(y.to_numpy()),
         )
 
         # train a model that selects the most important features to a prediction model
         prediction_model = prediction_method.model()
-
         selection_model = selection_method.model(prediction_model)
         selection_model.fit(X_train, y_train)
 
@@ -140,22 +141,32 @@ class Dataset:
         X = X.select(selection)
         dataset = self.apply(Keep(columns=selection_by_table))
 
-        # train the prediction model on the selected features
+        # train the prediction model on the selected features and evaluate it against the test data
         prediction_model.fit(X_train, y_train)
+        y_predicted = prediction_model.predict(X_test)
+
+        # train the baseline model on the selected features and evaluate it against the test data
+        baseline_model = prediction_method.problem.baseline_method.model()
+        baseline_model.fit(X_train, y_train)
+        y_baseline = baseline_model.predict(X_test)
 
         # collect all the intermediate outputs
         return TrainedModel(
+            baseline_model=baseline_model,
             dataset=dataset,
             prediction_method=prediction_method,
             prediction_model=prediction_model,
             selection_method=selection_method,
             selection_model=selection_model,
+            transformer=transformer,
             X=X,
             X_test=X_test,
             X_train=X_train,
             y=y,
-            y_test=y_test,
-            y_train=y_train,
+            y_baseline=transformer.inverse_transform(y_baseline),
+            y_predicted=transformer.inverse_transform(y_predicted),
+            y_test=transformer.inverse_transform(y_test),
+            y_train=transformer.inverse_transform(y_train),
         )
 
     def table(
