@@ -186,7 +186,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             height=600,
             width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},
-            xaxis={"type": "category", "categoryorder": "total descending"}
+            xaxis={"type": "category", "categoryorder": "total descending"},
         )
 
     return fig
