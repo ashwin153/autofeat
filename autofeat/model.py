@@ -221,7 +221,7 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class TrainedModel:
+class TrainedModel:  # type: ignore[no-any-unimported]
     """A prediction model trained on select features in a ``dataset``.
 
     :param baseline_model: Model used to benchmark the performance of this model.
@@ -250,13 +250,13 @@ class TrainedModel:
     selection_method: SelectionMethod
     X_test: numpy.ndarray
     X_train: numpy.ndarray
-    X_transformer: sklearn.pipeline.Pipeline
+    X_transformer: sklearn.pipeline.Pipeline  # type: ignore[no-any-unimported]
     X: polars.DataFrame
     y_baseline: numpy.ndarray
     y_predicted: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
-    y_transformer: sklearn.pipeline.Pipeline
+    y_transformer: sklearn.pipeline.Pipeline  # type: ignore[no-any-unimported]
     y: polars.Series
 
     def predict(
@@ -271,4 +271,4 @@ class TrainedModel:
         features = self.dataset.features(known)
         X = self.X_transformer.transform(features.to_numpy())
         y = self.prediction_model.predict(X)
-        return self.y_transformer.inverse_transform(y)
+        return self.y_transformer.inverse_transform(y)  # type: ignore[no-any-return]
