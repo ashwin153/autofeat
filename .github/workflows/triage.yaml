@@ -5,6 +5,8 @@ on:
       - opened
 jobs:
   author:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
