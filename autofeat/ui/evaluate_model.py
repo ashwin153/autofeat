@@ -172,8 +172,11 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
         df_percentages = df_counts.apply(lambda x: x / x.sum() * 100, axis=1)
 
         fig = px.bar(
-            df_percentages, barmode="stack",
-            labels={"value": "Percentage", "target": f"{model.y.name} Class"},
+            df_percentages,
+            x=df_percentages.index,
+            y=df_percentages.columns,
+            barmode="stack",
+            labels={"x": feature, "y": "Percentage", "color": f"{model.y.name} Class"},
             title=f"{feature} vs. {model.y.name}",
         )
 
@@ -182,7 +185,8 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             yaxis_title=f"{model.y.name} Distribution (%)",
             height=600,
             width=800,
-            yaxis={"tickformat": ".1f", "range": [0, 100]},  # Ensure y-axis is 0-100%
+            yaxis={"tickformat": ".1f", "range": [0, 100]},
+            xaxis={"type": "category", "categoryorder": "total descending"}
         )
 
     return fig
