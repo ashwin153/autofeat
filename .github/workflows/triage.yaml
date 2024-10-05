@@ -10,6 +10,8 @@ jobs:
     steps:
       - uses: toshimaru/auto-author-assign@v2.1.1
   labels:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -68,6 +70,8 @@ jobs:
           milestone: ${{ env.MILESTONE }}
           repo-token: ${{ github.token }}
   reviewers:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
