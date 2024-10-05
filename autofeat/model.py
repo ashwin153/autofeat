@@ -15,6 +15,7 @@ import sklearn.feature_selection
 import sklearn.linear_model
 import sklearn.metrics
 import sklearn.model_selection
+import sklearn.pipeline
 import sklearn.preprocessing
 import xgboost
 
@@ -219,24 +220,6 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
 }
 
 
-class Transformer(Protocol):
-    """Any invertible sklearn transformer."""
-
-    def fit_transform(
-        self,
-        y: numpy.ndarray,
-        /,
-    ) -> Any:
-        ...
-
-    def inverse_transform(
-        self,
-        y: numpy.ndarray,
-        /,
-    ) -> numpy.ndarray:
-        ...
-
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class TrainedModel:
     """A prediction model trained on select features in a ``dataset``.
@@ -247,15 +230,16 @@ class TrainedModel:
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
     :param selection_model: Model used to select relevant features from the ``prediction_model``.
-    :param transformer: Transformation applied by the model to the target variable.
-    :param X: Input variables.
     :param X_test: Input variables used to test this model.
     :param X_train: Input variables used to train this model.
-    :param y: Target variable.
+    :param X_transformer: Transformation applied by the model to the input variables.
+    :param X: Input variables.
     :param y_baseline: Target variable predicted by the baseline model on the test input variables.
     :param y_predicted: Target variable predicted by this model on the test input variables.
     :param y_test: Target variable used to test this model.
     :param y_train: Input variable used to train this model.
+    :param y_transformer: Transformation applied by the model to the target variable.
+    :param y: Target variable.
     """
 
     baseline_model: PredictionModel
@@ -264,16 +248,16 @@ class TrainedModel:
     prediction_method: PredictionMethod
     selection_model: SelectionModel
     selection_method: SelectionMethod
-    transformer: Transformer
-
-    X: polars.DataFrame
     X_test: numpy.ndarray
     X_train: numpy.ndarray
-    y: polars.Series
+    X_transformer: sklearn.pipeline.Pipeline
+    X: polars.DataFrame
     y_baseline: numpy.ndarray
     y_predicted: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
+    y_transformer: sklearn.pipeline.Pipeline
+    y: polars.Series
 
     def predict(
         self,
@@ -284,6 +268,7 @@ class TrainedModel:
         :param known: Data that is already known.
         :return: Target variable.
         """
-        X = self.dataset.features(known)
-        y = self.prediction_model.predict(X.to_numpy())
-        return self.transformer.inverse_transform(y)
+        features = self.dataset.features(known)
+        X = self.X_transformer.transform(features.to_numpy())
+        y = self.prediction_model.predict(X)
+        return self.y_transformer.inverse_transform(y)

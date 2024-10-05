@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import polars
 import sklearn.model_selection
+import sklearn.pipeline
 import sklearn.preprocessing
 
 from autofeat.attribute import Attribute
@@ -108,15 +109,21 @@ class Dataset:
         X = self.features(known)
         y = into_series(target)
 
-        transformer = (
-            sklearn.preprocessing.LabelEncoder()
-            if prediction_method.problem == PredictionProblem.classification
-            else sklearn.preprocessing.FunctionTransformer()
-        )
+        X_transformer = sklearn.pipeline.Pipeline([
+            ("scale", sklearn.preprocessing.RobustScaler()),
+        ])
+
+        y_transformer = sklearn.pipeline.Pipeline([
+            (
+                ("encode", sklearn.preprocessing.LabelEncoder())
+                if prediction_method.problem == PredictionProblem.classification
+                else ("identity", sklearn.preprocessing.FunctionTransformer())
+            ),
+        ])
 
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
-            X.to_numpy(),
-            transformer.fit_transform(y.to_numpy()),
+            X_transformer.fit_transform(X.to_numpy()),
+            y_transformer.fit_transform(y.to_numpy()),
         )
 
         # train a model that selects the most important features to a prediction model
@@ -158,15 +165,16 @@ class Dataset:
             prediction_model=prediction_model,
             selection_method=selection_method,
             selection_model=selection_model,
-            transformer=transformer,
+            X_test=X_transformer.inverse_transform(X_test),
+            X_train=X_transformer.inverse_transform(X_train),
+            X_transformer=X_transformer,
             X=X,
-            X_test=X_test,
-            X_train=X_train,
+            y_baseline=y_transformer.inverse_transform(y_baseline),
+            y_predicted=y_transformer.inverse_transform(y_predicted),
+            y_test=y_transformer.inverse_transform(y_test),
+            y_train=y_transformer.inverse_transform(y_train),
+            y_transformer=y_transformer,
             y=y,
-            y_baseline=transformer.inverse_transform(y_baseline),
-            y_predicted=transformer.inverse_transform(y_predicted),
-            y_test=transformer.inverse_transform(y_test),
-            y_train=transformer.inverse_transform(y_train),
         )
 
     def table(
