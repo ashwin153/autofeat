@@ -84,13 +84,10 @@ def _generate_sessions(
     sessions = []
 
     for account in accounts.rows(named=True):
-        company_id = account["Company ID"]
-        is_churned = account["Churned"]
-
         # churned accounts tend to actively use fewer of the available seats
-        active_usage = _RNG.beta(2, 5) if is_churned else _RNG.beta(5, 2)
+        active_usage = _RNG.beta(2, 5) if account["Churned"] else _RNG.beta(5, 2)
         active_seats = _RNG.integers(0, int(active_usage * account["Seats Available"]) + 1)
-        user_ids = [f"{company_id}_USER{i:02d}" for i in range(1, active_seats + 1)]
+        active_users = [f"{account['Company ID']}_USER{i:02d}" for i in range(1, active_seats + 1)]
 
         # all usage happens within a year of renewal_or_churn_date
         usage_start_date = max(
@@ -100,9 +97,9 @@ def _generate_sessions(
 
         usage_period = (account["Renewal or Churn Date"] - usage_start_date).days
 
-        for user_id in user_ids:
+        for user_id in active_users:
             # churned users tend to have fewer sessions
-            max_sessions = (_RNG.beta(2, 5) if is_churned else _RNG.beta(5, 2)) * 90
+            max_sessions = (_RNG.beta(2, 5) if account["Churned"] else _RNG.beta(5, 2)) * 90
             num_sessions = max(0, int(_RNG.normal(max_sessions / 2, max_sessions / 4)))
 
             for _ in range(num_sessions):
@@ -111,7 +108,7 @@ def _generate_sessions(
                     # churned sessions tend to have started earlier in the usage period
                     session_start_offset = (
                         int(_RNG.beta(1, 4) * usage_period)
-                        if is_churned
+                        if account["Churned"]
                         else int(_RNG.beta(1.2, 1) * usage_period)
                     )
 
@@ -119,21 +116,21 @@ def _generate_sessions(
                     session_starts.append(session_start)
 
                 for session_start in sorted(session_starts):
-                    session_id = f"{company_id}_SESSION{_RNG.integers(1, 1001):04d}"
-                    session = _generate_session(is_churned=is_churned)
+                    session_id = f"{account['Company ID']}_SESSION{_RNG.integers(1, 1001):04d}"
+                    session = _generate_session(is_churned=account["Churned"])
 
-                    timestamp = session_start
-                    for page, event, offset in session:
-                        timestamp += datetime.timedelta(seconds=offset)
-                        if timestamp > account["Renewal or Churn Date"]:
+                    event_timestamp = session_start
+                    for page, event, event_offset in session:
+                        event_timestamp += datetime.timedelta(seconds=event_offset)
+                        if event_timestamp > account["Renewal or Churn Date"]:
                             break
 
                         sessions.append({
-                            "Company ID": company_id,
+                            "Company ID": account["Company ID"],
                             "Event": event,
                             "Page Name": page,
                             "Session ID": session_id,
-                            "Timestamp": timestamp,
+                            "Timestamp": event_timestamp,
                             "User ID": user_id,
                         })
 
@@ -170,4 +167,3 @@ def _generate_session(
             break
 
     return session
-
