@@ -9,72 +9,81 @@ def edit_dataset(
     dataset: Dataset,
 ) -> Dataset:
     with streamlit.expander("Edit Dataset"):
-        edited_schemas: list[list[Column]] = []
+        edited_schemas: list[list[dict[str, Any]]] = []
 
-        for tab, table in zip(
+        for tab, table, schemas in zip(
             streamlit.tabs([table.name for table in dataset.tables]),
             dataset.tables,
+            _load_schemas(dataset),
         ):
             with tab:
                 if streamlit.toggle("Redacted", key=table.name):
                     edited_schemas.append([])
                 else:
-                    values = [
-                        {
-                            "column": column.name,
-                            "redacted": False,
-                            **{
-                                attribute.name: attribute in column.attributes
-                                for attribute in Attribute
-                            },
-                        }
-                        for column in table.columns
-                    ]
+                    edited_schemas.append(streamlit.data_editor(schemas, hide_index=True))
 
-                    edited_values: list[dict[str, Any]] = streamlit.data_editor(
-                        data=values,
-                        hide_index=True,
-                    )
-
-                    edited_columns = [
-                        Column(
-                            name=table.columns[i].name,
-                            attributes={
-                                attribute
-                                for attribute in Attribute
-                                if value[attribute.name]
-                            },
-                            derived_from=table.columns[i].derived_from,
-                        )
-                        for i, value in enumerate(edited_values)
-                        if not value["redacted"]
-                    ]
-
-                    edited_schemas.append(edited_columns)
-
-        return _apply_schema_changes(dataset, edited_schemas)
+        return _edit_schemas(dataset, edited_schemas)
 
 
 @streamlit.cache_resource(
     hash_funcs={
         Dataset: id,
         list: lambda schemas: tuple(
-            (column.name, attribute)
-            for columns in cast(list, schemas)
-            for column in columns
-            for attribute in sorted(attribute.name for attribute in column.attributes)
+            item
+            for schema in cast(list, schemas)
+            for value in schema
+            for item in value.items()
         ),
     },
     max_entries=1,
 )
-def _apply_schema_changes(
+def _edit_schemas(
     dataset: Dataset,
-    edited_schemas: list[list[Column]],
+    edited_schemas: list[list[dict[str, Any]]],
 ) -> Dataset:
-    edited_tables = [
-        table.select(edited_columns)
-        for table, edited_columns in zip(dataset.tables, edited_schemas)
-        if edited_columns
-    ]
+    edited_tables = []
+
+    for table, edited_schema in zip(dataset.tables, edited_schemas):
+        edited_columns = [
+            Column(
+                name=table.columns[i].name,
+                attributes={
+                    attribute
+                    for attribute in Attribute
+                    if value[attribute.name]
+                },
+                derived_from=table.columns[i].derived_from,
+            )
+            for i, value in enumerate(edited_schema)
+            if not value["redacted"]
+        ]
+
+        if edited_columns:
+            edited_tables.append(table.select(edited_columns))
 
     return Dataset(edited_tables)
+
+
+@streamlit.cache_resource(
+    hash_funcs={
+        Dataset: id,
+    },
+    max_entries=1,
+)
+def _load_schemas(
+    dataset: Dataset,
+) -> list[list[dict[str, Any]]]:
+    return [
+        [
+            {
+                "column": column.name,
+                "redacted": False,
+                **{
+                    attribute.name: attribute in column.attributes
+                    for attribute in Attribute
+                },
+            }
+            for column in table.columns
+        ]
+        for table in dataset.tables
+    ]

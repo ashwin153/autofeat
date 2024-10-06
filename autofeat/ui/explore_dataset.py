@@ -1,4 +1,3 @@
-import polars
 import pygwalker.api.streamlit
 import streamlit
 
@@ -33,18 +32,18 @@ def explore_dataset(
 
         if load:
             sample = _load_sample(table, sample_size)
-            renderer = pygwalker.api.streamlit.StreamlitRenderer(sample)
-            renderer.table(key=table.name)
+            sample.table(key=table.name)
 
 
-@streamlit.cache_data(
+@streamlit.cache_resource(
     hash_funcs={
         Table: id,
     },
     max_entries=20,
 )
-def _load_sample(
+def _load_sample(  # type: ignore[no-any-unimported]
     table: Table,
     sample_size: int,
-) -> polars.DataFrame:
-    return table.data.head(sample_size).collect()
+) -> pygwalker.api.streamlit.StreamlitRenderer:
+    df = table.data.head(sample_size).collect()
+    return pygwalker.api.streamlit.StreamlitRenderer(df)
