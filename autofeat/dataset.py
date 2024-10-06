@@ -113,13 +113,11 @@ class Dataset:
             ("scale", sklearn.preprocessing.RobustScaler()),
         ])
 
-        y_transformer = sklearn.pipeline.Pipeline([
-            (
-                ("encode", sklearn.preprocessing.LabelEncoder())
-                if prediction_method.problem == PredictionProblem.classification
-                else ("identity", sklearn.preprocessing.FunctionTransformer())
-            ),
-        ])
+        y_transformer = (
+            sklearn.preprocessing.LabelEncoder()
+            if prediction_method.problem == PredictionProblem.classification
+            else sklearn.preprocessing.FunctionTransformer()
+        )
 
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
             X_transformer.fit_transform(X.to_numpy()),
