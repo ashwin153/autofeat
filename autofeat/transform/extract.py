@@ -1,6 +1,6 @@
 import dataclasses
 from collections.abc import Iterable
-from typing import ClassVar, Final
+from typing import ClassVar
 
 import polars
 
@@ -18,7 +18,7 @@ class Extract(Transform):
     """
 
     # Reserved characters used to separate column and table names.
-    SEPARATOR: Final[ClassVar] = " :: "
+    SEPARATOR: ClassVar = " :: "
 
     known: IntoDataFrame
 

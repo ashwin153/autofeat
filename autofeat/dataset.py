@@ -63,7 +63,7 @@ class Dataset:
         """
         features = [
             table.data
-            for table in self.apply(Extract(known=known))
+            for table in self.apply(Extract(known=known)).tables
         ]
 
         return polars.concat(
