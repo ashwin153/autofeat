@@ -1,8 +1,8 @@
-import pandas
+import polars
 import pygwalker.api.streamlit
 import streamlit
 
-from autofeat import Dataset
+from autofeat import Dataset, Table
 
 
 def explore_dataset(
@@ -14,8 +14,15 @@ def explore_dataset(
     """
     with streamlit.expander("Explore Dataset"):
         with streamlit.form("explore_dataset"):
+            table = streamlit.selectbox(
+                help="Table to explore",
+                label="Table",
+                options=dataset.tables,
+            )
+
             sample_size = streamlit.number_input(
                 "Sample Size",
+                help="Number of rows to load",
                 min_value=1,
                 max_value=10000,
                 value=100,
@@ -25,26 +32,19 @@ def explore_dataset(
             load = streamlit.form_submit_button("Load")
 
         if load:
-            for tab, sample in zip(
-                streamlit.tabs([table.name for table in dataset.tables]),
-                _load_samples(dataset, sample_size),
-            ):
-                with tab:
-                    renderer = pygwalker.api.streamlit.StreamlitRenderer(sample)
-                    renderer.explorer(default_tab="data")
+            sample = _load_sample(table, sample_size)
+            renderer = pygwalker.api.streamlit.StreamlitRenderer(sample)
+            renderer.table(key=table.name)
 
 
 @streamlit.cache_data(
     hash_funcs={
-        Dataset: id,
+        Table: id,
     },
-    max_entries=1,
+    max_entries=20,
 )
-def _load_samples(
-    dataset: Dataset,
+def _load_sample(
+    table: Table,
     sample_size: int,
-) -> list[pandas.DataFrame]:
-    return [
-        table.data.head(sample_size).collect().to_pandas()
-        for table in dataset.tables
-    ]
+) -> polars.DataFrame:
+    return table.data.head(sample_size).collect()
