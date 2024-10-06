@@ -1,4 +1,5 @@
 import math
+import uuid
 from typing import Any
 
 import numpy
@@ -8,6 +9,7 @@ import plotly.graph_objects as go
 import shap
 import sklearn.metrics
 import streamlit
+from streamlit_option_menu import option_menu
 
 from autofeat.model import PredictionProblem, TrainedModel
 
@@ -74,10 +76,10 @@ def evaluate_model(
 def _create_feature_charts(
     model: TrainedModel,
 ) -> None:
-
     #generate feature importances and sort them in descending order
     feature_importance = _feature_importance(model)
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
+    feature_list = feature_importance["Feature"].tolist()
 
     # Create the Plotly bar chart
     fig = go.Figure(
@@ -100,30 +102,61 @@ def _create_feature_charts(
     )
 
     streamlit.plotly_chart(fig, use_container_width=True)
-    ordered_list = feature_importance["Feature"].tolist()
 
-    with streamlit.form("feature_selection_form"):
-        # Create a dropdown for feature selection
-        selected_feature = streamlit.selectbox(
-            "Select a feature to analyze:",
-            ordered_list,
-        )
+    # Initialize session state for tabs
+    if 'tabs' not in streamlit.session_state:
+        streamlit.session_state.tabs = []
+    if 'selected_tab_index' not in streamlit.session_state:
+        streamlit.session_state.selected_tab_index = len(streamlit.session_state.tabs) - 1  # Default to first tab
 
-        submit_button = streamlit.form_submit_button("Show Chart")
+    tabs_list = streamlit.session_state.tabs
+    tab_labels = ['New Tab'] + [tab['label'] for tab in tabs_list]  # 'New Tab' is now first
 
-        fig = go.Figure()
+    # Use streamlit.tabs to create tabbed interface
+    tabs = streamlit.tabs(tab_labels)
 
-        if submit_button:
-            # Create the corresponding chart based on the selected feature
-            match model.prediction_method.problem:
-                case PredictionProblem.classification:
-                    fig = _create_classification_feature_chart(model, selected_feature)
-                    streamlit.plotly_chart(fig, use_container_width=True)
-                case PredictionProblem.regression:
-                    fig = _create_regression_feature_chart(model, selected_feature)
-                    streamlit.plotly_chart(fig, use_container_width=True)
-                case _:
-                    raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+    # Handle the 'New Tab' for adding new tabs
+    with tabs[0]:  # Index 0 for 'New Tab'
+        available_features = [
+            f for f in feature_list
+            if f not in [t.get('feature') for t in streamlit.session_state.tabs if t.get('feature')]
+        ]
+        if available_features:
+            streamlit.subheader("Add a New Chart")
+            selected_feature = streamlit.selectbox(
+                "Select a feature to analyze:",
+                [''] + available_features,
+                index=0,  # Start with the empty string selected
+            )
+            if selected_feature != '':
+                # Add a new tab with the selected feature
+                new_tab = {'label': selected_feature, 'feature': selected_feature}
+                streamlit.session_state.tabs.append(new_tab)
+                streamlit.rerun(scope="fragment")
+        else:
+            streamlit.write("No more features to select.")
+
+    # Handle existing tabs
+    for idx, tab in enumerate(tabs_list):
+        with tabs[idx + 1]:  # Existing tabs start from index 1
+            selected_feature = tab['feature']
+            streamlit.subheader(f"Feature: {selected_feature}")
+
+            # Generate the chart based on the prediction problem
+            if model.prediction_method.problem == PredictionProblem.classification:
+                chart_fig = _create_classification_feature_chart(model, selected_feature)
+            elif model.prediction_method.problem == PredictionProblem.regression:
+                chart_fig = _create_regression_feature_chart(model, selected_feature)
+            else:
+                raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+
+            streamlit.plotly_chart(chart_fig, use_container_width=True)
+
+            # Button to close the tab
+            if streamlit.button("Close Tab", key=f"close_{idx}"):
+                del streamlit.session_state.tabs[idx]
+                streamlit.rerun(scope="fragment")
+
 
 
 @streamlit.cache_data(
@@ -214,6 +247,7 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
         # Numerical feature: create a scatter plot
+        print(x)
         x = pandas.to_numeric(x, errors="coerce")
         mask = ~numpy.isnan(x)
         x = x[mask]
