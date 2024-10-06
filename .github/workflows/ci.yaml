@@ -35,4 +35,4 @@ jobs:
         with:
           python-version: 3.11
           poetry-version: 1.8.3
-      - run: poetry run pytest -v --doctest-modules
+      - run: poetry run pytest -v --cov=autofeat --doctest-modules
