@@ -41,7 +41,7 @@ def explore_dataset(
     },
     max_entries=20,
 )
-def _load_sample(
+def _load_sample(  # type: ignore[no-any-unimported]
     table: Table,
     sample_size: int,
 ) -> pygwalker.api.streamlit.StreamlitRenderer:
