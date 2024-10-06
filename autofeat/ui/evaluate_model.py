@@ -37,7 +37,7 @@ def evaluate_model(
                 "Improvement (%)": [
                     f"{_percent_change(baseline['accuracy'], metrics['accuracy']):.2f}%",
                     f"{_percent_change(baseline['precision'], metrics['precision']):.2f}%",
-                    f"{_percent_change(baseline['recall'], metrics['recall']):.2f}%"
+                    f"{_percent_change(baseline['recall'], metrics['recall']):.2f}%",
                 ],
             }
         case PredictionProblem.regression:
@@ -58,7 +58,7 @@ def evaluate_model(
                 ],
                 "Improvement (%)": [
                     f"{_percent_change(baseline['rmse'], metrics['rmse']):.2f}%",
-                    f"{_percent_change(baseline['r2'], metrics['r2']):.2f}%"
+                    f"{_percent_change(baseline['r2'], metrics['r2']):.2f}%",
                 ],
             }
         case _:
@@ -77,7 +77,7 @@ def evaluate_model(
             streamlit.caption(
                 "The metrics shown compare the model's performance against a baseline model. "
                 "Improvements are calculated as percentage changes from the baseline. "
-                "Higher accuracy, precision, recall, or R2, and lower RMSE, indicate better performance."
+                "Higher accuracy, precision, recall, or R2, and lower RMSE, indicate better performance.",
             )
 
     _create_feature_charts(model)
@@ -108,7 +108,7 @@ def _create_feature_importance_charts(
         streamlit.subheader(f"Predictors of {model.y.name}")
         streamlit.caption(
             f"This chart displays the top predictors of {model.y.name}. "
-            "The importance of each predictor indicates how predictive it is relative to the others."
+            "The importance of each predictor indicates how predictive it is relative to the others.",
         )
         with streamlit.container():
             # Create the bottom menu for pagination controls
@@ -168,13 +168,13 @@ def _create_feature_analysis_charts(
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
     feature_list = feature_importance["Feature"].tolist()
     # Initialize session state for tabs
-    if 'tabs' not in streamlit.session_state:
+    if "tabs" not in streamlit.session_state:
         streamlit.session_state.tabs = []
-    if 'selected_tab_index' not in streamlit.session_state:
+    if "selected_tab_index" not in streamlit.session_state:
         streamlit.session_state.selected_tab_index = len(streamlit.session_state.tabs) - 1  # Default to first tab
 
     tabs_list = streamlit.session_state.tabs
-    tab_labels = ['New Tab'] + [tab['label'] for tab in tabs_list]  # 'New Tab' is now first
+    tab_labels = ["New Tab"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
 
     # Use streamlit.tabs to create tabbed interface
     tabs = streamlit.tabs(tab_labels)
@@ -183,18 +183,18 @@ def _create_feature_analysis_charts(
     with tabs[0]:  # Index 0 for 'New Tab'
         available_features = [
             f for f in feature_list
-            if f not in [t.get('feature') for t in streamlit.session_state.tabs if t.get('feature')]
+            if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")]
         ]
         if available_features:
             streamlit.subheader("Add a New Chart")
             selected_feature = streamlit.selectbox(
                 "Select a feature to analyze:",
-                [''] + available_features,
+                ["", *available_features],
                 index=0,  # Start with the empty string selected
             )
-            if selected_feature != '':
+            if selected_feature != "":
                 # Add a new tab with the selected feature
-                new_tab = {'label': selected_feature, 'feature': selected_feature}
+                new_tab = {"label": selected_feature, "feature": selected_feature}
                 streamlit.session_state.tabs.append(new_tab)
                 streamlit.rerun(scope="fragment")
         else:
@@ -203,7 +203,7 @@ def _create_feature_analysis_charts(
     # Handle existing tabs
     for idx, tab in enumerate(tabs_list):
         with tabs[idx + 1]:  # Existing tabs start from index 1
-            selected_feature = tab['feature']
+            selected_feature = tab["feature"]
             streamlit.subheader(f"Feature: {selected_feature}")
 
             # Generate the chart based on the prediction problem
@@ -419,7 +419,6 @@ def _shap_explanation(  # type: ignore[no-any-unimported]
 def _feature_importance(
     model: TrainedModel,
 ) -> pandas.DataFrame:
-    print("hello world")
     shap_explanation = _shap_explanation(model)
 
     importance = (
