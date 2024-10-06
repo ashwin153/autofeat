@@ -129,7 +129,7 @@ def _create_feature_importance_charts(
                 streamlit.markdown(f"Page **{current_page}** of **{total_pages}**")
 
             # Function to split the dataset into pages
-            def split_frame(df, batch_size):
+            def split_frame(df, batch_size) -> list:
                 return [df.iloc[i:i + batch_size] for i in range(0, len(df), batch_size)]
 
             # Split the dataset and get the current page's data
@@ -236,7 +236,7 @@ def feature_selection_form(
     hash_funcs={TrainedModel: id},
     max_entries=1,
 )
-def _create_classification_feature_chart(
+def _create_classification_feature_chart( # noqa: no-any-unimported
     model: TrainedModel,
     feature: str,
 ) -> go.Figure:
@@ -293,7 +293,7 @@ def _create_classification_feature_chart(
     hash_funcs={TrainedModel: id},
     max_entries=1,
 )
-def _create_regression_feature_chart(
+def _create_regression_feature_chart( # noqa: no-any-unimported
     model: TrainedModel,
     feature: str,
 ) -> go.Figure:
