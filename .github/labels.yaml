@@ -3,6 +3,7 @@ area/sdlc:
       - any-glob-to-any-file:
           - '.devcontainer/**/*'
           - '.github/**/*'
+          - '.gitignore'
           - '.pre-commit-config.yaml'
           - '.vscode/**/*'
           - 'poetry.lock'
