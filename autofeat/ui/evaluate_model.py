@@ -77,7 +77,7 @@ def evaluate_model(
             streamlit.caption(
                 "The metrics shown compare the model's performance against a baseline model. "
                 "Improvements are calculated as percentage changes from the baseline. "
-                "Higher accuracy, precision, recall, or R2, and lower RMSE, indicate better performance.",
+                "Higher accuracy, precision, recall, or R2, and lower RMSE, indicate better performance.", # noqa: E501
             )
 
     _create_feature_charts(model)
@@ -108,7 +108,7 @@ def _create_feature_importance_charts(
         streamlit.subheader(f"Predictors of {model.y.name}")
         streamlit.caption(
             f"This chart displays the top predictors of {model.y.name}. "
-            "The importance of each predictor indicates how predictive it is relative to the others.",
+            "The importance of each predictor indicates how predictive it is relative to the others.", # noqa: E501
         )
         with streamlit.container():
             # Create the bottom menu for pagination controls
@@ -171,7 +171,7 @@ def _create_feature_analysis_charts(
     if "tabs" not in streamlit.session_state:
         streamlit.session_state.tabs = []
     if "selected_tab_index" not in streamlit.session_state:
-        streamlit.session_state.selected_tab_index = len(streamlit.session_state.tabs) - 1  # Default to first tab
+        streamlit.session_state.selected_tab_index = len(streamlit.session_state.tabs) - 1 #first tab default # noqa: E501
 
     tabs_list = streamlit.session_state.tabs
     tab_labels = ["New Tab"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
