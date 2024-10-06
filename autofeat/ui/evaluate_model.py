@@ -129,7 +129,7 @@ def _create_feature_importance_charts(
                 streamlit.markdown(f"Page **{current_page}** of **{total_pages}**")
 
             # Function to split the dataset into pages
-            def split_frame(df, batch_size) -> list:
+            def split_frame(df, batch_size) -> list: # noqa: no-untyped-def
                 return [df.iloc[i:i + batch_size] for i in range(0, len(df), batch_size)]
 
             # Split the dataset and get the current page's data
