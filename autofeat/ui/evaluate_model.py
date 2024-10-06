@@ -83,71 +83,90 @@ def evaluate_model(
     _create_feature_charts(model)
 
 
-@streamlit.fragment
 def _create_feature_charts(
+    model: TrainedModel,
+) -> None:
+    _create_feature_importance_charts(model)
+    _create_feature_analysis_charts(model)
+
+@streamlit.fragment
+def _create_feature_importance_charts(
     model: TrainedModel,
 ) -> None:
     #generate feature importances and sort them in descending order
     feature_importance = _feature_importance(model)
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
-    feature_list = feature_importance["Feature"].tolist()
-
     # Get the maximum importance for consistent x-axis range
     max_importance = feature_importance["Importance"].max()
-
-    # Pagination container
-    pagination = streamlit.container()
-
-    # Create the bottom menu for pagination controls
-    bottom_menu = streamlit.columns([4, 1, 1])
 
     # Page size (fixed to 8 for this case)
     batch_size = 8
 
     # Determine total pages
     total_pages = max(1, (len(feature_importance) - 1) // batch_size + 1)
-
-    # Page number input with steppers
-    with bottom_menu[1]:
-        current_page = streamlit.number_input(
-            "Page", min_value=1, max_value=total_pages, step=1, value=1, format="%d"
+    with streamlit.container(border=True):
+        streamlit.subheader(f"Predictors of {model.y.name}")
+        streamlit.caption(
+            f"This chart displays the top predictors of {model.y.name}. "
+            "The importance of each predictor indicates how predictive it is relative to the others."
         )
+        with streamlit.container():
+            # Create the bottom menu for pagination controls
+            pagination = streamlit.container()
+            bottom_menu = streamlit.columns([3, 1])
+            # Page number input with steppers
+            with bottom_menu[1]:
+                current_page = streamlit.number_input(
+                    "Page", min_value=1,
+                    max_value=total_pages,
+                    value=1,
+                    step=1,
+                    label_visibility="collapsed",
+                )
 
-    # Display current page info
-    with bottom_menu[0]:
-        streamlit.markdown(f"Page **{current_page}** of **{total_pages}**")
+            # Display current page info
+            with bottom_menu[0]:
+                streamlit.markdown(f"Page **{current_page}** of **{total_pages}**")
 
-    # Function to split the dataset into pages
-    def split_frame(df, batch_size):
-        return [df.iloc[i:i + batch_size] for i in range(0, len(df), batch_size)]
+            # Function to split the dataset into pages
+            def split_frame(df, batch_size):
+                return [df.iloc[i:i + batch_size] for i in range(0, len(df), batch_size)]
 
-    # Split the dataset and get the current page's data
-    pages = split_frame(feature_importance, batch_size)
-    current_page_data = pages[current_page - 1]
+            # Split the dataset and get the current page's data
+            pages = split_frame(feature_importance, batch_size)
+            current_page_data = pages[current_page - 1]
 
-    # Create the Plotly bar chart for the selected subset
-    fig = go.Figure(
-        go.Bar(
-            x=current_page_data["Importance"],
-            y=current_page_data["Feature"],
-            orientation="h",
-            marker_color="steelblue",
-        ),
-    )
+            # Create the Plotly bar chart for the selected subset
+            fig = go.Figure(
+                go.Bar(
+                    x=current_page_data["Importance"],
+                    y=current_page_data["Feature"],
+                    orientation="h",
+                    marker_color="steelblue",
+                ),
+            )
 
-    # Update layout for better appearance and maintain a consistent x-axis range
-    fig.update_layout(
-        xaxis_title="Importance",
-        yaxis_title="Feature",
-        margin={"l": 0, "r": 0, "t": 30, "b": 0},
-        height=20 * len(current_page_data),
-        yaxis={"autorange": "reversed"},
-        xaxis_range=[0, max_importance],  # Set consistent x-axis range
-    )
+            # Update layout for better appearance and maintain a consistent x-axis range
+            fig.update_layout(
+                xaxis_title="Importance",
+                yaxis_title="Feature",
+                margin={"l": 0, "r": 0, "t": 30, "b": 0},
+                height=40 * len(current_page_data),
+                yaxis={"autorange": "reversed"},
+                xaxis_range=[0, max_importance],  # Set consistent x-axis range
+            )
 
-    # Display the chart
-    pagination.plotly_chart(fig, use_container_width=True)
+            # Display the chart
+            pagination.plotly_chart(fig, use_container_width=True)
 
+
+@streamlit.fragment
+def _create_feature_analysis_charts(
+    model: TrainedModel,
+) -> None:
+    feature_importance = _feature_importance(model)
+    feature_importance = feature_importance.sort_values("Importance", ascending=False)
+    feature_list = feature_importance["Feature"].tolist()
     # Initialize session state for tabs
     if 'tabs' not in streamlit.session_state:
         streamlit.session_state.tabs = []
@@ -292,7 +311,6 @@ def _create_regression_feature_chart(
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
         # Numerical feature: create a scatter plot
-        print(x)
         x = pandas.to_numeric(x, errors="coerce")
         mask = ~numpy.isnan(x)
         x = x[mask]
@@ -401,6 +419,7 @@ def _shap_explanation(  # type: ignore[no-any-unimported]
 def _feature_importance(
     model: TrainedModel,
 ) -> pandas.DataFrame:
+    print("hello world")
     shap_explanation = _shap_explanation(model)
 
     importance = (
