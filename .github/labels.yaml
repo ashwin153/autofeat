@@ -1,6 +1,8 @@
-area/deps:
+area/sdlc:
   - changed-files:
       - any-glob-to-any-file:
+          - '.devcontainer/**/*'
+          - '.github/**/*'
           - '.pre-commit-config.yaml'
           - 'poetry.lock'
           - 'pyproject.toml'
