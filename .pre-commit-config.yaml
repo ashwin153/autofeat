@@ -1,7 +1,7 @@
 repos:
   # Common
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -17,7 +17,7 @@ repos:
       - id: trailing-whitespace
   # Bash
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
@@ -58,7 +58,7 @@ repos:
           - --keep-runtime-typing
           - --py311-plus
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-ast
       - id: check-builtin-literals
@@ -68,7 +68,7 @@ repos:
       - id: debug-statements
   # TOML
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-toml
   - repo: https://github.com/pappasam/toml-sort
@@ -78,7 +78,7 @@ repos:
         files: pyproject.toml
   # YAML
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-yaml
   - repo: https://github.com/google/yamlfmt

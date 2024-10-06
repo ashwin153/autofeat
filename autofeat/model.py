@@ -256,7 +256,7 @@ class TrainedModel:  # type: ignore[no-any-unimported]
     y_predicted: numpy.ndarray
     y_test: numpy.ndarray
     y_train: numpy.ndarray
-    y_transformer: sklearn.pipeline.Pipeline  # type: ignore[no-any-unimported]
+    y_transformer: sklearn.base.TransformerMixin  # type: ignore[no-any-unimported]
     y: polars.Series
 
     def predict(
