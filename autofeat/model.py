@@ -268,7 +268,7 @@ class TrainedModel:  # type: ignore[no-any-unimported]
         :param known: Data that is already known.
         :return: Target variable.
         """
-        features = self.dataset.features(known)
+        features = self.dataset.extract(known)
         X = self.X_transformer.transform(features.to_numpy())
         y = self.prediction_model.predict(X)
         return self.y_transformer.inverse_transform(y)  # type: ignore[no-any-return]
