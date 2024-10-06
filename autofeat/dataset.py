@@ -9,8 +9,7 @@ import sklearn.model_selection
 import sklearn.pipeline
 import sklearn.preprocessing
 
-from autofeat.attribute import Attribute
-from autofeat.convert import IntoDataFrame, IntoSeries, into_data_frame, into_series
+from autofeat.convert import IntoDataFrame, IntoSeries, into_series
 from autofeat.model import (
     PREDICTION_METHODS,
     SELECTION_METHODS,
@@ -19,16 +18,13 @@ from autofeat.model import (
     SelectionMethod,
     TrainedModel,
 )
+from autofeat.transform.extract import Extract
 from autofeat.transform.keep import Keep
 
 if TYPE_CHECKING:
     from autofeat.convert import IntoDataFrame
     from autofeat.table import Table
     from autofeat.transform.base import Transform
-
-
-# Delimiter used to separate column and table names in feature names.
-_SEPARATOR = " :: "
 
 
 @dataclasses.dataclass(frozen=True)
@@ -52,7 +48,7 @@ class Dataset:
         """
         return Dataset(list(transform.apply(self.tables)))
 
-    def features(
+    def extract(
         self,
         known: IntoDataFrame,
     ) -> polars.DataFrame:
@@ -65,24 +61,10 @@ class Dataset:
         :param known: Data that is already known.
         :return: Extracted features.
         """
-        known = into_data_frame(known)
-
-        features = []
-        for table in self.tables:
-            primary_key = {
-                column.name
-                for column in table.columns
-                if Attribute.primary_key in column.attributes
-            }
-
-            if primary_key and primary_key.issubset(known.columns):
-                features.append(
-                    known
-                    .lazy()
-                    .join(table.data, on=list(primary_key), how="left")
-                    .select(polars.selectors.boolean() | polars.selectors.numeric())
-                    .select(polars.all().name.suffix(f"{_SEPARATOR}{table.name}")),
-                )
+        features = [
+            table.data
+            for table in self.apply(Extract(known=known))
+        ]
 
         return polars.concat(
             polars.collect_all(features, streaming=True),
@@ -106,7 +88,7 @@ class Dataset:
         :return: Trained model.
         """
         # pre-process the input and target variables and split them into training and test data
-        X = self.features(known)
+        X = self.extract(known)
         y = into_series(target)
 
         X_transformer = sklearn.pipeline.Pipeline([
@@ -140,7 +122,7 @@ class Dataset:
 
         selection_by_table = collections.defaultdict(set)
         for selected in selection:
-            column, table = selected.split(_SEPARATOR, 1)
+            column, table = selected.split(Extract.SEPARATOR, 1)
             selection_by_table[table].add(column)
 
         X_train = selection_model.transform(X_train)
