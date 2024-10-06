@@ -146,11 +146,13 @@ def _create_feature_analysis_charts(
     feature_importance = _feature_importance(model)
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
     feature_list = feature_importance["Feature"].tolist()
+
     # Initialize session state for tabs
     if "tabs" not in streamlit.session_state:
         streamlit.session_state.tabs = []
-    if "selected_tab_index" not in streamlit.session_state:
-        streamlit.session_state.selected_tab_index = len(streamlit.session_state.tabs) - 1 #first tab default # noqa: E501
+    else:
+        print("hello world")
+        streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list] #noqa 
 
     tabs_list = streamlit.session_state.tabs
     tab_labels = ["Create Chart"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
@@ -211,10 +213,7 @@ def feature_selection_form(
 ) -> None:
     return
 
-@streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
-    max_entries=1,
-)
+
 def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
     feature: str,
@@ -228,22 +227,22 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
         return go.Figure()
 
     fig = go.Figure()
-    df = pandas.DataFrame({"feature": x, "target": y_true})
+    df = pandas.DataFrame({"feature": x, f"{model.y.name}": y_true})
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
         # Numerical feature: create a histogram
         fig = px.histogram(
-            df, x="feature", color="target",
+            df, x="feature", color=f"{model.y.name}",
             hover_data=df.columns,
-            labels={"feature": feature, "target": f"{model.y.name} Class"},
+            labels={"feature": feature, f"{model.y.name}": f"{model.y.name}"},
             height=600, width=800,
         )
 
         fig.update_layout(bargap=0.2)
-        fig.update_yaxes(title_text=f"{model.y.name} Frequency")
+        fig.update_yaxes(title_text=f"{model.y.name} count")
     else:
         # Categorical feature: create a normalized stacked bar chart
-        df_counts = df.groupby(["feature", "target"]).size().unstack(fill_value=0)
+        df_counts = df.groupby(["feature", f"{model.y.name}"]).size().unstack(fill_value=0)
         df_percentages = df_counts.apply(lambda x: x / x.sum() * 100, axis=1)
 
         fig = px.bar(
@@ -251,12 +250,12 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             x=df_percentages.index,
             y=df_percentages.columns,
             barmode="stack",
-            labels={"x": feature, "y": "Percentage", "color": f"{model.y.name} Class"},
+            labels={"x": feature, "y": "Percentage", "color": f"{model.y.name}"},
         )
 
         fig.update_layout(
             xaxis_title=feature,
-            yaxis_title=f"{model.y.name} Distribution (%)",
+            yaxis_title=f"{model.y.name} (%)",
             height=600,
             width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},
