@@ -110,7 +110,9 @@ class Dataset:
         y = into_series(target)
 
         X_transformer = sklearn.pipeline.Pipeline([
-            ("scale", sklearn.preprocessing.RobustScaler()),
+            # TODO: create a custom scaler that only applies to numeric columns
+            # ("scale", sklearn.preprocessing.RobustScaler()),
+            ("identity", sklearn.preprocessing.FunctionTransformer()),
         ])
 
         y_transformer = (
