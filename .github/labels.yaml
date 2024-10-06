@@ -1,7 +1,11 @@
-area/dependencies:
+area/sdlc:
   - changed-files:
       - any-glob-to-any-file:
+          - '.devcontainer/**/*'
+          - '.github/**/*'
+          - '.gitignore'
           - '.pre-commit-config.yaml'
+          - '.vscode/**/*'
           - 'poetry.lock'
           - 'pyproject.toml'
           - 'renovate.json'
