@@ -4,12 +4,11 @@ import collections
 import dataclasses
 from typing import TYPE_CHECKING
 
-import polars
 import sklearn.model_selection
 import sklearn.pipeline
 import sklearn.preprocessing
 
-from autofeat.convert import IntoDataFrame, IntoSeries, into_series
+from autofeat.convert import IntoDataFrame, IntoSeries, into_data_frame, into_series
 from autofeat.model import (
     PREDICTION_METHODS,
     SELECTION_METHODS,
@@ -22,6 +21,8 @@ from autofeat.transform.extract import Extract
 from autofeat.transform.keep import Keep
 
 if TYPE_CHECKING:
+    import polars
+
     from autofeat.convert import IntoDataFrame
     from autofeat.table import Table
     from autofeat.transform.base import Transform
@@ -61,15 +62,7 @@ class Dataset:
         :param known: Data that is already known.
         :return: Extracted features.
         """
-        features = [
-            table.data
-            for table in self.apply(Extract(known=known)).tables
-        ]
-
-        return polars.concat(
-            polars.collect_all(features, streaming=True),
-            how="horizontal",
-        )
+        return into_data_frame(self.apply(Extract(known=known)))
 
     def train(
         self,
