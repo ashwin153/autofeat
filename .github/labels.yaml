@@ -4,6 +4,7 @@ area/sdlc:
           - '.devcontainer/**/*'
           - '.github/**/*'
           - '.pre-commit-config.yaml'
+          - '.vscode/**/*'
           - 'poetry.lock'
           - 'pyproject.toml'
           - 'renovate.json'
