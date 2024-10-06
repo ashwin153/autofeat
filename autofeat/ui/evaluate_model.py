@@ -94,72 +94,42 @@ def _create_feature_charts(
 def _create_feature_importance_charts(
     model: TrainedModel,
 ) -> None:
-    #generate feature importances and sort them in descending order
+    # Generate feature importances and sort them in descending order
     feature_importance = _feature_importance(model)
-    feature_importance = feature_importance.sort_values("Importance", ascending=False)
-    # Get the maximum importance for consistent x-axis range
+
+    # Extract 'Column' and 'Table' information, then rename columns
+    feature_importance["Predictor"] = [c.split(" :: ", 1)[0] for c in model.X.columns]
+    feature_importance["Table Sources"] = [c.split(" :: ", 1)[1] for c in model.X.columns]
+
+    # Normalize the importance values
     max_importance = feature_importance["Importance"].max()
+    feature_importance["Importance"] = feature_importance["Importance"] / max_importance
 
-    # Page size (fixed to 8 for this case)
-    batch_size = 8
+    # Sort by importance in descending order
+    feature_importance = feature_importance.sort_values("Importance", ascending=False)
 
-    # Determine total pages
-    total_pages = max(1, (len(feature_importance) - 1) // batch_size + 1)
+    # Reorder columns
+    feature_importance = feature_importance[["Predictor", "Importance", "Table Sources"]]
+
     with streamlit.container(border=True):
         streamlit.subheader(f"Predictors of {model.y.name}")
         streamlit.caption(
             f"This chart displays the top predictors of {model.y.name}. "
             "The importance of each predictor indicates how predictive it is relative to the others.", # noqa: E501
         )
-        with streamlit.container():
-            # Create the bottom menu for pagination controls
-            pagination = streamlit.container()
-            bottom_menu = streamlit.columns([3, 1])
-            # Page number input with steppers
-            with bottom_menu[1]:
-                current_page = streamlit.number_input(
-                    "Page", min_value=1,
-                    max_value=total_pages,
-                    value=1,
-                    step=1,
-                    label_visibility="collapsed",
-                )
-
-            # Display current page info
-            with bottom_menu[0]:
-                streamlit.markdown(f"Page **{current_page}** of **{total_pages}**")
-
-            # Function to split the dataset into pages
-            def split_frame(df, batch_size) -> list: # noqa: no-untyped-def
-                return [df.iloc[i:i + batch_size] for i in range(0, len(df), batch_size)]
-
-            # Split the dataset and get the current page's data
-            pages = split_frame(feature_importance, batch_size)
-            current_page_data = pages[current_page - 1]
-
-            # Create the Plotly bar chart for the selected subset
-            fig = go.Figure(
-                go.Bar(
-                    x=current_page_data["Importance"],
-                    y=current_page_data["Feature"],
-                    orientation="h",
-                    marker_color="steelblue",
+        # Display the DataFrame in Streamlit with a progress column for Importance
+        streamlit.dataframe(
+            feature_importance,
+            column_config={
+                "Importance": streamlit.column_config.ProgressColumn(
+                    format="%.2f",
+                    max_value=1,
+                    min_value=0,
                 ),
-            )
-
-            # Update layout for better appearance and maintain a consistent x-axis range
-            fig.update_layout(
-                xaxis_title="Importance",
-                yaxis_title="Feature",
-                margin={"l": 0, "r": 0, "t": 30, "b": 0},
-                height=40 * len(current_page_data),
-                yaxis={"autorange": "reversed"},
-                xaxis_range=[0, max_importance],  # Set consistent x-axis range
-            )
-
-            # Display the chart
-            pagination.plotly_chart(fig, use_container_width=True)
-
+            },
+            hide_index=True,
+            use_container_width=True,
+        )
 
 @streamlit.fragment
 def _create_feature_analysis_charts(
@@ -175,7 +145,7 @@ def _create_feature_analysis_charts(
         streamlit.session_state.selected_tab_index = len(streamlit.session_state.tabs) - 1 #first tab default # noqa: E501
 
     tabs_list = streamlit.session_state.tabs
-    tab_labels = ["New Tab"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
+    tab_labels = ["Create Chart"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
 
     # Use streamlit.tabs to create tabbed interface
     tabs = streamlit.tabs(tab_labels)
@@ -187,9 +157,9 @@ def _create_feature_analysis_charts(
             if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")]
         ]
         if available_features:
-            streamlit.subheader("Add a New Chart")
+            streamlit.subheader("Create a new chart")
             selected_feature = streamlit.selectbox(
-                "Select a feature to analyze:",
+                "Select a predictor to analyze:",
                 ["", *available_features],
                 index=0,  # Start with the empty string selected
             )
@@ -205,7 +175,6 @@ def _create_feature_analysis_charts(
     for idx, tab in enumerate(tabs_list):
         with tabs[idx + 1]:  # Existing tabs start from index 1
             selected_feature = tab["feature"]
-            streamlit.subheader(f"Feature: {selected_feature}")
 
             # Generate the chart based on the prediction problem
             if model.prediction_method.problem == PredictionProblem.classification:
