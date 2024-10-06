@@ -59,7 +59,7 @@ class Extract(Transform):
                 yield Table(
                     columns=columns,
                     data=data,
-                    name=table.name,
+                    name=f"features({table.name})",
                 )
 
     def _features(
