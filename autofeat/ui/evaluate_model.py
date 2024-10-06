@@ -21,7 +21,7 @@ def evaluate_model(
             baseline = _classification_metrics(model.y_test, model.y_baseline)
             improvement = _percent_change(baseline["accuracy"], metrics["accuracy"])
 
-            headline = f"✅ Model is {improvement:.2f}% more accurate than always guessing randomly"
+            headline = f"✅ Model is **:green[{improvement:.2f}% more accurate]** than always guessing the most frequent category" # noqa: E501
             table_data = {
                 "Metric": ["Accuracy", "Precision", "Recall"],
                 "Model": [
@@ -45,7 +45,7 @@ def evaluate_model(
             baseline = _regression_metrics(model.y_test, model.y_baseline)
             improvement = -_percent_change(baseline["rmse"], metrics["rmse"])
 
-            headline = f"✅ Model is {improvement:.2f}% more accurate than always guessing the mean"
+            headline = f"✅ Model is **:green[{improvement:.2f}% more accurate]** than always guessing the mean" # noqa: E501
             table_data = {
                 "Metric": ["RMSE", "R2"],
                 "Model": [
@@ -58,7 +58,7 @@ def evaluate_model(
                 ],
                 "Improvement (%)": [
                     f"{_percent_change(baseline['rmse'], metrics['rmse']):.2f}%",
-                    f"{_percent_change(baseline['r2'], metrics['r2']):.2f}%",
+                    f"{_percent_change(baseline['r2'],metrics['r2']):.2f}%",
                 ],
             }
         case _:
@@ -67,18 +67,26 @@ def evaluate_model(
     # Streamlit bordered section with title and headline
     with streamlit.container(border=True):
         streamlit.subheader("Model Performance")
-        streamlit.markdown(f"**{headline}**")
+        streamlit.markdown(f"{headline}")
 
         # Expander with a table of model stats
         with streamlit.expander("Show detailed model stats"):
-            streamlit.table(table_data)
+            streamlit.dataframe(table_data, hide_index=True, use_container_width=True)
 
             # Light text about interpreting the metrics
-            streamlit.caption(
-                "The metrics shown compare the model's performance against a baseline model. "
-                "Improvements are calculated as percentage changes from the baseline. "
-                "Higher accuracy, precision, recall, or R2, and lower RMSE, indicate better performance.", # noqa: E501
-            )
+            match model.prediction_method.problem:
+                case PredictionProblem.classification:
+                    streamlit.caption(
+                        f"Comparison: model's performance against a baseline model that randomly guesses based on the frequency of {model.y.name} values. " # noqa: E501
+                        "Higher precision indicates a model guesses the value correctly more on average. " # noqa: E501
+                        "Higher recall indicates that a model covers more correct classifications overall."  # noqa: E501
+                    )
+                case PredictionProblem.regression:
+                    streamlit.caption(
+                        f"Comparison: the model's performance against a baseline model, that always predicts the mean of {model.y.name}. "  # noqa: E501
+                        "RMSE is the average error between the actual value and the prediction by the model. Lower error is better (means guesses are closer to true). " # noqa: E501
+                        "R2 indicates how much of the variation in your data the model captures. A higher value is better."  # noqa: E501
+                    )
 
     _create_feature_charts(model)
 
@@ -160,10 +168,10 @@ def _create_feature_analysis_charts(
             streamlit.subheader("Create a new chart")
             selected_feature = streamlit.selectbox(
                 "Select a predictor to analyze:",
-                ["", *available_features],
-                index=0,  # Start with the empty string selected
+                available_features,
+                index=None,
             )
-            if selected_feature != "":
+            if selected_feature is not None:
                 # Add a new tab with the selected feature
                 new_tab = {"label": selected_feature, "feature": selected_feature}
                 streamlit.session_state.tabs.append(new_tab)
@@ -178,13 +186,15 @@ def _create_feature_analysis_charts(
 
             # Generate the chart based on the prediction problem
             if model.prediction_method.problem == PredictionProblem.classification:
+                streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
                 chart_fig = _create_classification_feature_chart(model, selected_feature)
             elif model.prediction_method.problem == PredictionProblem.regression:
+                streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
                 chart_fig = _create_regression_feature_chart(model, selected_feature)
             else:
                 raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
 
-            streamlit.plotly_chart(chart_fig, use_container_width=True)
+            streamlit.plotly_chart(chart_fig, use_container_width=True, config={"displayModeBar": False})  # noqa: E501
 
             # Button to close the tab
             if streamlit.button("Close Tab", key=f"close_{idx}"):
@@ -225,7 +235,6 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
         fig = px.histogram(
             df, x="feature", color="target",
             hover_data=df.columns,
-            title=f"{feature} vs {model.y.name}",
             labels={"feature": feature, "target": f"{model.y.name} Class"},
             height=600, width=800,
         )
@@ -243,7 +252,6 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             y=df_percentages.columns,
             barmode="stack",
             labels={"x": feature, "y": "Percentage", "color": f"{model.y.name} Class"},
-            title=f"{feature} vs. {model.y.name}",
         )
 
         fig.update_layout(
@@ -253,6 +261,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},
             xaxis={"type": "category", "categoryorder": "total descending"},
+            margin=dict(t=30),
         )
 
     return fig
@@ -328,11 +337,11 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
 
     # Customize the layout
     fig.update_layout(
-        title=f"{feature} vs {model.y.name}",
         xaxis_title=feature,
         yaxis_title=f"{model.y.name}",
         height=400,
         width=600,
+        margin=dict(t=30),
     )
 
     return fig
