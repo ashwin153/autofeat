@@ -237,9 +237,9 @@ def _create_feature_composition_section(
 
             streamlit.selectbox(
                 "Add a feature to the rules",
-                [f for f in feature_list if f not in streamlit.session_state.selected_features],  #noqa
-                key='feature_selector', index=None, on_change=update_selected_features,
-            )   #noqa
+                [f for f in feature_list if f not in streamlit.session_state.selected_features],
+                key="feature_selector", index=None, on_change=update_selected_features,
+            )
 
             # Display and edit rules for selected features
             for i, feature in enumerate(streamlit.session_state.selected_features):
