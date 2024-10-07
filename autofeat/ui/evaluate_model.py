@@ -229,7 +229,7 @@ def _create_feature_composition_section(
 
 
             # Function to update rules when a new feature is selected
-            def update_selected_features():
+            def update_selected_features() -> None:
                 new_feature = streamlit.session_state.feature_selector
                 if new_feature and new_feature not in streamlit.session_state.selected_features:
                     streamlit.session_state.selected_features.append(new_feature)
