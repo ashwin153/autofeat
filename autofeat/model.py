@@ -70,7 +70,7 @@ class PredictionProblem(enum.Enum):
         """
         match self:
             case PredictionProblem.classification:
-                return PREDICTION_METHODS["random_guess"]
+                return PREDICTION_METHODS["most_frequent"]
             case PredictionProblem.regression:
                 return PREDICTION_METHODS["mean"]
             case _:

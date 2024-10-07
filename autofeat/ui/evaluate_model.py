@@ -21,109 +21,187 @@ def evaluate_model(
             baseline = _classification_metrics(model.y_test, model.y_baseline)
             improvement = _percent_change(baseline["accuracy"], metrics["accuracy"])
 
-            with streamlit.expander(
-                f"✅ model is {improvement:.2f}% more accurate than always guessing randomly",
-            ):
-                column1, column2, column3 = streamlit.columns(3)
-
-                column1.metric(
-                    "Accuracy",
-                    value=f"{metrics['accuracy']:.4f}",
-                    delta=f"{_percent_change(baseline['accuracy'], metrics['accuracy']):.2f}%",
-                )
-
-                column2.metric(
-                    "Precision",
-                    value=f"{metrics['precision']:.4f}",
-                    delta=f"{_percent_change(baseline['precision'], metrics['precision']):.2f}%",
-                )
-
-                column3.metric(
-                    "Recall",
-                    value=f"{metrics['recall']:.4f}",
-                    delta=f"{_percent_change(baseline['recall'], metrics['recall']):.2f}%",
-                )
+            headline = f"✅ Model is **:green[{improvement:.2f}% more accurate]** than always guessing the most frequent category" # noqa: E501
+            table_data = {
+                "Metric": ["Accuracy", "Precision", "Recall"],
+                "Model": [
+                    f"{metrics['accuracy']:.4f}",
+                    f"{metrics['precision']:.4f}",
+                    f"{metrics['recall']:.4f}",
+                ],
+                "Baseline": [
+                    f"{baseline['accuracy']:.4f}",
+                    f"{baseline['precision']:.4f}",
+                    f"{baseline['recall']:.4f}",
+                ],
+                "Improvement (%)": [
+                    f"{_percent_change(baseline['accuracy'], metrics['accuracy']):.2f}%",
+                    f"{_percent_change(baseline['precision'], metrics['precision']):.2f}%",
+                    f"{_percent_change(baseline['recall'], metrics['recall']):.2f}%",
+                ],
+            }
         case PredictionProblem.regression:
             metrics = _regression_metrics(model.y_test, model.y_predicted)
             baseline = _regression_metrics(model.y_test, model.y_baseline)
             improvement = -_percent_change(baseline["rmse"], metrics["rmse"])
 
-            with streamlit.expander(
-                f"✅ model is {improvement:.2f}% more accurate than always guessing the mean",
-            ):
-                column1, column2 = streamlit.columns(2)
-
-                column1.metric(
-                    "RMSE",
-                    value=f"{metrics['rmse']:.4f}",
-                    delta=f"{_percent_change(baseline['rmse'], metrics['rmse']):.2f}%",
-                )
-
-                column2.metric(
-                    "R2",
-                    value=f"{metrics['r2']:.4f}",
-                    delta=f"{_percent_change(baseline['r2'], metrics['r2']):.2f}%",
-                )
+            headline = f"✅ Model is **:green[{improvement:.2f}% more accurate]** than always guessing the mean" # noqa: E501
+            table_data = {
+                "Metric": ["RMSE", "R2"],
+                "Model": [
+                    f"{metrics['rmse']:.4f}",
+                    f"{metrics['r2']:.4f}",
+                ],
+                "Baseline": [
+                    f"{baseline['rmse']:.4f}",
+                    f"{baseline['r2']:.4f}",
+                ],
+                "Improvement (%)": [
+                    f"{_percent_change(baseline['rmse'], metrics['rmse']):.2f}%",
+                    f"{_percent_change(baseline['r2'],metrics['r2']):.2f}%",
+                ],
+            }
         case _:
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+
+    # Streamlit bordered section with title and headline
+    with streamlit.container(border=True):
+        streamlit.subheader("Model Performance")
+        streamlit.markdown(f"{headline}")
+
+        # Expander with a table of model stats
+        with streamlit.expander("Show detailed model stats"):
+            streamlit.dataframe(table_data, hide_index=True, use_container_width=True)
+
+            # Light text about interpreting the metrics
+            match model.prediction_method.problem:
+                case PredictionProblem.classification:
+                    streamlit.caption(
+                        f"Comparison: model's performance against a baseline model that randomly guesses based on the frequency of {model.y.name} values. " # noqa: E501
+                        "Higher precision indicates a model guesses the value correctly more on average. " # noqa: E501
+                        "Higher recall indicates that a model covers more correct classifications overall.",  # noqa: E501
+                    )
+                case PredictionProblem.regression:
+                    streamlit.caption(
+                        f"Comparison: the model's performance against a baseline model, that always predicts the mean of {model.y.name}. "  # noqa: E501
+                        "RMSE is the average error between the actual value and the prediction by the model. Lower error is better (means guesses are closer to true). " # noqa: E501
+                        "R2 indicates how much of the variation in your data the model captures. A higher value is better.",  # noqa: E501
+                    )
 
     _create_feature_charts(model)
 
 
-@streamlit.fragment
 def _create_feature_charts(
     model: TrainedModel,
 ) -> None:
+    _create_feature_importance_charts(model)
+    _create_feature_analysis_charts(model)
 
-    #generate feature importances and sort them in descending order
+
+@streamlit.fragment
+def _create_feature_importance_charts(
+    model: TrainedModel,
+) -> None:
+    # Generate feature importances and sort them in descending order
     feature_importance = _feature_importance(model)
+
+    # Extract 'Column' and 'Table' information, then rename columns
+    feature_importance["Predictor"] = [c.split(" :: ", 1)[0] for c in model.X.columns]
+    feature_importance["Table Sources"] = [c.split(" :: ", 1)[1] for c in model.X.columns]
+
+    # Normalize the importance values
+    max_importance = feature_importance["Importance"].max()
+    feature_importance["Importance"] = feature_importance["Importance"] / max_importance
+
+    # Sort by importance in descending order
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
 
-    # Create the Plotly bar chart
-    fig = go.Figure(
-        go.Bar(
-            x=feature_importance["Importance"],
-            y=feature_importance["Feature"],
-            orientation="h",
-            marker_color="steelblue",
-        ),
-    )
+    # Reorder columns
+    feature_importance = feature_importance[["Predictor", "Importance", "Table Sources"]]
 
-    # Update layout for better appearance
-    fig.update_layout(
-        title="Feature Importance",
-        xaxis_title="Importance",
-        yaxis_title="Feature",
-        margin={"l": 0, "r": 0, "t": 30, "b": 0},
-        height= max(600, 40*len(feature_importance)),
-        yaxis={"autorange": "reversed"},
-    )
-
-    streamlit.plotly_chart(fig, use_container_width=True)
-    ordered_list = feature_importance["Feature"].tolist()
-
-    with streamlit.form("feature_selection_form"):
-        # Create a dropdown for feature selection
-        selected_feature = streamlit.selectbox(
-            "Select a feature to analyze:",
-            ordered_list,
+    with streamlit.container(border=True):
+        streamlit.subheader(f"Predictors of {model.y.name}")
+        streamlit.caption(
+            f"This chart displays the top predictors of {model.y.name}. "
+            "The importance of each predictor indicates how predictive it is relative to the others.", # noqa: E501
+        )
+        # Display the DataFrame in Streamlit with a progress column for Importance
+        streamlit.dataframe(
+            feature_importance,
+            column_config={
+                "Importance": streamlit.column_config.ProgressColumn(
+                    format="%.2f",
+                    max_value=1,
+                    min_value=0,
+                ),
+            },
+            hide_index=True,
+            use_container_width=True,
         )
 
-        submit_button = streamlit.form_submit_button("Show Chart")
+@streamlit.fragment
+def _create_feature_analysis_charts(
+    model: TrainedModel,
+) -> None:
+    feature_importance = _feature_importance(model)
+    feature_importance = feature_importance.sort_values("Importance", ascending=False)
+    feature_list = feature_importance["Feature"].tolist()
 
-        fig = go.Figure()
+    # Initialize session state for tabs
+    if "tabs" not in streamlit.session_state:
+        streamlit.session_state.tabs = []
+    else:
+        streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list] #noqa
 
-        if submit_button:
-            # Create the corresponding chart based on the selected feature
-            match model.prediction_method.problem:
-                case PredictionProblem.classification:
-                    fig = _create_classification_feature_chart(model, selected_feature)
-                    streamlit.plotly_chart(fig, use_container_width=True)
-                case PredictionProblem.regression:
-                    fig = _create_regression_feature_chart(model, selected_feature)
-                    streamlit.plotly_chart(fig, use_container_width=True)
-                case _:
+    tabs_list = streamlit.session_state.tabs
+    tab_labels = ["Create Chart"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
+
+    # Use streamlit.tabs to create tabbed interface
+
+    with streamlit.container(border=True):
+        tabs = streamlit.tabs(tab_labels)
+        # Handle the 'New Tab' for adding new tabs
+        with tabs[0]:  # Index 0 for 'New Tab'
+            available_features = [
+                f for f in feature_list
+                if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")] #noqa 501
+            ]
+            if available_features:
+                streamlit.subheader("Create a new chart")
+                selected_feature = streamlit.selectbox(
+                    "Select a predictor to analyze:",
+                    available_features,
+                    index=None,
+                )
+                if selected_feature is not None:
+                    # Add a new tab with the selected feature
+                    new_tab = {"label": selected_feature, "feature": selected_feature}
+                    streamlit.session_state.tabs.append(new_tab)
+                    streamlit.rerun(scope="fragment")
+            else:
+                streamlit.write("No more features to select.")
+
+        # Handle existing tabs
+        for idx, tab in enumerate(tabs_list):
+            with tabs[idx + 1]:  # Existing tabs start from index 1
+                selected_feature = tab["feature"]
+
+                # Generate the chart based on the prediction problem
+                if model.prediction_method.problem == PredictionProblem.classification:
+                    streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
+                    for chart_fig in _create_classification_feature_chart(model, selected_feature):
+                        streamlit.plotly_chart(chart_fig, use_container_width=True, config={"displayModeBar": False})  # noqa: E501
+                elif model.prediction_method.problem == PredictionProblem.regression:
+                    streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
+                    chart_fig = _create_regression_feature_chart(model, selected_feature)
+                    streamlit.plotly_chart(chart_fig, use_container_width=True, config={"displayModeBar": False})  # noqa: E501
+                else:
                     raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+
+                # Button to close the tab
+                if streamlit.button("Close Tab", key=f"close_{idx}"):
+                    del streamlit.session_state.tabs[idx]
+                    streamlit.rerun(scope="fragment")
 
 
 @streamlit.cache_data(
@@ -137,38 +215,82 @@ def feature_selection_form(
 
 @streamlit.cache_data(
     hash_funcs={TrainedModel: id},
-    max_entries=1,
+    max_entries=5,
 )
 def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
     feature: str,
-) -> go.Figure:
+) -> list[go.Figure]:
     # Get the index of the feature
     i = model.X.columns.index(feature)
     # Clean the data
     x, y_true = _clean_data(model.X_test[:, i], model.y_test)
+    list_of_figs = []
+    fig = go.Figure()
     # Check if we have any data left after cleaning
     if len(x) == 0:
-        return go.Figure()
+        list_of_figs.append(fig)
+        return list_of_figs
 
-    fig = go.Figure()
-    df = pandas.DataFrame({"feature": x, "target": y_true})
+    df = pandas.DataFrame({"feature": x, f"{model.y.name}": y_true})
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
-        # Numerical feature: create a histogram
-        fig = px.histogram(
-            df, x="feature", color="target",
-            hover_data=df.columns,
-            title=f"{feature} vs {model.y.name}",
-            labels={"feature": feature, "target": f"{model.y.name} Class"},
+        # Numerical feature: create a histogram with adjustable buckets
+        num_buckets = 5
+        # Sort the data and create buckets
+        sorted_data = df.sort_values("feature")
+        bucket_size = len(sorted_data) // num_buckets
+
+        bucket_data = []
+        for i in range(num_buckets):
+            start_idx = i * bucket_size
+            end_idx = (i + 1) * bucket_size if i < num_buckets - 1 else len(sorted_data)
+            bucket = sorted_data.iloc[start_idx:end_idx]
+
+            bucket_name = f"{bucket['feature'].min():.2f} - {bucket['feature'].max():.2f}"
+            for target_value in df[model.y.name].unique():
+                count = bucket[bucket[model.y.name] == target_value].shape[0]
+                bucket_data.append({
+                    "Bucket": bucket_name,
+                    model.y.name: target_value,
+                    "Count": count,
+                    "BucketStart": bucket["feature"].min(),
+                    "BucketEnd": bucket["feature"].max(),
+                })
+
+        bucket_df = pandas.DataFrame(bucket_data)
+
+        fig = px.bar(
+            bucket_df, x="Bucket", y="Count", color=model.y.name,
+            labels={"Bucket": feature, "Count": f"{target_value} count"},
             height=600, width=800,
         )
 
-        fig.update_layout(bargap=0.2)
-        fig.update_yaxes(title_text=f"{model.y.name} Frequency")
+        fig.update_layout(bargap=0.2, margin={"t": 30})
+        fig.update_xaxes(title_text=f"{feature} (Buckets)")
+        fig.update_yaxes(title_text=f"{model.y.name} count")
+        list_of_figs.append(fig)
+
+        # Add a box and whisker plot for Y vs. X
+        fig_two = go.Figure()
+        fig_two.add_trace(
+            go.Box(
+                y=df["feature"],
+                x=df[model.y.name],
+                name=feature,
+            ),
+        )
+        # Update layout for fig_two
+        fig_two.update_layout(
+            xaxis_title=model.y.name,
+            yaxis_title=feature,
+            margin={"t": 30},
+        )
+
+        list_of_figs.append(fig_two)
     else:
         # Categorical feature: create a normalized stacked bar chart
-        df_counts = df.groupby(["feature", "target"]).size().unstack(fill_value=0)
+        df_counts = df.groupby(["feature", f"{model.y.name}"]).size().unstack(fill_value=0)
         df_percentages = df_counts.apply(lambda x: x / x.sum() * 100, axis=1)
 
         fig = px.bar(
@@ -176,25 +298,25 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             x=df_percentages.index,
             y=df_percentages.columns,
             barmode="stack",
-            labels={"x": feature, "y": "Percentage", "color": f"{model.y.name} Class"},
-            title=f"{feature} vs. {model.y.name}",
+            labels={"x": feature, "y": "Percentage", "color": f"{model.y.name}"},
         )
 
         fig.update_layout(
             xaxis_title=feature,
-            yaxis_title=f"{model.y.name} Distribution (%)",
-            height=600,
-            width=800,
+            yaxis_title=f"{model.y.name} (%)",
             yaxis={"tickformat": ".1f", "range": [0, 100]},
             xaxis={"type": "category", "categoryorder": "total descending"},
+            margin={"t": 20},
         )
 
-    return fig
+        list_of_figs.append(fig)
+
+    return list_of_figs
 
 
 @streamlit.cache_data(
     hash_funcs={TrainedModel: id},
-    max_entries=1,
+    max_entries=5,
 )
 def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
@@ -254,19 +376,14 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
                 x=x,
                 y=y_true,
                 name="Distribution",
-                boxpoints="all",
-                jitter=0.3,
-                pointpos=-1.8,
             ),
         )
 
     # Customize the layout
     fig.update_layout(
-        title=f"{feature} vs {model.y.name}",
         xaxis_title=feature,
         yaxis_title=f"{model.y.name}",
-        height=400,
-        width=600,
+        margin={"t": 30},
     )
 
     return fig
