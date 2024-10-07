@@ -1,7 +1,7 @@
 import dataclasses
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Iterable
 
-from autofeat.table import Table
+from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
@@ -9,29 +9,41 @@ from autofeat.transform.base import Transform
 class Drop(Transform):
     """Drop any of the ``columns`` from all tables.
 
-    :param columns: Names of columns to drop.
-    :param tables: Names of tables to drop.
+    :param columns: Columns to drop.
+    :param tables: Tables to drop.
     """
 
-    columns: Mapping[str, Collection[str]] | None = None
-    tables: set[str] | None = None
+    columns: Collection[tuple[Column, Table]] | None = None
+    tables: Collection[Table] | None = None
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for table in tables:
-            if not self.tables or table.name not in self.tables:
-                dropped = {
-                    str(column)
-                    for column in (self.columns.get(table.name, []) if self.columns else [])
-                }
+        column_names = {
+            (column.name, table.name)
+            for column, table in self.columns or []
+        }
 
-                columns = [
+        table_names = {
+            table.name
+            for table in self.tables or []
+        }
+
+        for table in tables:
+            if self.tables and table.name in table_names:
+                continue
+
+            if self.columns:
+                remaining_columns = [
                     column
                     for column in table.columns
-                    if column.name not in dropped
+                    if (column.name, table.name) not in column_names
                 ]
 
-                if columns:
-                    yield table.select(columns)
+                if remaining_columns:
+                    table = table.select(remaining_columns)
+                else:
+                    continue
+
+            yield table
