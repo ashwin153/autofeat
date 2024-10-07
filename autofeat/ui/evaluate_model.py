@@ -152,7 +152,7 @@ def _create_feature_analysis_charts(
     if "tabs" not in streamlit.session_state:
         streamlit.session_state.tabs = []
     else:
-        streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list] #noqa
+        streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list]  #noqa
 
     tabs_list = streamlit.session_state.tabs
     tab_labels = ["Create Chart"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
@@ -218,9 +218,9 @@ def _create_feature_composition_section(
         feature_list = feature_importance["Feature"].tolist()
         with streamlit.container(border=True):
             # Initialize session state for selected features and rules
-            if 'selected_features' not in streamlit.session_state:
+            if "selected_features" not in streamlit.session_state:
                 streamlit.session_state.selected_features = []
-            if 'rules' not in streamlit.session_state:
+            if "rules" not in streamlit.session_state:
                 streamlit.session_state.rules = {}
             else:
                 # Remove features from session state that are not in all_features
@@ -233,11 +233,13 @@ def _create_feature_composition_section(
                 new_feature = streamlit.session_state.feature_selector
                 if new_feature and new_feature not in streamlit.session_state.selected_features:
                     streamlit.session_state.selected_features.append(new_feature)
-                    streamlit.session_state.rules[new_feature] = {'operator': '<', 'value': 0}
+                    streamlit.session_state.rules[new_feature] = {"operator": "<", "value": 0}
 
-            streamlit.selectbox("Add a feature to the rules", 
-                                [f for f in feature_list if f not in streamlit.session_state.selected_features], 
-                                key='feature_selector', index=None, on_change=update_selected_features)
+            streamlit.selectbox(
+                "Add a feature to the rules",
+                [f for f in feature_list if f not in streamlit.session_state.selected_features],  #noqa
+                key='feature_selector', index=None, on_change=update_selected_features,
+            )   #noqa
 
             # Display and edit rules for selected features
             for i, feature in enumerate(streamlit.session_state.selected_features):
@@ -251,27 +253,27 @@ def _create_feature_composition_section(
 
                 if model.X.schema[feature].is_numeric():
                     with cols[1]:
-                        streamlit.session_state.rules[feature]['operator'] = streamlit.selectbox(
+                        streamlit.session_state.rules[feature]["operator"] = streamlit.selectbox(
                             " ", ["<", "<=", ">=", ">"],
                             key=f"op_{feature}",
-                            index=["<", "<=", ">=", ">"].index(streamlit.session_state.rules[feature]['operator']),
+                            index=["<", "<=", ">=", ">"].index(streamlit.session_state.rules[feature]['operator']), #noqa
                             label_visibility="collapsed",
                         )
                     with cols[2]:
-                        streamlit.session_state.rules[feature]['value'] = streamlit.number_input(
-                            "Value", value=streamlit.session_state.rules[feature]['value'], key=f"val_{feature}",
+                        streamlit.session_state.rules[feature]["value"] = streamlit.number_input(
+                            "Value", value=streamlit.session_state.rules[feature]['value'], key=f"val_{feature}", #noqa
                             label_visibility="collapsed",
                         )
                 else:
                     with cols[2]:
-                        unique_values = numpy.unique(model.X_test[:, model.X.columns.index(feature)])
-                        if 'value' not in streamlit.session_state.rules[feature]:
-                            streamlit.session_state.rules[feature]['value'] = []
-                        streamlit.session_state.rules[feature]['value'] = streamlit.multiselect(
-                            "Select values", unique_values, 
-                            default=streamlit.session_state.rules[feature]['value'],
+                        unique_values = numpy.unique(model.X_test[:, model.X.columns.index(feature)]) #noqa
+                        if "value" not in streamlit.session_state.rules[feature]:
+                            streamlit.session_state.rules[feature]["value"] = []
+                        streamlit.session_state.rules[feature]["value"] = streamlit.multiselect(
+                            "Select values", unique_values,
+                            default=streamlit.session_state.rules[feature]["value"],
                             key=f"val_{feature}",
-                            label_visibility="collapsed"
+                            label_visibility="collapsed",
                         )
 
                 with cols[3]:
@@ -287,8 +289,8 @@ def _create_feature_composition_section(
                 feature_index = model.X.columns.index(feature)
                 feature_values = model.X_test[:, feature_index]
                 if model.X.schema[feature].is_numeric():
-                    operator = rule['operator']
-                    value = rule['value']
+                    operator = rule["operator"]
+                    value = rule["value"]
                     if operator == "<":
                         mask &= (feature_values < value)
                     elif operator == "<=":
@@ -298,7 +300,7 @@ def _create_feature_composition_section(
                     elif operator == ">":
                         mask &= (feature_values > value)
                 else:
-                    mask &= numpy.isin(feature_values, rule['value'])
+                    mask &= numpy.isin(feature_values, rule["value"])
 
             # Calculate and display statistics
             group_size = mask.sum()
@@ -313,7 +315,7 @@ def _create_feature_composition_section(
 
                     for cls in unique_classes:
                         group_class_count = (y_true[mask] == cls).sum()
-                        group_class_percentage = group_class_count / group_size * 100 if group_size > 0 else 0
+                        group_class_percentage = group_class_count / group_size * 100 if group_size > 0 else 0  #noqa
 
                         total_class_count = (y_true == cls).sum()
                         class_recall = group_class_count / total_class_count * 100
@@ -329,31 +331,35 @@ def _create_feature_composition_section(
                     prevalences = [stat["Prevalence"] for stat in class_stats]
 
                     # Create the bar chart
-                    fig = go.Figure(data=[
-                        go.Bar(
-                            x=classes,
-                            y=prevalences,
-                            text=[f"{prev:.2f}%" for prev in prevalences],
-                            textposition='auto'
-                        ),
-                    ])
+                    fig = go.Figure(
+                        data=[
+                            go.Bar(
+                                x=classes,
+                                y=prevalences,
+                                text=[f"{prev:.2f}%" for prev in prevalences],
+                                textposition="auto",
+                            ),
+                        ],
+                    )
 
                     # Update layout
                     fig.update_layout(
                         title=f"{model.y.name} Prevalence in Selected Group",
                         xaxis_title=f"{model.y.name}",
                         yaxis_title= "% of selected group",
-                        yaxis=dict(range=[0, 100])
+                        yaxis={"range": [0, 100]},
                     )
                     streamlit.plotly_chart(fig, use_container_width=True)
 
-                    # Create and display the dataframe with formatted percentages and renamed columns
+                    # Create and display the dataframe with formatted percentages and renamed columns #noqa
                     df = pandas.DataFrame(class_stats)
-                    df = df.rename(columns={
-                        "Class": f"{model.y.name}",
-                        "Prevalence": "Prevalence in Selected Group",
-                        "Recall": f"Coverage of {model.y.name} value",
-                    })
+                    df = df.rename(
+                        columns={
+                            "Class": f"{model.y.name}",
+                            "Prevalence": "Prevalence in Selected Group",
+                            "Recall": f"Coverage of {model.y.name} value",
+                        },
+                    )
                     df["Prevalence in Selected Group"] = df["Prevalence in Selected Group"].apply(lambda x: f"{x:.2f}%") #noqa
                     df[f"Coverage of {model.y.name} value"] = df[f"Coverage of {model.y.name} value"].apply(lambda x: f"{x:.2f}%")  #noqa
 
@@ -366,8 +372,8 @@ def _create_feature_composition_section(
                     rest_y_values = y_true[~mask]
 
                     fig = go.Figure()
-                    fig.add_trace(go.Box(y=selected_y_values, name='Selected Group', marker_color='blue', boxpoints=False,))
-                    fig.add_trace(go.Box(y=rest_y_values, name='Rest of Population', marker_color='orange', boxpoints=False,))
+                    fig.add_trace(go.Box(y=selected_y_values, name='Selected Group', marker_color='blue', boxpoints=False)) #noqa
+                    fig.add_trace(go.Box(y=rest_y_values, name='Rest of Population', marker_color='orange', boxpoints=False)) #noqa
 
                     # Update layout for the box plot
                     fig.update_layout(
@@ -383,7 +389,7 @@ def _create_feature_composition_section(
                     rest_median = numpy.median(rest_y_values)
 
                     mean_diff = ((selected_mean - rest_mean) / rest_mean) * 100 if rest_mean != 0 else 0
-                    median_diff = ((selected_median - rest_median) / rest_median) * 100 if rest_median != 0 else 0
+                    median_diff = ((selected_median - rest_median) / rest_median) * 100 if rest_median != 0 else 0 #noqa
 
                     comparison_df = pandas.DataFrame({
                         "Group": ["Selected Group", "Rest of Population"],
@@ -405,7 +411,7 @@ def _create_feature_composition_section(
                     streamlit.dataframe(comparison_df, hide_index=True, use_container_width=True)
 
                     # 3. Describe the size of the isolated group
-                    streamlit.write(f"Selected group size: {group_size} ({group_percentage:.2f}% of total)")
+                    streamlit.write(f"Selected group size: {group_size} ({group_percentage:.2f}% of total)") #noqa
 
         else:
             streamlit.info("Select features and set rules to see statistics.")
