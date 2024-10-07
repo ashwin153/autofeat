@@ -1,5 +1,5 @@
 import dataclasses
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Iterable
 
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
@@ -7,31 +7,43 @@ from autofeat.transform.base import Transform
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Keep(Transform):
-    """Keep only the ``columns`` in all tables.
+    """Keep only specific tables or columns.
 
-    :param columns: Names of columns to keep.
-    :param tables: Names of tables to keep.
+    :param columns: Columns to keep.
+    :param tables: Tables to keep.
     """
 
-    columns: Mapping[str, Collection[str | Column]] | None = None
-    tables: set[str] | None = None
+    columns: Collection[tuple[Column, Table]] | None = None
+    tables: Collection[Table] | None = None
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for table in tables:
-            if not self.tables or table.name in self.tables:
-                kept = {
-                    str(column)
-                    for column in (self.columns.get(table.name, []) if self.columns else [])
-                }
+        column_names = {
+            (column.name, table.name)
+            for column, table in self.columns or []
+        }
 
-                columns = [
+        table_names = {
+            table.name
+            for table in self.tables or []
+        }
+
+        for table in tables:
+            if self.tables and table.name not in table_names:
+                continue
+
+            if self.columns:
+                remaining_columns = [
                     column
                     for column in table.columns
-                    if column.name in kept
+                    if (column.name, table.name) in column_names
                 ]
 
-                if columns:
-                    yield table.select(columns)
+                if remaining_columns:
+                    table = table.select(remaining_columns)
+                else:
+                    continue
+
+            yield table
