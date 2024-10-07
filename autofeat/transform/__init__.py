@@ -3,6 +3,7 @@ __all__ = [
     "AllOf",
     "AnyOf",
     "Cast",
+    "Collect",
     "Combine",
     "Drop",
     "Encode",
@@ -22,6 +23,7 @@ from autofeat.transform.all_of import AllOf
 from autofeat.transform.any_of import AnyOf
 from autofeat.transform.base import Transform
 from autofeat.transform.cast import Cast
+from autofeat.transform.collect import Collect
 from autofeat.transform.combine import Combine
 from autofeat.transform.drop import Drop
 from autofeat.transform.encode import Encode
