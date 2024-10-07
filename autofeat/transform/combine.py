@@ -2,6 +2,7 @@ import dataclasses
 import itertools
 from collections.abc import Iterable
 
+import numpy
 import polars
 
 from autofeat.attribute import Attribute
@@ -32,7 +33,10 @@ class Combine(Transform):
                 ]
 
                 yield Table(
-                    data=table.data.select(*into_exprs(extra_columns), **into_named_exprs(columns)),
+                    data=table.data.select(
+                        *into_exprs(extra_columns),
+                        **into_named_exprs(combinations),
+                    ),
                     name=f"combine({table.name})",
                     columns=columns,
                 )
@@ -54,8 +58,8 @@ class Combine(Transform):
                 (f"{x} - {y}", x.expr - y.expr),
                 (f"{y} - {x}", y.expr - x.expr),
                 (f"{x} * {y}", x.expr * y.expr),
-                (f"{x} / {y}", x.expr / y.expr),
-                (f"{y} / {x}", y.expr / x.expr),
+                (f"{x} / {y}", polars.when(y.expr == 0).then(numpy.nan).otherwise(x.expr / y.expr)),
+                (f"{y} / {x}", polars.when(x.expr == 0).then(numpy.nan).otherwise(y.expr / x.expr)),
             ]
 
             for name, expr in combinations:
