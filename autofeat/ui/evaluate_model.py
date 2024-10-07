@@ -79,13 +79,13 @@ def evaluate_model(
                     streamlit.caption(
                         f"Comparison: model's performance against a baseline model that randomly guesses based on the frequency of {model.y.name} values. " # noqa: E501
                         "Higher precision indicates a model guesses the value correctly more on average. " # noqa: E501
-                        "Higher recall indicates that a model covers more correct classifications overall.",  # noqa: E501
+                        "Higher recall indicates that a model covers more correct classifications overall."  # noqa: E501
                     )
                 case PredictionProblem.regression:
                     streamlit.caption(
                         f"Comparison: the model's performance against a baseline model, that always predicts the mean of {model.y.name}. "  # noqa: E501
                         "RMSE is the average error between the actual value and the prediction by the model. Lower error is better (means guesses are closer to true). " # noqa: E501
-                        "R2 indicates how much of the variation in your data the model captures. A higher value is better.",  # noqa: E501
+                        "R2 indicates how much of the variation in your data the model captures. A higher value is better."  # noqa: E501
                     )
 
     _create_feature_charts(model)
@@ -157,50 +157,51 @@ def _create_feature_analysis_charts(
     tab_labels = ["Create Chart"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
 
     # Use streamlit.tabs to create tabbed interface
-    tabs = streamlit.tabs(tab_labels)
 
-    # Handle the 'New Tab' for adding new tabs
-    with tabs[0]:  # Index 0 for 'New Tab'
-        available_features = [
-            f for f in feature_list
-            if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")]
-        ]
-        if available_features:
-            streamlit.subheader("Create a new chart")
-            selected_feature = streamlit.selectbox(
-                "Select a predictor to analyze:",
-                available_features,
-                index=None,
-            )
-            if selected_feature is not None:
-                # Add a new tab with the selected feature
-                new_tab = {"label": selected_feature, "feature": selected_feature}
-                streamlit.session_state.tabs.append(new_tab)
-                streamlit.rerun(scope="fragment")
-        else:
-            streamlit.write("No more features to select.")
-
-    # Handle existing tabs
-    for idx, tab in enumerate(tabs_list):
-        with tabs[idx + 1]:  # Existing tabs start from index 1
-            selected_feature = tab["feature"]
-
-            # Generate the chart based on the prediction problem
-            if model.prediction_method.problem == PredictionProblem.classification:
-                streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
-                chart_fig = _create_classification_feature_chart(model, selected_feature)
-            elif model.prediction_method.problem == PredictionProblem.regression:
-                streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
-                chart_fig = _create_regression_feature_chart(model, selected_feature)
+    with streamlit.container(border=True):
+        tabs = streamlit.tabs(tab_labels)
+        # Handle the 'New Tab' for adding new tabs
+        with tabs[0]:  # Index 0 for 'New Tab'
+            available_features = [
+                f for f in feature_list
+                if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")]
+            ]
+            if available_features:
+                streamlit.subheader("Create a new chart")
+                selected_feature = streamlit.selectbox(
+                    "Select a predictor to analyze:",
+                    available_features,
+                    index=None,
+                )
+                if selected_feature is not None:
+                    # Add a new tab with the selected feature
+                    new_tab = {"label": selected_feature, "feature": selected_feature}
+                    streamlit.session_state.tabs.append(new_tab)
+                    streamlit.rerun(scope="fragment")
             else:
-                raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+                streamlit.write("No more features to select.")
 
-            streamlit.plotly_chart(chart_fig, use_container_width=True, config={"displayModeBar": False})  # noqa: E501
+        # Handle existing tabs
+        for idx, tab in enumerate(tabs_list):
+            with tabs[idx + 1]:  # Existing tabs start from index 1
+                selected_feature = tab["feature"]
 
-            # Button to close the tab
-            if streamlit.button("Close Tab", key=f"close_{idx}"):
-                del streamlit.session_state.tabs[idx]
-                streamlit.rerun(scope="fragment")
+                # Generate the chart based on the prediction problem
+                if model.prediction_method.problem == PredictionProblem.classification:
+                    streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
+                    for chart_fig in _create_classification_feature_chart(model, selected_feature):
+                        streamlit.plotly_chart(chart_fig, use_container_width=True, config={"displayModeBar": False})  # noqa: E501
+                elif model.prediction_method.problem == PredictionProblem.regression:
+                    streamlit.subheader(f"{selected_feature} vs. {model.y.name}")
+                    chart_fig = _create_regression_feature_chart(model, selected_feature)
+                    streamlit.plotly_chart(chart_fig, use_container_width=True, config={"displayModeBar": False})  # noqa: E501
+                else:
+                    raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+
+                # Button to close the tab
+                if streamlit.button("Close Tab", key=f"close_{idx}"):
+                    del streamlit.session_state.tabs[idx]
+                    streamlit.rerun(scope="fragment")
 
 
 @streamlit.cache_data(
@@ -212,25 +213,30 @@ def feature_selection_form(
 ) -> None:
     return
 
-
+@streamlit.cache_data(
+    hash_funcs={TrainedModel: id},
+    max_entries=5,
+)
 def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
     feature: str,
-) -> go.Figure:
+) -> list[go.Figure]:
     # Get the index of the feature
     i = model.X.columns.index(feature)
     # Clean the data
     x, y_true = _clean_data(model.X_test[:, i], model.y_test)
+    list_of_figs = []
+    fig = go.Figure()
     # Check if we have any data left after cleaning
     if len(x) == 0:
-        return go.Figure()
+        list_of_figs.append(fig)
+        return list_of_figs
 
-    fig = go.Figure()
     df = pandas.DataFrame({"feature": x, f"{model.y.name}": y_true})
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
         # Numerical feature: create a histogram with adjustable buckets
-        num_buckets = 4
+        num_buckets = 5
         # Sort the data and create buckets
         sorted_data = df.sort_values("feature")
         bucket_size = len(sorted_data) // num_buckets
@@ -248,21 +254,36 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
                     "Bucket": bucket_name,
                     model.y.name: target_value,
                     "Count": count,
-                    "BucketStart": bucket["feature"].min(),
-                    "BucketEnd": bucket["feature"].max(),
+                    "BucketStart": bucket['feature'].min(),
+                    "BucketEnd": bucket['feature'].max(),
                 })
 
         bucket_df = pandas.DataFrame(bucket_data)
 
-        fig = px.bar(
-            bucket_df, x="Bucket", y="Count", color=model.y.name,
-            labels={"Bucket": feature, "Count": f"{target_value} count"},
-            height=600, width=800,
-        )
+        fig = px.bar(bucket_df, x="Bucket", y="Count", color=model.y.name,
+                     labels={"Bucket": feature, "Count": f"{target_value} count"},
+                     height=600, width=800)
 
-        fig.update_layout(bargap=0.2)
+        fig.update_layout(bargap=0.2, margin=dict(t=30))
         fig.update_xaxes(title_text=f"{feature} (Buckets)")
         fig.update_yaxes(title_text=f"{model.y.name} count")
+        list_of_figs.append(fig)
+
+        # Add a box and whisker plot for Y vs. X
+        fig_two = go.Figure()
+        fig_two.add_trace(go.Box(
+            y=df['feature'],
+            x=df[model.y.name],
+            name=feature,
+        ))
+        # Update layout for fig_two
+        fig_two.update_layout(
+            xaxis_title=model.y.name,
+            yaxis_title=feature,
+            margin=dict(t=30),
+        )
+
+        list_of_figs.append(fig_two)
     else:
         # Categorical feature: create a normalized stacked bar chart
         df_counts = df.groupby(["feature", f"{model.y.name}"]).size().unstack(fill_value=0)
@@ -279,19 +300,19 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
         fig.update_layout(
             xaxis_title=feature,
             yaxis_title=f"{model.y.name} (%)",
-            height=600,
-            width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},
             xaxis={"type": "category", "categoryorder": "total descending"},
-            margin={"t": 20},
+            margin=dict(t=20),
         )
 
-    return fig
+        list_of_figs.append(fig)
+
+    return list_of_figs
 
 
 @streamlit.cache_data(
     hash_funcs={TrainedModel: id},
-    max_entries=1,
+    max_entries=5,
 )
 def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     model: TrainedModel,
@@ -351,9 +372,6 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
                 x=x,
                 y=y_true,
                 name="Distribution",
-                boxpoints="all",
-                jitter=0.3,
-                pointpos=-1.8,
             ),
         )
 
@@ -361,9 +379,7 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     fig.update_layout(
         xaxis_title=feature,
         yaxis_title=f"{model.y.name}",
-        height=400,
-        width=600,
-        margin={"t": 30},
+        margin=dict(t=30),
     )
 
     return fig
