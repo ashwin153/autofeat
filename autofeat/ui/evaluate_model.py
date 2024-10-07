@@ -151,7 +151,6 @@ def _create_feature_analysis_charts(
     if "tabs" not in streamlit.session_state:
         streamlit.session_state.tabs = []
     else:
-        print("hello world")
         streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list] #noqa 
 
     tabs_list = streamlit.session_state.tabs
@@ -230,15 +229,37 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
     df = pandas.DataFrame({"feature": x, f"{model.y.name}": y_true})
     # Check if the feature is numerical
     if model.X.schema[feature].is_numeric():
-        # Numerical feature: create a histogram
-        fig = px.histogram(
-            df, x="feature", color=f"{model.y.name}",
-            hover_data=df.columns,
-            labels={"feature": feature, f"{model.y.name}": f"{model.y.name}"},
-            height=600, width=800,
-        )
+        # Numerical feature: create a histogram with adjustable buckets
+        num_buckets = 4
+        # Sort the data and create buckets
+        sorted_data = df.sort_values("feature")
+        bucket_size = len(sorted_data) // num_buckets
+
+        bucket_data = []
+        for i in range(num_buckets):
+            start_idx = i * bucket_size
+            end_idx = (i + 1) * bucket_size if i < num_buckets - 1 else len(sorted_data)
+            bucket = sorted_data.iloc[start_idx:end_idx]
+
+            bucket_name = f"{bucket['feature'].min():.2f} - {bucket['feature'].max():.2f}"
+            for target_value in df[model.y.name].unique():
+                count = bucket[bucket[model.y.name] == target_value].shape[0]
+                bucket_data.append({
+                    "Bucket": bucket_name,
+                    model.y.name: target_value,
+                    "Count": count,
+                    "BucketStart": bucket['feature'].min(),
+                    "BucketEnd": bucket['feature'].max(),
+                })
+
+        bucket_df = pandas.DataFrame(bucket_data)
+
+        fig = px.bar(bucket_df, x="Bucket", y="Count", color=model.y.name,
+                     labels={"Bucket": feature, "Count": f"{target_value} count"},
+                     height=600, width=800)
 
         fig.update_layout(bargap=0.2)
+        fig.update_xaxes(title_text=f"{feature} (Buckets)")
         fig.update_yaxes(title_text=f"{model.y.name} count")
     else:
         # Categorical feature: create a normalized stacked bar chart
@@ -260,7 +281,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},
             xaxis={"type": "category", "categoryorder": "total descending"},
-            margin=dict(t=30),
+            margin=dict(t=20),
         )
 
     return fig
