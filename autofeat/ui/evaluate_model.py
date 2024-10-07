@@ -79,13 +79,13 @@ def evaluate_model(
                     streamlit.caption(
                         f"Comparison: model's performance against a baseline model that randomly guesses based on the frequency of {model.y.name} values. " # noqa: E501
                         "Higher precision indicates a model guesses the value correctly more on average. " # noqa: E501
-                        "Higher recall indicates that a model covers more correct classifications overall."  # noqa: E501
+                        "Higher recall indicates that a model covers more correct classifications overall.",  # noqa: E501
                     )
                 case PredictionProblem.regression:
                     streamlit.caption(
                         f"Comparison: the model's performance against a baseline model, that always predicts the mean of {model.y.name}. "  # noqa: E501
                         "RMSE is the average error between the actual value and the prediction by the model. Lower error is better (means guesses are closer to true). " # noqa: E501
-                        "R2 indicates how much of the variation in your data the model captures. A higher value is better."  # noqa: E501
+                        "R2 indicates how much of the variation in your data the model captures. A higher value is better.",  # noqa: E501
                     )
 
     _create_feature_charts(model)
@@ -254,33 +254,37 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
                     "Bucket": bucket_name,
                     model.y.name: target_value,
                     "Count": count,
-                    "BucketStart": bucket['feature'].min(),
-                    "BucketEnd": bucket['feature'].max(),
+                    "BucketStart": bucket["feature"].min(),
+                    "BucketEnd": bucket["feature"].max(),
                 })
 
         bucket_df = pandas.DataFrame(bucket_data)
 
-        fig = px.bar(bucket_df, x="Bucket", y="Count", color=model.y.name,
-                     labels={"Bucket": feature, "Count": f"{target_value} count"},
-                     height=600, width=800)
+        fig = px.bar(
+            bucket_df, x="Bucket", y="Count", color=model.y.name,
+            labels={"Bucket": feature, "Count": f"{target_value} count"},
+            height=600, width=800,
+        )
 
-        fig.update_layout(bargap=0.2, margin=dict(t=30))
+        fig.update_layout(bargap=0.2, margin={"t": 30})
         fig.update_xaxes(title_text=f"{feature} (Buckets)")
         fig.update_yaxes(title_text=f"{model.y.name} count")
         list_of_figs.append(fig)
 
         # Add a box and whisker plot for Y vs. X
         fig_two = go.Figure()
-        fig_two.add_trace(go.Box(
-            y=df['feature'],
-            x=df[model.y.name],
-            name=feature,
-        ))
+        fig_two.add_trace(
+            go.Box(
+                y=df["feature"],
+                x=df[model.y.name],
+                name=feature,
+            ),
+        )
         # Update layout for fig_two
         fig_two.update_layout(
             xaxis_title=model.y.name,
             yaxis_title=feature,
-            margin=dict(t=30),
+            margin={"t": 30},
         )
 
         list_of_figs.append(fig_two)
@@ -302,7 +306,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             yaxis_title=f"{model.y.name} (%)",
             yaxis={"tickformat": ".1f", "range": [0, 100]},
             xaxis={"type": "category", "categoryorder": "total descending"},
-            margin=dict(t=20),
+            margin={"t": 20},
         )
 
         list_of_figs.append(fig)
@@ -379,7 +383,7 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     fig.update_layout(
         xaxis_title=feature,
         yaxis_title=f"{model.y.name}",
-        margin=dict(t=30),
+        margin={"t": 30},
     )
 
     return fig
