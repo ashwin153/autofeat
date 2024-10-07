@@ -69,6 +69,7 @@ class Dataset:
         known: IntoDataFrame,
         target: IntoSeries,
         *,
+        n_features: int = 25,
         prediction_method: PredictionMethod = PREDICTION_METHODS["xgboost_classifier"],
         selection_method: SelectionMethod = SELECTION_METHODS["feature_importance"],
     ) -> TrainedModel:
@@ -76,6 +77,7 @@ class Dataset:
 
         :param known: Data that is already known.
         :param target: Target variable.
+        :param n_features: Number of features to train the model on.
         :param prediction_method: Method of prediction.
         :param selection_method: Method of feature selection.
         :return: Trained model.
@@ -103,7 +105,8 @@ class Dataset:
 
         # train a model that selects the most important features to a prediction model
         prediction_model = prediction_method.model()
-        selection_model = selection_method.model(prediction_model)
+
+        selection_model = selection_method.model(prediction_model, n_features)
         selection_model.fit(X_train, y_train)
 
         # apply feature selection to the training and test data

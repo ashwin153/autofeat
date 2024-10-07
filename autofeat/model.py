@@ -192,7 +192,7 @@ class SelectionMethod(Generic[AnySelectionModel]):
     """
 
     mask: Callable[[AnySelectionModel], numpy.ndarray]
-    model: Callable[[PredictionModel], AnySelectionModel]
+    model: Callable[[PredictionModel, int], AnySelectionModel]
     name: str
 
     def __str__(
@@ -204,17 +204,17 @@ class SelectionMethod(Generic[AnySelectionModel]):
 SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
     "feature_importance": SelectionMethod(
         mask=lambda model: model.get_support(),
-        model=lambda model: sklearn.feature_selection.SelectFromModel(model, max_features=50),
+        model=lambda model, n: sklearn.feature_selection.SelectFromModel(model, max_features=n),
         name="Feature Importance",
     ),
     "recursive_feature_elimination": SelectionMethod(
         mask=lambda model: model.get_support(),
-        model=sklearn.feature_selection.RFE,  # pyright: ignore[reportArgumentType]
+        model=lambda model, n: sklearn.feature_selection.RFE(model, n_features_to_select=n),  # pyright: ignore[reportArgumentType]
         name="Recursive Feature Elimination",
     ),
     "boruta": SelectionMethod(
         mask=lambda model: model.support_,
-        model=boruta.BorutaPy,
+        model=lambda model, n: boruta.BorutaPy(model),  # TODO: support n
         name="Boruta",
     ),
 }
