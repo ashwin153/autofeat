@@ -102,12 +102,12 @@ class PredictionMethod:
 
 PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
     "xgboost_classifier": PredictionMethod(
-        model=lambda: xgboost.XGBClassifier(missing=float("inf")),
+        model=xgboost.XGBClassifier,
         name="XGBoost",
         problem=PredictionProblem.classification,
     ),
     "xgboost_regressor": PredictionMethod(
-        model=lambda: xgboost.XGBRegressor(missing=float("inf")),
+        model=xgboost.XGBRegressor,
         name="XGBoost",
         problem=PredictionProblem.regression,
     ),
