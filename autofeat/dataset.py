@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import collections
 import dataclasses
 from typing import TYPE_CHECKING
 
@@ -81,7 +80,9 @@ class Dataset:
         :return: Trained model.
         """
         # pre-process the input and target variables and split them into training and test data
-        X = self.extract(known)
+        features = self.apply(Extract(known=known))
+
+        X = into_data_frame(features)
         y = into_series(target)
 
         X_transformer = sklearn.pipeline.Pipeline([
@@ -113,16 +114,22 @@ class Dataset:
             if is_selected
         ]
 
-        selection_by_table = collections.defaultdict(set)
-        for selected in selection:
-            column, table = selected.split(Extract.SEPARATOR, 1)
-            selection_by_table[table].add(column)
-
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
         X = X.select(selection)
         X_transformer.fit_transform(X_train)
-        dataset = self.apply(Keep(columns=selection_by_table))
+
+        dataset = self.apply(
+            Keep(
+                columns=[
+                    ancestor
+                    for table in features.tables
+                    for column in table.columns
+                    if column.name in selection
+                    for ancestor in column.derived_from
+                ],
+            ),
+        )
 
         # train the prediction model on the selected features and evaluate it against the test data
         prediction_model.fit(X_train, y_train)
