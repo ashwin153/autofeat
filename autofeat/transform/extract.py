@@ -29,19 +29,19 @@ class Extract(Transform):
         known = into_data_frame(self.known)
 
         for table in tables:
-            primary_key = {
-                column.name
+            primary_key = [
+                column
                 for column in table.columns
                 if Attribute.primary_key in column.attributes
-            }
+            ]
 
             features = [
-                *self._features(table),
+                *self._features(table, primary_key),
             ]
 
             if (
                 primary_key
-                and primary_key.issubset(known.columns)
+                and all(column.name in known.columns for column in primary_key)
                 and features
             ):
                 columns = [
@@ -52,7 +52,7 @@ class Extract(Transform):
                 data = (
                     known
                     .lazy()
-                    .join(table.data, on=list(primary_key), how="left")
+                    .join(table.data, on=[column.name for column in primary_key], how="left")
                     .select(**into_named_exprs(features))
                 )
 
@@ -65,6 +65,7 @@ class Extract(Transform):
     def _features(
         self,
         table: Table,
+        primary_key: list[Column],
     ) -> Iterable[tuple[Column, polars.Expr]]:
         for x in table.columns:
             if  (
@@ -74,7 +75,7 @@ class Extract(Transform):
                 column = Column(
                     name=f"{x.name}{Extract.SEPARATOR}{table.name}",
                     attributes=x.attributes,
-                    derived_from=[(x, table)],
+                    derived_from=[(x, table), *((column, table) for column in primary_key)],
                 )
 
                 yield column, x.expr
