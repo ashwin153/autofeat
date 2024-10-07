@@ -36,7 +36,7 @@ class Extract(Transform):
             ]
 
             features = [
-                *self._features(table, primary_key),
+                *self._features(table),
             ]
 
             if (
@@ -65,8 +65,13 @@ class Extract(Transform):
     def _features(
         self,
         table: Table,
-        primary_key: list[Column],
     ) -> Iterable[tuple[Column, polars.Expr]]:
+        primary_key = [
+            (column, table)
+            for column in table.columns
+            if Attribute.primary_key in column.attributes
+        ]
+
         for x in table.columns:
             if  (
                 {Attribute.boolean, Attribute.numeric} & x.attributes
@@ -75,7 +80,7 @@ class Extract(Transform):
                 column = Column(
                     name=f"{x.name}{Extract.SEPARATOR}{table.name}",
                     attributes=x.attributes,
-                    derived_from=[(x, table), *((column, table) for column in primary_key)],
+                    derived_from=[(x, table), *primary_key],
                 )
 
                 yield column, x.expr
