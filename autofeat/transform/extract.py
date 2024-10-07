@@ -66,6 +66,12 @@ class Extract(Transform):
         self,
         table: Table,
     ) -> Iterable[tuple[Column, polars.Expr]]:
+        primary_key = [
+            (column, table)
+            for column in table.columns
+            if Attribute.primary_key in column.attributes
+        ]
+
         for x in table.columns:
             if  (
                 {Attribute.boolean, Attribute.numeric} & x.attributes
@@ -74,7 +80,7 @@ class Extract(Transform):
                 column = Column(
                     name=f"{x.name}{Extract.SEPARATOR}{table.name}",
                     attributes=x.attributes,
-                    derived_from=[(x, table)],
+                    derived_from=[(x, table), *primary_key],
                 )
 
                 yield column, x.expr
