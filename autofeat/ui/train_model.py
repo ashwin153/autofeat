@@ -11,7 +11,7 @@ from autofeat.model import (
     TrainedModel,
 )
 from autofeat.table import Column, Table
-from autofeat.transform import Aggregate, Drop, Identity
+from autofeat.transform import Aggregate, Cache, Combine, Drop, Identity
 
 
 def train_model(
@@ -118,24 +118,53 @@ def _train_model(
     training_data: Table,
     target_column: Column,
 ) -> TrainedModel:
-    masked_columns = [
-        (column, table)
-        for table in dataset.tables
-        for column in table.columns
-        if column.is_related(target_column)
+    # extract the known and target variables from the training data
+    known = (
+        training_data.data
+        .select([column.name for column in known_columns])
+        .collect()
+    )
+
+    target = (
+        training_data.data
+        .select(target_column.name)
+        .collect()
+    )
+
+    # drop all columns that are related to the target column
+    dataset = dataset.apply(Drop(columns=[target_column]))
+
+    # TODO: make this configurable
+    # transforms to iteratively apply to the dataset
+    rounds = [
+        (Identity(), 60),
+        (Aggregate(is_pivotable=known_columns), 40),
+        (Combine(), 10),
     ]
 
-    input_dataset = dataset.apply(
-        Drop(columns=masked_columns)
-        .then(Identity(), Aggregate(is_pivotable=known_columns)),
-    )
+    cache = Cache()
 
-    return input_dataset.train(
-        known=training_data.data.select([column.name for column in known_columns]),
-        target=training_data.data.select(target_column.name),
-        prediction_method=prediction_method,
-        selection_method=selection_method,
-    )
+    i = 0
+    while True:
+        # apply the next transform to the dataset, train a model, and select the top n features
+        transform, n_features = rounds[i]
+        dataset = dataset.apply(Identity().then(Identity(), transform).then(cache))
+        model = dataset.train(known, target, prediction_method, selection_method, n_features)
+        dataset = model.dataset
+        cache.keep(dataset)
+
+        if i == len(rounds) - 1:
+            return model
+        else:
+            i += 1
+
+
+        selection_by_table = collections.defaultdict(set)
+        for selected in selection:
+            column, table = selected.split(Extract.SEPARATOR, 1)
+            selection_by_table[table].add(column)
+        dataset = self.apply(Keep(columns=selection_by_table))
+
 
 
 def _clear_state(
