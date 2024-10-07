@@ -35,9 +35,10 @@ class Extract(Transform):
                 if Attribute.primary_key in column.attributes
             }
 
-            features = [
-                *self._features(table),
-            ]
+            features = sorted(
+                self._features(table),
+                key=lambda feature: len(feature[0].name),
+            )
 
             if (
                 primary_key

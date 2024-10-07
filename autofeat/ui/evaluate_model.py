@@ -671,6 +671,7 @@ def _feature_importance(
         else numpy.abs(shap_explanation.values).mean(0)
     )
 
+
     return pandas.DataFrame(
         {
             "Feature": model.X.columns,

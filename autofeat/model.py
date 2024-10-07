@@ -9,6 +9,8 @@ import boruta
 import catboost
 import lightgbm
 import numpy
+import pandas
+import shap
 import sklearn.dummy
 import sklearn.ensemble
 import sklearn.feature_selection
@@ -20,12 +22,11 @@ import sklearn.preprocessing
 import xgboost
 
 from autofeat.convert import into_data_frame
-from autofeat.transform import Aggregate, Collect, Combine, Drop, Extract, Identity, Keep
+from autofeat.transform import Aggregate, Combine, Drop, Extract, Identity, Keep
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    import numpy
     import polars
 
     from autofeat.convert import IntoDataFrame
@@ -186,6 +187,81 @@ class SelectionModel(Protocol):
 AnySelectionModel = TypeVar("AnySelectionModel", bound=SelectionModel)
 
 
+class AutofeatSelector(sklearn.base.BaseEstimator, sklearn.feature_selection.SelectorMixin):
+    """
+
+    :param model:
+    :param n:
+    """
+
+    def __init__(
+        self,
+        model: PredictionModel,
+        n: int,
+    ) -> None:
+        self._model = model
+        self._n = n
+        self._support_mask: numpy.ndarray | None = None
+
+    def fit(
+        self,
+        X: numpy.ndarray,
+        y: numpy.ndarray,
+        /,
+    ) -> Any:
+        # fit the model
+        self._model.fit(X, y)
+
+        # find columns that are highly correlated
+        correlated = (
+            numpy.max(
+                numpy.triu(
+                    numpy.abs(
+                        pandas.DataFrame(X[:10000, :]).corr().to_numpy(),
+                    ),
+                    k=1,
+                ),
+                axis=1,
+            ) > 0.95
+        )
+
+        # find the shap values associated with the model
+        explanation = shap.Explainer(self._model)(X[:1000, :])
+
+        # determine the shap importance of each column
+        importance = (
+            numpy
+            .abs(explanation.values)
+            .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
+        )
+
+        # select the most important columns that are not highly correlated with other columns
+        selection = (
+            numpy
+            .where(correlated, 0, importance)
+            .argpartition(-self._n)[-self._n:]
+        )
+
+        # construct a bitmask from the selected columns
+        self._support_mask = numpy.array([
+            i in selection
+            for i in range(X.shape[1])
+        ])
+
+    def _get_support_mask(
+        self,
+    ) -> numpy.ndarray:
+        assert self._support_mask is not None
+        return self._support_mask
+
+    def _more_tags(
+        self,
+    ) -> dict[str, bool]:
+        return {
+            "allow_nan": True,
+        }
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SelectionMethod(Generic[AnySelectionModel]):
     """A method of solving feature selection problems.
@@ -210,6 +286,11 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
         mask=lambda model: model.get_support(),
         model=lambda model, n: sklearn.feature_selection.SelectFromModel(model, max_features=n),
         name="Feature Importance",
+    ),
+    "autofeat": SelectionMethod(
+        mask=lambda model: model.get_support(),
+        model=lambda model, n: AutofeatSelector(model, n),
+        name="autofeat",
     ),
     "recursive_feature_elimination": SelectionMethod(
         mask=lambda model: model.get_support(),
@@ -326,26 +407,25 @@ class Model:  # type: ignore[no-any-unimported]
             (
                 [Aggregate(is_pivotable=known_columns)],
                 SELECTION_METHODS["feature_importance"],
-                160,
+                120,
             ),
             (
                 [],
-                SELECTION_METHODS["recursive_feature_elimination"],
+                SELECTION_METHODS["autofeat"],
                 80,
             ),
             (
                 [Combine()],
-                SELECTION_METHODS["recursive_feature_elimination"],
+                SELECTION_METHODS["autofeat"],
                 40,
             ),
         ]
-
 
         i = 0
         while True:
             transform, selection_method, n_features = iterations[i]
 
-            dataset = dataset.apply(Identity().then(Identity(), *transform).then(Collect()))
+            dataset = dataset.apply(Identity().then(Identity(), *transform))
 
             model = Model._train_once(
                 dataset=dataset,
@@ -369,7 +449,7 @@ class Model:  # type: ignore[no-any-unimported]
         dataset: Dataset,
         known: polars.DataFrame,
         target: polars.Series,
-        n_features: int = 25,
+        n_features: int,
         prediction_method: PredictionMethod,
         selection_method: SelectionMethod,
     ) -> Model:
