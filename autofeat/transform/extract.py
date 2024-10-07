@@ -29,11 +29,11 @@ class Extract(Transform):
         known = into_data_frame(self.known)
 
         for table in tables:
-            primary_key = [
-                column
+            primary_key = {
+                column.name
                 for column in table.columns
                 if Attribute.primary_key in column.attributes
-            ]
+            }
 
             features = [
                 *self._features(table),
@@ -41,7 +41,7 @@ class Extract(Transform):
 
             if (
                 primary_key
-                and all(column.name in known.columns for column in primary_key)
+                and primary_key.issubset(known.columns)
                 and features
             ):
                 columns = [
@@ -52,7 +52,7 @@ class Extract(Transform):
                 data = (
                     known
                     .lazy()
-                    .join(table.data, on=[column.name for column in primary_key], how="left")
+                    .join(table.data, on=list(primary_key), how="left")
                     .select(**into_named_exprs(features))
                 )
 
