@@ -57,7 +57,7 @@ class Transform(abc.ABC):
             else:
                 transforms.append(
                     AllOf(
-                        transforms=[
+                        [
                             *(self.transforms if isinstance(self, AllOf) else [self]),
                             *(next.transforms if isinstance(next, AllOf) else [next]),
                         ],
@@ -67,4 +67,4 @@ class Transform(abc.ABC):
         if len(transforms) == 1:
             return transforms[0]
         else:
-            return AnyOf(transforms=transforms)
+            return AnyOf(transforms)
