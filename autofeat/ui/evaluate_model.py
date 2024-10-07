@@ -233,7 +233,12 @@ def _create_feature_composition_section(
                 new_feature = streamlit.session_state.feature_selector
                 if new_feature and new_feature not in streamlit.session_state.selected_features:
                     streamlit.session_state.selected_features.append(new_feature)
-                    streamlit.session_state.rules[new_feature] = {"operator": "<", "value": 0}
+                    streamlit.session_state.rules[new_feature] = {"operator": "<", "value": 0.0}
+
+            # Function to update the rule value when the input changes
+            def update_rule_value(feature) -> None:
+                streamlit.session_state.rules[feature]["value"] = streamlit.session_state[f"val_{feature}"] #noqa
+
 
             streamlit.selectbox(
                 "Add a feature to the rules",
@@ -260,9 +265,14 @@ def _create_feature_composition_section(
                             label_visibility="collapsed",
                         )
                     with cols[2]:
-                        streamlit.session_state.rules[feature]["value"] = streamlit.number_input(
+                        #streamlit.session_state.rules[feature]["value"] = streamlit.number_input(
+                        streamlit.number_input(
                             "Value", value=streamlit.session_state.rules[feature]['value'], key=f"val_{feature}", #noqa
                             label_visibility="collapsed",
+                            step=None,  # Setting step to None still shows the stepper, but allows free input #noqa
+                            format="%.3f",  # Allows users to input numbers with high precision
+                            on_change=update_rule_value,  # Trigger update when value changes
+                            args=(feature,),  # Pass the current feature to the callback
                         )
                 else:
                     with cols[2]:
