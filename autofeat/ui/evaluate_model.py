@@ -79,13 +79,13 @@ def evaluate_model(
                     streamlit.caption(
                         f"Comparison: model's performance against a baseline model that randomly guesses based on the frequency of {model.y.name} values. " # noqa: E501
                         "Higher precision indicates a model guesses the value correctly more on average. " # noqa: E501
-                        "Higher recall indicates that a model covers more correct classifications overall."  # noqa: E501
+                        "Higher recall indicates that a model covers more correct classifications overall.",  # noqa: E501
                     )
                 case PredictionProblem.regression:
                     streamlit.caption(
                         f"Comparison: the model's performance against a baseline model, that always predicts the mean of {model.y.name}. "  # noqa: E501
                         "RMSE is the average error between the actual value and the prediction by the model. Lower error is better (means guesses are closer to true). " # noqa: E501
-                        "R2 indicates how much of the variation in your data the model captures. A higher value is better."  # noqa: E501
+                        "R2 indicates how much of the variation in your data the model captures. A higher value is better.",  # noqa: E501
                     )
 
     _create_feature_charts(model)
@@ -151,7 +151,7 @@ def _create_feature_analysis_charts(
     if "tabs" not in streamlit.session_state:
         streamlit.session_state.tabs = []
     else:
-        streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list] #noqa 
+        streamlit.session_state.tabs = [tab for tab in streamlit.session_state.tabs if tab["feature"] in feature_list] #noqa
 
     tabs_list = streamlit.session_state.tabs
     tab_labels = ["Create Chart"] + [tab["label"] for tab in tabs_list]  # 'New Tab' is now first
@@ -248,15 +248,17 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
                     "Bucket": bucket_name,
                     model.y.name: target_value,
                     "Count": count,
-                    "BucketStart": bucket['feature'].min(),
-                    "BucketEnd": bucket['feature'].max(),
+                    "BucketStart": bucket["feature"].min(),
+                    "BucketEnd": bucket["feature"].max(),
                 })
 
         bucket_df = pandas.DataFrame(bucket_data)
 
-        fig = px.bar(bucket_df, x="Bucket", y="Count", color=model.y.name,
-                     labels={"Bucket": feature, "Count": f"{target_value} count"},
-                     height=600, width=800)
+        fig = px.bar(
+            bucket_df, x="Bucket", y="Count", color=model.y.name,
+            labels={"Bucket": feature, "Count": f"{target_value} count"},
+            height=600, width=800,
+        )
 
         fig.update_layout(bargap=0.2)
         fig.update_xaxes(title_text=f"{feature} (Buckets)")
@@ -281,7 +283,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             width=800,
             yaxis={"tickformat": ".1f", "range": [0, 100]},
             xaxis={"type": "category", "categoryorder": "total descending"},
-            margin=dict(t=20),
+            margin={"t": 20},
         )
 
     return fig
@@ -361,7 +363,7 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
         yaxis_title=f"{model.y.name}",
         height=400,
         width=600,
-        margin=dict(t=30),
+        margin={"t": 30},
     )
 
     return fig
