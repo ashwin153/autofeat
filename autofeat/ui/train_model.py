@@ -4,19 +4,16 @@ from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
 from autofeat.model import (
     PREDICTION_METHODS,
-    SELECTION_METHODS,
+    Model,
     PredictionMethod,
     PredictionProblem,
-    SelectionMethod,
-    TrainedModel,
 )
 from autofeat.table import Column, Table
-from autofeat.transform import Aggregate, Cache, Combine, Drop, Identity
 
 
 def train_model(
     dataset: Dataset,
-) -> TrainedModel | None:
+) -> Model | None:
     """Load features from the ``dataset`` that are relevant to a prediction problem.
 
     :param dataset: Dataset to load features from.
@@ -79,13 +76,6 @@ def train_model(
             options=[method for method in PREDICTION_METHODS.values() if method.problem == problem],
         )
 
-        selection_method = streamlit.selectbox(
-            help="Method of selecting the most important features to the prediction model",
-            key="selection_method",
-            label="Selection Method",
-            options=SELECTION_METHODS.values(),
-        )
-
     if not streamlit.button("Train Model"):
         return None
 
@@ -93,7 +83,6 @@ def train_model(
         dataset=dataset,
         known_columns=tuple(known_columns),
         prediction_method=prediction_method,
-        selection_method=selection_method,
         training_data=training_data,
         target_column=target_column,
     )
@@ -103,7 +92,6 @@ def train_model(
     hash_funcs={
         Dataset: id,
         PredictionMethod: lambda x: x.name,
-        SelectionMethod: lambda x: x.name,
         Table: id,
         Column: id,
     },
@@ -114,57 +102,16 @@ def _train_model(
     dataset: Dataset,
     known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
-    selection_method: SelectionMethod,
     training_data: Table,
     target_column: Column,
-) -> TrainedModel:
-    # extract the known and target variables from the training data
-    known = (
-        training_data.data
-        .select([column.name for column in known_columns])
-        .collect()
+) -> Model:
+    return Model.train(
+        dataset=dataset,
+        known_columns=known_columns,
+        prediction_method=prediction_method,
+        training_data=training_data,
+        target_column=target_column,
     )
-
-    target = (
-        training_data.data
-        .select(target_column.name)
-        .collect()
-    )
-
-    # drop all columns that are related to the target column
-    dataset = dataset.apply(Drop(columns=[target_column]))
-
-    # TODO: make this configurable
-    # transforms to iteratively apply to the dataset
-    rounds = [
-        (Identity(), 60),
-        (Aggregate(is_pivotable=known_columns), 40),
-        (Combine(), 10),
-    ]
-
-    cache = Cache()
-
-    i = 0
-    while True:
-        # apply the next transform to the dataset, train a model, and select the top n features
-        transform, n_features = rounds[i]
-        dataset = dataset.apply(Identity().then(Identity(), transform).then(cache))
-        model = dataset.train(known, target, prediction_method, selection_method, n_features)
-        dataset = model.dataset
-        cache.keep(dataset)
-
-        if i == len(rounds) - 1:
-            return model
-        else:
-            i += 1
-
-
-        selection_by_table = collections.defaultdict(set)
-        for selected in selection:
-            column, table = selected.split(Extract.SEPARATOR, 1)
-            selection_by_table[table].add(column)
-        dataset = self.apply(Keep(columns=selection_by_table))
-
 
 
 def _clear_state(

@@ -19,6 +19,9 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import xgboost
 
+from autofeat.convert import into_data_frame
+from autofeat.transform import Aggregate, Collect, Combine, Drop, Extract, Identity, Keep
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -27,6 +30,7 @@ if TYPE_CHECKING:
 
     from autofeat.convert import IntoDataFrame
     from autofeat.dataset import Dataset
+    from autofeat.table import Column, Table
 
 
 class PredictionModel(Protocol):
@@ -98,12 +102,12 @@ class PredictionMethod:
 
 PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
     "xgboost_classifier": PredictionMethod(
-        model=xgboost.XGBClassifier,
+        model=lambda: xgboost.XGBClassifier(missing=float("inf")),
         name="XGBoost",
         problem=PredictionProblem.classification,
     ),
     "xgboost_regressor": PredictionMethod(
-        model=xgboost.XGBRegressor,
+        model=lambda: xgboost.XGBRegressor(missing=float("inf")),
         name="XGBoost",
         problem=PredictionProblem.regression,
     ),
@@ -221,7 +225,7 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class TrainedModel:  # type: ignore[no-any-unimported]
+class Model:  # type: ignore[no-any-unimported]
     """A prediction model trained on select features in a ``dataset``.
 
     :param baseline_model: Model used to benchmark the performance of this model.
@@ -268,7 +272,186 @@ class TrainedModel:  # type: ignore[no-any-unimported]
         :param known: Data that is already known.
         :return: Target variable.
         """
-        features = self.dataset.extract(known)
+        features = self.dataset.features(known)
         X = self.X_transformer.transform(features.to_numpy())
         y = self.prediction_model.predict(X)
         return self.y_transformer.inverse_transform(y)  # type: ignore[no-any-return]
+
+    @staticmethod
+    def train(
+        dataset: Dataset,
+        *,
+        known_columns: tuple[Column, ...],
+        prediction_method: PredictionMethod,
+        training_data: Table,
+        target_column: Column,
+    ) -> Model:
+        """
+
+        :param dataset:
+        :param known_columns:
+        :param prediction_method:
+        :param training_data:
+        :param target_column:
+        :return:
+        """
+        # extract the known and target variables from the training data
+        known = (
+            training_data.data
+            .select([column.name for column in known_columns])
+            .collect()
+        )
+
+        target = (
+            training_data.data
+            .select(target_column.name)
+            .collect()
+            .to_series()
+        )
+
+        # drop all columns related to the target column from the dataset
+        dataset = dataset.apply(
+            Drop(
+                columns=[
+                    (column, table)
+                    for table in dataset.tables
+                    for column in table.columns
+                    if column.is_related(target_column)
+                ],
+            ),
+        )
+
+        # repeatedly transform the dataset and train a model on the n most important features
+        iterations = [
+            (
+                [Aggregate(is_pivotable=known_columns)],
+                SELECTION_METHODS["feature_importance"],
+                160,
+            ),
+            (
+                [],
+                SELECTION_METHODS["recursive_feature_elimination"],
+                80,
+            ),
+            (
+                [Combine()],
+                SELECTION_METHODS["recursive_feature_elimination"],
+                40,
+            ),
+        ]
+
+
+        i = 0
+        while True:
+            transform, selection_method, n_features = iterations[i]
+
+            dataset = dataset.apply(Identity().then(Identity(), *transform).then(Collect()))
+
+            model = Model._train_once(
+                dataset=dataset,
+                known=known,
+                target=target,
+                n_features=n_features,
+                prediction_method=prediction_method,
+                selection_method=selection_method,
+            )
+
+            dataset = model.dataset
+
+            if i == len(iterations) - 1:
+                return model
+            else:
+                i += 1
+
+    @staticmethod
+    def _train_once(
+        *,
+        dataset: Dataset,
+        known: polars.DataFrame,
+        target: polars.Series,
+        n_features: int = 25,
+        prediction_method: PredictionMethod,
+        selection_method: SelectionMethod,
+    ) -> Model:
+        # extract features from the dataset
+        features = dataset.apply(Extract(known=known))
+
+        # pre-process the input and target variables and split them into training and test data
+        X = into_data_frame(features)
+        y = target
+
+        X_transformer = sklearn.pipeline.Pipeline([
+            # TODO: create a custom scaler that only applies to numeric columns
+            # ("scale", sklearn.preprocessing.RobustScaler()),
+            ("identity", sklearn.preprocessing.FunctionTransformer()),
+        ])
+
+        y_transformer = (
+            sklearn.preprocessing.LabelEncoder()
+            if prediction_method.problem == PredictionProblem.classification
+            else sklearn.preprocessing.FunctionTransformer()
+        )
+
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
+            X_transformer.fit_transform(X.to_numpy()),
+            y_transformer.fit_transform(y.to_numpy()),
+        )
+
+        # create a prediction model
+        prediction_model = prediction_method.model()
+
+        # train a model that selects the n most important features to the prediction model
+        selection_model = selection_method.model(prediction_model, n_features)
+        selection_model.fit(X_train, y_train)
+
+        # drop features that were not selected from the training data
+        X_train = selection_model.transform(X_train)
+        X_test = selection_model.transform(X_test)
+        X_transformer.fit_transform(X_train)
+        X = X.select(c for c, x in zip(X.columns, selection_method.mask(selection_model)) if x)
+
+        # keep only the columns that selected features are extracted from
+        dataset = dataset.apply(
+            Keep(
+                columns=[
+                    ancestor
+                    for table in features.tables
+                    for column in table.columns
+                    if column.name in X.columns
+                    for ancestor in column.derived_from
+                ],
+            ),
+        )
+
+        # train the prediction model on the selected features
+        prediction_model.fit(X_train, y_train)
+
+        # evaluate the prediction model on the test data
+        y_predicted = prediction_model.predict(X_test)
+
+        # train the baseline model on the selected features
+        baseline_model = prediction_method.problem.baseline_method.model()
+        baseline_model.fit(X_train, y_train)
+
+        # evaluate the baseline model on the test data
+        y_baseline = baseline_model.predict(X_test)
+
+        # collect all the intermediate outputs
+        return Model(
+            baseline_model=baseline_model,
+            dataset=dataset,
+            prediction_method=prediction_method,
+            prediction_model=prediction_model,
+            selection_method=selection_method,
+            selection_model=selection_model,
+            X_test=X_transformer.inverse_transform(X_test),
+            X_train=X_transformer.inverse_transform(X_train),
+            X_transformer=X_transformer,
+            X=X,
+            y_baseline=y_transformer.inverse_transform(y_baseline),
+            y_predicted=y_transformer.inverse_transform(y_predicted),
+            y_test=y_transformer.inverse_transform(y_test),
+            y_train=y_transformer.inverse_transform(y_train),
+            y_transformer=y_transformer,
+            y=y,
+        )
