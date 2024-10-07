@@ -164,7 +164,7 @@ def _create_feature_analysis_charts(
         with tabs[0]:  # Index 0 for 'New Tab'
             available_features = [
                 f for f in feature_list
-                if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")]
+                if f not in [t.get("feature") for t in streamlit.session_state.tabs if t.get("feature")] #noqa 501
             ]
             if available_features:
                 streamlit.subheader("Create a new chart")
