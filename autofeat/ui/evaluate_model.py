@@ -236,7 +236,7 @@ def _create_feature_composition_section(
                     streamlit.session_state.rules[new_feature] = {"operator": "<", "value": 0.0}
 
             # Function to update the rule value when the input changes
-            def update_rule_value(feature) -> None:
+            def update_rule_value(feature) -> None:  # type: ignore[no-any-unimported]
                 streamlit.session_state.rules[feature]["value"] = streamlit.session_state[f"val_{feature}"] #noqa
 
 
