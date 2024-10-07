@@ -388,8 +388,8 @@ def _create_feature_composition_section(
                     rest_mean = numpy.mean(rest_y_values)
                     rest_median = numpy.median(rest_y_values)
 
-                    mean_diff = ((selected_mean - rest_mean) / rest_mean) * 100 if rest_mean != 0 else 0
-                    median_diff = ((selected_median - rest_median) / rest_median) * 100 if rest_median != 0 else 0 #noqa
+                    mean_diff = ((selected_mean - rest_mean) / rest_mean) * 100 if rest_mean != 0 else 0  #noqa
+                    median_diff = ((selected_median - rest_median) / rest_median) * 100 if rest_median != 0 else 0  #noqa
 
                     comparison_df = pandas.DataFrame({
                         "Group": ["Selected Group", "Rest of Population"],
