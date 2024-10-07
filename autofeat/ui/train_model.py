@@ -118,17 +118,15 @@ def _train_model(
     training_data: Table,
     target_column: Column,
 ) -> TrainedModel:
-    related_columns = {
-        table.name: {
-            column.name
-            for column in table.columns
-            if column.is_related(target_column)
-        }
+    masked_columns = {
+        (column, table)
         for table in dataset.tables
+        for column in table.columns
+        if column.is_related(target_column)
     }
 
     input_dataset = dataset.apply(
-        Drop(columns=related_columns)
+        Drop(columns=masked_columns)
         .then(Identity(), Aggregate(is_pivotable=known_columns)),
     )
 
