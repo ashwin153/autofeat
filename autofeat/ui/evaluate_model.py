@@ -32,7 +32,7 @@ def evaluate_model(
                 ],
                 "Baseline": [
                     f"{baseline['accuracy']:.4f}",
-                    f"{metrics['f1']:.4f}",
+                    f"{baseline['f1']:.4f}",
                     f"{baseline['precision']:.4f}",
                     f"{baseline['recall']:.4f}",
                 ],
