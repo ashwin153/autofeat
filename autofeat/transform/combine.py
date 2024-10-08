@@ -55,12 +55,7 @@ class Combine(Transform):
 
         for x, y in itertools.combinations(numeric_columns, 2):
             combinations = [
-                (f"{x} + {y}", x.expr + y.expr),
-                (f"{x} - {y}", x.expr - y.expr),
-                (f"{y} - {x}", y.expr - x.expr),
-                (f"{x} * {y}", x.expr * y.expr),
                 (f"{x} / {y}", polars.when(y.expr == 0).then(numpy.nan).otherwise(x.expr / y.expr)),
-                (f"{y} / {x}", polars.when(x.expr == 0).then(numpy.nan).otherwise(y.expr / x.expr)),
             ]
 
             for name, expr in combinations:
