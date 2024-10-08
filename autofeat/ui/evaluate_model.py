@@ -19,7 +19,7 @@ def evaluate_model(
         case PredictionProblem.classification:
             metrics = _classification_metrics(model.y_test, model.y_predicted)
             baseline = _classification_metrics(model.y_test, model.y_baseline)
-            improvement = _percent_change(baseline["f1"], metrics["f1"])
+            improvement = _percent_change(baseline["precision"], metrics["precision"])
 
             headline = f"✅ Model is **:green[{improvement:.2f}% better]** than always guessing the most frequent category" # noqa: E501
             table_data = {
@@ -32,7 +32,7 @@ def evaluate_model(
                 ],
                 "Baseline": [
                     f"{baseline['accuracy']:.4f}",
-                    f"{metrics['f1']:.4f}",
+                    f"{baseline['f1']:.4f}",
                     f"{baseline['precision']:.4f}",
                     f"{baseline['recall']:.4f}",
                 ],
@@ -506,10 +506,21 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
                 boxpoints="outliers",
             ),
         )
+
+        # Compute whiskers directly from the entire dataset
+        lower_whisker, upper_whisker = _compute_whiskers(df["feature"])
+
+        # Calculate the range with some padding
+        padding = (upper_whisker - lower_whisker) * 0.05
+        y_min = lower_whisker - padding
+        y_max = upper_whisker + padding
+
+
         # Update layout for fig_two
         fig_two.update_layout(
             xaxis_title=model.y.name,
             yaxis_title=feature,
+            yaxis={"range": [y_min, y_max]},
             margin={"t": 30},
         )
 
@@ -704,3 +715,30 @@ def _clean_data(
     mask = ~(pandas.isnull(x) | pandas.isnull(y))
 
     return x[mask], y[mask]
+
+
+@streamlit.cache_data(
+    hash_funcs={go.Figure: id},
+    max_entries=1,
+)
+def _compute_whiskers(
+    data: pandas.Series,
+) -> tuple:
+    # Convert to pandas Series to handle mixed types and easily remove NaN/None
+    # Remove NaN and None values
+    data_clean = data.dropna()
+
+    # Check if we have any data left after removing NaN/None
+    if len(data_clean) == 0:
+        return numpy.nan, numpy.nan  # Return NaN if no valid data
+
+    # Calculate quartiles and IQR
+    q1 = numpy.percentile(data_clean, 25)
+    q3 = numpy.percentile(data_clean, 75)
+    iqr = q3 - q1
+
+    # Calculate whiskers
+    lower_whisker = max(data_clean.min(), q1 - 1.5 * iqr)
+    upper_whisker = min(data_clean.max(), q3 + 1.5 * iqr)
+
+    return lower_whisker, upper_whisker
