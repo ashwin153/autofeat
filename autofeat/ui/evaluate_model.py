@@ -507,17 +507,14 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
             ),
         )
 
-        # Get all whisker ends
-        whisker_ends = _get_whisker_ends(fig_two)
+        # Compute whiskers directly from the entire dataset
+        lower_whisker, upper_whisker = _compute_whiskers(df["feature"])
 
-        # Calculate the range
-        y_min = numpy.min(whisker_ends)
-        y_max = numpy.max(whisker_ends)
+        # Calculate the range with some padding
+        padding = (upper_whisker - lower_whisker) * 0.05
+        y_min = lower_whisker - padding
+        y_max = upper_whisker + padding
 
-        # Add some padding (e.g., 5% on each side)
-        padding = (y_max - y_min) * 0.05
-        y_min -= padding
-        y_max += padding
 
         # Update layout for fig_two
         fig_two.update_layout(
@@ -724,11 +721,24 @@ def _clean_data(
     hash_funcs={go.Figure: id},
     max_entries=1,
 )
-def _get_whisker_ends(  # type: ignore[no-any-unimported]
-    fig: go.Figure,
-) -> list:
-    whisker_ends = []
-    for trace in fig.data:
-        if isinstance(trace, go.Box):
-            whisker_ends.extend([trace.lowerfence, trace.upperfence])
-    return whisker_ends
+def _compute_whiskers(  # type: ignore[no-any-unimported]
+    data: pandas.Series,
+) -> tuple:
+    # Convert to pandas Series to handle mixed types and easily remove NaN/None
+    # Remove NaN and None values
+    data_clean = data.dropna()
+
+    # Check if we have any data left after removing NaN/None
+    if len(data_clean) == 0:
+        return numpy.nan, numpy.nan  # Return NaN if no valid data
+
+    # Calculate quartiles and IQR
+    q1 = numpy.percentile(data_clean, 25)
+    q3 = numpy.percentile(data_clean, 75)
+    iqr = q3 - q1
+
+    # Calculate whiskers
+    lower_whisker = max(data_clean.min(), q1 - 1.5 * iqr)
+    upper_whisker = min(data_clean.max(), q3 + 1.5 * iqr)
+
+    return lower_whisker, upper_whisker

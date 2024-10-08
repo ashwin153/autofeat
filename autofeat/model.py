@@ -103,12 +103,12 @@ class PredictionMethod:
 
 PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
     "xgboost_classifier": PredictionMethod(
-        model=lambda: xgboost.XGBClassifier(device="cuda"),
+        model=lambda: xgboost.XGBClassifier(),
         name="XGBoost",
         problem=PredictionProblem.classification,
     ),
     "xgboost_regressor": PredictionMethod(
-        model=lambda: xgboost.XGBRegressor(device="cuda"),
+        model=lambda: xgboost.XGBRegressor(),
         name="XGBoost",
         problem=PredictionProblem.regression,
     ),
@@ -417,19 +417,21 @@ class Model:  # type: ignore[no-any-unimported]
         iterations: list[tuple[list[Transform], SelectionMethod, int]] = [
             (
                 [Aggregate(is_pivotable=known_columns)],
-                SELECTION_METHODS["feature_importance"],
-                200,
-            ),
-            (
-                [],
-                SELECTION_METHODS["autofeat"],
-                100,
-            ),
-            (
-                [Combine()],
                 SELECTION_METHODS["autofeat"],
                 50,
             ),
+            
+            # (
+            #     [],
+            #     SELECTION_METHODS["autofeat"],
+            #     100,
+            # ),
+            # (
+            #     [Combine()],
+            #     SELECTION_METHODS["autofeat"],
+            #     50,
+            # ),
+            
         ]
 
         i = 0
