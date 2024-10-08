@@ -506,10 +506,24 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
                 boxpoints=False,
             ),
         )
+
+        # Get all whisker ends
+        whisker_ends = _get_whisker_ends(fig_two)
+
+        # Calculate the range
+        y_min = numpy.min(whisker_ends)
+        y_max = numpy.max(whisker_ends)
+
+        # Add some padding (e.g., 5% on each side)
+        padding = (y_max - y_min) * 0.05
+        y_min -= padding
+        y_max += padding
+
         # Update layout for fig_two
         fig_two.update_layout(
             xaxis_title=model.y.name,
             yaxis_title=feature,
+            yaxis=dict(range=[y_min, y_max]),
             margin={"t": 30},
         )
 
@@ -704,3 +718,18 @@ def _clean_data(
     mask = ~(pandas.isnull(x) | pandas.isnull(y))
 
     return x[mask], y[mask]
+
+
+@streamlit.cache_data(
+    hash_funcs={go.Figure: id},
+    max_entries=1,
+)
+def _get_whisker_ends(
+    fig: go.Figure,
+) -> list:
+    whisker_ends = []
+    for trace in fig.data:
+        if isinstance(trace, go.Box):
+            whisker_ends.extend([trace.lowerfence, trace.upperfence])
+    return whisker_ends
+
