@@ -188,19 +188,26 @@ AnySelectionModel = TypeVar("AnySelectionModel", bound=SelectionModel)
 
 
 class AutofeatSelector(sklearn.base.BaseEstimator, sklearn.feature_selection.SelectorMixin):
-    """
+    """Select the features with the highest SHAP values that are not correlated with other features.
 
-    :param model:
-    :param n:
+    :param max_correlation: Maximum correlation that a selected feature can have with any feature.
+    :param model: Model to select features from.
+    :param num_features: Number of features to select.
+    :param num_samples: Number of samples to use for the correlation and SHAP calculations.
     """
 
     def __init__(
         self,
+        *,
+        max_correlation: float = 0.7,
         model: PredictionModel,
-        n: int,
+        num_features: int,
+        num_samples: int = 5000,
     ) -> None:
+        self._max_correlation = max_correlation
         self._model = model
-        self._n = n
+        self._num_features = num_features
+        self._num_samples = num_samples
         self._support_mask: numpy.ndarray | None = None
 
     def fit(
@@ -217,16 +224,17 @@ class AutofeatSelector(sklearn.base.BaseEstimator, sklearn.feature_selection.Sel
             numpy.max(
                 numpy.triu(
                     numpy.abs(
-                        pandas.DataFrame(X[:10000, :]).corr().to_numpy(),
+                        # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
+                        pandas.DataFrame(X[:self._num_samples, :]).corr().to_numpy(),
                     ),
                     k=1,
                 ),
                 axis=1,
-            ) > 0.95
+            ) > self._max_correlation
         )
 
         # find the shap values associated with the model
-        explanation = shap.Explainer(self._model)(X[:1000, :])
+        explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
 
         # determine the shap importance of each column
         importance = (
@@ -239,7 +247,7 @@ class AutofeatSelector(sklearn.base.BaseEstimator, sklearn.feature_selection.Sel
         selection = (
             numpy
             .where(correlated, 0, importance)
-            .argpartition(-self._n)[-self._n:]
+            .argpartition(-self._num_features)[-self._num_features:]
         )
 
         # construct a bitmask from the selected columns
@@ -289,7 +297,7 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
     ),
     "autofeat": SelectionMethod(
         mask=lambda model: model.get_support(),
-        model=lambda model, n: AutofeatSelector(model, n),
+        model=lambda model, n: AutofeatSelector(model=model, num_features=n),
         name="autofeat",
     ),
     "recursive_feature_elimination": SelectionMethod(
