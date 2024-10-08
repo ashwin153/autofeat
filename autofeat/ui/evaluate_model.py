@@ -724,7 +724,7 @@ def _clean_data(
     hash_funcs={go.Figure: id},
     max_entries=1,
 )
-def _get_whisker_ends(  #ignore[no-any-unimported]
+def _get_whisker_ends(  # type: ignore[no-any-unimported]
     fig: go.Figure,
 ) -> list:
     whisker_ends = []
