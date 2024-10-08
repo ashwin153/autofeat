@@ -103,12 +103,12 @@ class PredictionMethod:
 
 PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
     "xgboost_classifier": PredictionMethod(
-        model=xgboost.XGBClassifier,
+        model=lambda: xgboost.XGBClassifier(device="cuda"),
         name="XGBoost",
         problem=PredictionProblem.classification,
     ),
     "xgboost_regressor": PredictionMethod(
-        model=xgboost.XGBRegressor,
+        model=lambda: xgboost.XGBRegressor(device="cuda"),
         name="XGBoost",
         problem=PredictionProblem.regression,
     ),
@@ -202,10 +202,10 @@ class AutofeatSelector(
     def __init__(
         self,
         *,
-        max_correlation: float = 0.7,
+        max_correlation: float = 0.4,
         model: PredictionModel,
         num_features: int,
-        num_samples: int = 5000,
+        num_samples: int = 2500,
     ) -> None:
         self._max_correlation = max_correlation
         self._model = model
@@ -413,22 +413,22 @@ class Model:  # type: ignore[no-any-unimported]
             ),
         )
 
-        # repeatedly transform the dataset and train a model on the n most important features
+        # repeatedly transform the dataset and train a prediction model on the top n features
         iterations: list[tuple[list[Transform], SelectionMethod, int]] = [
             (
                 [Aggregate(is_pivotable=known_columns)],
                 SELECTION_METHODS["feature_importance"],
-                120,
+                200,
             ),
             (
                 [],
                 SELECTION_METHODS["autofeat"],
-                80,
+                100,
             ),
             (
                 [Combine()],
                 SELECTION_METHODS["autofeat"],
-                40,
+                50,
             ),
         ]
 
@@ -486,6 +486,8 @@ class Model:  # type: ignore[no-any-unimported]
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
             X_transformer.fit_transform(X.to_numpy()),
             y_transformer.fit_transform(y.to_numpy()),
+            train_size=0.8,
+            shuffle=False,
         )
 
         # create a prediction model
@@ -498,7 +500,7 @@ class Model:  # type: ignore[no-any-unimported]
         # drop features that were not selected from the training data
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
-        X_transformer.fit_transform(X_train)
+        X_transformer.fit(X_train)
         X = X.select(c for c, x in zip(X.columns, selection_method.mask(selection_model)) if x)
 
         # keep only the columns that selected features are extracted from
