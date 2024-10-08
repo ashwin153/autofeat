@@ -19,23 +19,26 @@ def evaluate_model(
         case PredictionProblem.classification:
             metrics = _classification_metrics(model.y_test, model.y_predicted)
             baseline = _classification_metrics(model.y_test, model.y_baseline)
-            improvement = _percent_change(baseline["accuracy"], metrics["accuracy"])
+            improvement = _percent_change(baseline["f1"], metrics["f1"])
 
-            headline = f"✅ Model is **:green[{improvement:.2f}% more accurate]** than always guessing the most frequent category" # noqa: E501
+            headline = f"✅ Model is **:green[{improvement:.2f}% better]** than always guessing the most frequent category" # noqa: E501
             table_data = {
-                "Metric": ["Accuracy", "Precision", "Recall"],
+                "Metric": ["Accuracy", "F1", "Precision", "Recall"],
                 "Model": [
                     f"{metrics['accuracy']:.4f}",
+                    f"{metrics['f1']:.4f}",
                     f"{metrics['precision']:.4f}",
                     f"{metrics['recall']:.4f}",
                 ],
                 "Baseline": [
                     f"{baseline['accuracy']:.4f}",
+                    f"{metrics['f1']:.4f}",
                     f"{baseline['precision']:.4f}",
                     f"{baseline['recall']:.4f}",
                 ],
                 "Improvement (%)": [
                     f"{_percent_change(baseline['accuracy'], metrics['accuracy']):.2f}%",
+                    f"{_percent_change(baseline['f1'], metrics['f1']):.2f}%",
                     f"{_percent_change(baseline['precision'], metrics['precision']):.2f}%",
                     f"{_percent_change(baseline['recall'], metrics['recall']):.2f}%",
                 ],
@@ -45,7 +48,7 @@ def evaluate_model(
             baseline = _regression_metrics(model.y_test, model.y_baseline)
             improvement = -_percent_change(baseline["rmse"], metrics["rmse"])
 
-            headline = f"✅ Model is **:green[{improvement:.2f}% more accurate]** than always guessing the mean" # noqa: E501
+            headline = f"✅ Model is **:green[{improvement:.2f}% better]** than always guessing the mean" # noqa: E501
             table_data = {
                 "Metric": ["RMSE", "R2"],
                 "Model": [
@@ -622,8 +625,9 @@ def _classification_metrics(
 ) -> dict[str, Any]:
     return {
         "accuracy": sklearn.metrics.accuracy_score(y_true, y_pred),
-        "precision": sklearn.metrics.precision_score(y_true, y_pred, average="weighted"),
-        "recall": sklearn.metrics.recall_score(y_true, y_pred, average="weighted"),
+        "f1": sklearn.metrics.f1_score(y_true, y_pred, average="macro"),
+        "precision": sklearn.metrics.precision_score(y_true, y_pred, average="macro"),
+        "recall": sklearn.metrics.recall_score(y_true, y_pred, average="macro"),
     }
 
 
