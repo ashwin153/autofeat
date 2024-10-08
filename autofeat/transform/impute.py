@@ -54,7 +54,7 @@ class Impute(Transform):
 
         for x in numeric_columns:
             imputations = [
-                (f"impute_mean({x})", x.expr.fill_null(strategy="mean")),
+                (f"fill_mean({x})", x.expr.fill_null(strategy="mean")),
             ]
 
             for name, expr in imputations:
