@@ -247,11 +247,14 @@ class AutofeatSelector(
         )
 
         # select the most important columns that are not highly correlated with other columns
-        selection = (
-            numpy
-            .where(correlated, 0, importance)
-            .argpartition(-self._num_features)[-self._num_features:]
-        )
+        if self._num_features < X.shape[1]:
+            selection = (
+                numpy
+                .where(correlated, 0, importance)
+                .argpartition(-self._num_features)[-self._num_features:]
+            )
+        else:
+            selection = numpy.arange(X.shape[1])
 
         # construct a bitmask from the selected columns
         self._support_mask = numpy.array([
@@ -418,7 +421,7 @@ class Model:  # type: ignore[no-any-unimported]
             (
                 [Aggregate(is_pivotable=known_columns)],
                 SELECTION_METHODS["feature_importance"],
-                200,
+                150,
             ),
             (
                 [],
@@ -434,14 +437,14 @@ class Model:  # type: ignore[no-any-unimported]
 
         i = 0
         while True:
-            transforms, selection_method, n_features = iterations[i]
+            transforms, selection_method, num_features = iterations[i]
 
             dataset = dataset.apply(Identity().then(Identity(), *transforms))
 
             model = Model._train_once(
                 dataset=dataset,
                 known=known,
-                num_features=n_features,
+                num_features=num_features,
                 prediction_method=prediction_method,
                 selection_method=selection_method,
                 target=target,
