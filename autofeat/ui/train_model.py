@@ -4,19 +4,16 @@ from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
 from autofeat.model import (
     PREDICTION_METHODS,
-    SELECTION_METHODS,
+    Model,
     PredictionMethod,
     PredictionProblem,
-    SelectionMethod,
-    TrainedModel,
 )
 from autofeat.table import Column, Table
-from autofeat.transform import Aggregate, Drop, Identity
 
 
 def train_model(
     dataset: Dataset,
-) -> TrainedModel | None:
+) -> Model | None:
     """Load features from the ``dataset`` that are relevant to a prediction problem.
 
     :param dataset: Dataset to load features from.
@@ -79,13 +76,6 @@ def train_model(
             options=[method for method in PREDICTION_METHODS.values() if method.problem == problem],
         )
 
-        selection_method = streamlit.selectbox(
-            help="Method of selecting the most important features to the prediction model",
-            key="selection_method",
-            label="Selection Method",
-            options=SELECTION_METHODS.values(),
-        )
-
     if not streamlit.button("Train Model"):
         return None
 
@@ -93,7 +83,6 @@ def train_model(
         dataset=dataset,
         known_columns=tuple(known_columns),
         prediction_method=prediction_method,
-        selection_method=selection_method,
         training_data=training_data,
         target_column=target_column,
     )
@@ -103,7 +92,6 @@ def train_model(
     hash_funcs={
         Dataset: id,
         PredictionMethod: lambda x: x.name,
-        SelectionMethod: lambda x: x.name,
         Table: id,
         Column: id,
     },
@@ -114,27 +102,15 @@ def _train_model(
     dataset: Dataset,
     known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
-    selection_method: SelectionMethod,
     training_data: Table,
     target_column: Column,
-) -> TrainedModel:
-    masked_columns = [
-        (column, table)
-        for table in dataset.tables
-        for column in table.columns
-        if column.is_related(target_column)
-    ]
-
-    input_dataset = dataset.apply(
-        Drop(columns=masked_columns)
-        .then(Identity(), Aggregate(is_pivotable=known_columns)),
-    )
-
-    return input_dataset.train(
-        known=training_data.data.select([column.name for column in known_columns]),
-        target=training_data.data.select(target_column.name),
+) -> Model:
+    return Model.train(
+        dataset=dataset,
+        known_columns=known_columns,
         prediction_method=prediction_method,
-        selection_method=selection_method,
+        training_data=training_data,
+        target_column=target_column,
     )
 
 

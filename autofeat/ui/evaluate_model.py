@@ -9,11 +9,11 @@ import shap
 import sklearn.metrics
 import streamlit
 
-from autofeat.model import PredictionProblem, TrainedModel
+from autofeat.model import Model, PredictionProblem
 
 
 def evaluate_model(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     match model.prediction_method.problem:
         case PredictionProblem.classification:
@@ -92,7 +92,7 @@ def evaluate_model(
 
 
 def _create_feature_charts(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     _create_feature_importance_charts(model)
     _create_feature_analysis_charts(model)
@@ -101,7 +101,7 @@ def _create_feature_charts(
 
 @streamlit.fragment
 def _create_feature_importance_charts(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     # Generate feature importances and sort them in descending order
     feature_importance = _feature_importance(model)
@@ -142,7 +142,7 @@ def _create_feature_importance_charts(
 
 @streamlit.fragment
 def _create_feature_analysis_charts(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     feature_importance = _feature_importance(model)
     feature_importance = feature_importance.sort_values("Importance", ascending=False)
@@ -207,7 +207,7 @@ def _create_feature_analysis_charts(
 
 @streamlit.fragment
 def _create_feature_composition_section(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     with streamlit.container(border=True):
         streamlit.subheader("Combine Predictors")
@@ -427,20 +427,20 @@ def _create_feature_composition_section(
             streamlit.info("Select features and set rules to see statistics.")
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=1,
 )
 def feature_selection_form(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     return
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=5,
 )
 def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
-    model: TrainedModel,
+    model: Model,
     feature: str,
 ) -> list[go.Figure]:
     # Get the index of the feature
@@ -538,11 +538,11 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
 
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=5,
 )
 def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
-    model: TrainedModel,
+    model: Model,
     feature: str,
 ) -> go.Figure:
     # Get the index of the feature
@@ -613,7 +613,7 @@ def _create_regression_feature_chart(  # type: ignore[no-any-unimported]
     return fig
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=1,
 )
 def _classification_metrics(
@@ -628,7 +628,7 @@ def _classification_metrics(
 
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=1,
 )
 def _regression_metrics(
@@ -642,11 +642,11 @@ def _regression_metrics(
 
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=1,
 )
 def _shap_explanation(  # type: ignore[no-any-unimported]
-    model: TrainedModel,
+    model: Model,
 ) -> shap.Explanation:
     shap_explainer = shap.Explainer(
         model.prediction_model,
@@ -657,11 +657,11 @@ def _shap_explanation(  # type: ignore[no-any-unimported]
 
 
 @streamlit.cache_data(
-    hash_funcs={TrainedModel: id},
+    hash_funcs={Model: id},
     max_entries=1,
 )
 def _feature_importance(
-    model: TrainedModel,
+    model: Model,
 ) -> pandas.DataFrame:
     shap_explanation = _shap_explanation(model)
 
@@ -670,6 +670,7 @@ def _feature_importance(
         if len(shap_explanation.shape) == 3
         else numpy.abs(shap_explanation.values).mean(0)
     )
+
 
     return pandas.DataFrame(
         {
