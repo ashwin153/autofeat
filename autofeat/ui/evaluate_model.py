@@ -721,7 +721,7 @@ def _clean_data(
     hash_funcs={go.Figure: id},
     max_entries=1,
 )
-def _compute_whiskers(  # type: ignore[no-any-unimported]
+def _compute_whiskers(
     data: pandas.Series,
 ) -> tuple:
     # Convert to pandas Series to handle mixed types and easily remove NaN/None
