@@ -10,6 +10,7 @@ __all__ = [
     "Extract",
     "Filter",
     "Identity",
+    "Impute",
     "Join",
     "Keep",
     "Rename",
@@ -30,6 +31,7 @@ from autofeat.transform.encode import Encode
 from autofeat.transform.extract import Extract
 from autofeat.transform.filter import Filter
 from autofeat.transform.identity import Identity
+from autofeat.transform.impute import Impute
 from autofeat.transform.join import Join
 from autofeat.transform.keep import Keep
 from autofeat.transform.rename import Rename
