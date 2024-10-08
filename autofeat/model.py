@@ -219,48 +219,45 @@ class AutofeatSelector(
         y: numpy.ndarray,
         /,
     ) -> Any:
-        # fit the model
-        self._model.fit(X, y)
+        if self._num_features > X.shape[1]:
+            # skip feature selection if num_features > X.shape[1]
+            self._support_mask = numpy.array([True for _ in range(X.shape[1])])
+        else:
+            # fit the model
+            self._model.fit(X, y)
 
-        # find columns that are highly correlated
-        correlated = (
-            numpy.max(
-                numpy.triu(
-                    numpy.abs(
-                        # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
-                        pandas.DataFrame(X[:self._num_samples, :]).corr().to_numpy(),
+            # find columns that are highly correlated
+            correlated = (
+                numpy.max(
+                    numpy.triu(
+                        numpy.abs(
+                            # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
+                            pandas.DataFrame(X[:self._num_samples, :]).corr().to_numpy(),
+                        ),
+                        k=1,
                     ),
-                    k=1,
-                ),
-                axis=1,
-            ) > self._max_correlation
-        )
+                    axis=1,
+                ) > self._max_correlation
+            )
 
-        # find the shap values associated with the model
-        explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
+            # find the shap values associated with the model
+            explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
 
-        # determine the shap importance of each column
-        importance = (
-            numpy
-            .abs(explanation.values)
-            .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
-        )
+            # determine the shap importance of each column
+            importance = (
+                numpy
+                .abs(explanation.values)
+                .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
+            )
 
-        # select the most important columns that are not highly correlated with other columns
-        if self._num_features < X.shape[1]:
             selection = (
                 numpy
                 .where(correlated, 0, importance)
                 .argpartition(-self._num_features)[-self._num_features:]
             )
-        else:
-            selection = numpy.arange(X.shape[1])
 
-        # construct a bitmask from the selected columns
-        self._support_mask = numpy.array([
-            i in selection
-            for i in range(X.shape[1])
-        ])
+            # construct a bitmask from the selected columns
+            self._support_mask = numpy.array([i in selection for i in range(X.shape[1])])
 
     def _get_support_mask(
         self,
