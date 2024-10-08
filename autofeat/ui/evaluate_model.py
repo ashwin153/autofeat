@@ -523,7 +523,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
         fig_two.update_layout(
             xaxis_title=model.y.name,
             yaxis_title=feature,
-            yaxis=dict(range=[y_min, y_max]),
+            yaxis={"range": [y_min, y_max]},
             margin={"t": 30},
         )
 
@@ -732,4 +732,3 @@ def _get_whisker_ends(
         if isinstance(trace, go.Box):
             whisker_ends.extend([trace.lowerfence, trace.upperfence])
     return whisker_ends
-
