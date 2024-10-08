@@ -438,10 +438,10 @@ class Model:  # type: ignore[no-any-unimported]
             model = Model._train_once(
                 dataset=dataset,
                 known=known,
-                target=target,
-                n_features=n_features,
+                num_features=n_features,
                 prediction_method=prediction_method,
                 selection_method=selection_method,
+                target=target,
             )
 
             dataset = model.dataset
@@ -456,10 +456,10 @@ class Model:  # type: ignore[no-any-unimported]
         *,
         dataset: Dataset,
         known: polars.DataFrame,
-        target: polars.Series,
-        n_features: int,
+        num_features: int,
         prediction_method: PredictionMethod,
         selection_method: SelectionMethod,
+        target: polars.Series,
     ) -> Model:
         # extract features from the dataset
         features = dataset.apply(Extract(known=known))
@@ -489,7 +489,7 @@ class Model:  # type: ignore[no-any-unimported]
         prediction_model = prediction_method.model()
 
         # train a model that selects the n most important features to the prediction model
-        selection_model = selection_method.model(prediction_model, n_features)
+        selection_model = selection_method.model(prediction_model, num_features)
         selection_model.fit(X_train, y_train)
 
         # drop features that were not selected from the training data
