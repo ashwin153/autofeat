@@ -22,7 +22,7 @@ import sklearn.preprocessing
 import xgboost
 
 from autofeat.convert import into_data_frame
-from autofeat.transform import Aggregate, Combine, Drop, Extract, Identity, Keep
+from autofeat.transform import Aggregate, Combine, Drop, Extract, Identity, Keep, Transform
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -187,7 +187,10 @@ class SelectionModel(Protocol):
 AnySelectionModel = TypeVar("AnySelectionModel", bound=SelectionModel)
 
 
-class AutofeatSelector(sklearn.base.BaseEstimator, sklearn.feature_selection.SelectorMixin):
+class AutofeatSelector(
+    sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
+    sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
+):
     """Select the features with the highest SHAP values that are not correlated with other features.
 
     :param max_correlation: Maximum correlation that a selected feature can have with any feature.
@@ -372,16 +375,16 @@ class Model:  # type: ignore[no-any-unimported]
         *,
         known_columns: tuple[Column, ...],
         prediction_method: PredictionMethod,
-        target_column: Column,
         training_data: Table,
+        target_column: Column,
     ) -> Model:
         """Train a model that predicts the ``target_column`` given the ``known_columns``.
 
         :param dataset: Dataset to extract features from.
         :param known_columns: Columns that are known at the time of prediction.
         :param prediction_method: Method of predicting the target variable.
-        :param target_column: Column containing the target variable.
         :param training_data: Table containing the ``target_column`` and ``known_columns``.
+        :param target_column: Column containing the target variable.
         :return: Trained model.
         """
         # extract the known and target variables from the training data
@@ -411,7 +414,7 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # repeatedly transform the dataset and train a model on the n most important features
-        iterations = [
+        iterations: list[tuple[list[Transform], SelectionMethod, int]] = [
             (
                 [Aggregate(is_pivotable=known_columns)],
                 SELECTION_METHODS["feature_importance"],
@@ -431,9 +434,9 @@ class Model:  # type: ignore[no-any-unimported]
 
         i = 0
         while True:
-            transform, selection_method, n_features = iterations[i]
+            transforms, selection_method, n_features = iterations[i]
 
-            dataset = dataset.apply(Identity().then(Identity(), *transform))
+            dataset = dataset.apply(Identity().then(Identity(), *transforms))
 
             model = Model._train_once(
                 dataset=dataset,
