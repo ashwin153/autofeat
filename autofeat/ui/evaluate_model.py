@@ -503,7 +503,7 @@ def _create_classification_feature_chart(  # type: ignore[no-any-unimported]
                 y=df["feature"],
                 x=df[model.y.name],
                 name=feature,
-                boxpoints=False,
+                boxpoints="outliers",
             ),
         )
         # Update layout for fig_two

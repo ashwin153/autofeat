@@ -34,6 +34,12 @@ def into_data_frame(
     elif isinstance(value, Table):
         return value.data.collect()
     elif isinstance(value, Dataset):
+        # TODO: explore using the gpu
+        # return (
+        #     polars
+        #     .concat([table.data for table in value.tables], how="horizontal")
+        #     .collect(engine="gpu")
+        # )
         return polars.concat(
             polars.collect_all([table.data for table in value.tables], streaming=True),
             how="horizontal",
