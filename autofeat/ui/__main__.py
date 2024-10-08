@@ -8,6 +8,7 @@ from autofeat.ui.train_model import train_model
 
 streamlit.set_page_config(
     page_title="autofeat",
+    layout="wide",
 )
 
 
