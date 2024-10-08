@@ -372,16 +372,16 @@ class Model:  # type: ignore[no-any-unimported]
         *,
         known_columns: tuple[Column, ...],
         prediction_method: PredictionMethod,
-        training_data: Table,
         target_column: Column,
+        training_data: Table,
     ) -> Model:
         """Train a model that predicts the ``target_column`` given the ``known_columns``.
 
         :param dataset: Dataset to extract features from.
         :param known_columns: Columns that are known at the time of prediction.
         :param prediction_method: Method of predicting the target variable.
-        :param training_data: Table containing the ``target_column`` and ``known_columns``.
         :param target_column: Column containing the target variable.
+        :param training_data: Table containing the ``target_column`` and ``known_columns``.
         :return: Trained model.
         """
         # extract the known and target variables from the training data
