@@ -207,7 +207,7 @@ def _create_feature_analysis_charts(
 
 @streamlit.fragment
 def _create_feature_composition_section(
-    model: TrainedModel,
+    model: Model,
 ) -> None:
     with streamlit.container(border=True):
         streamlit.subheader("Combine Predictors")
