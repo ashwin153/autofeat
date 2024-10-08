@@ -6,7 +6,8 @@ import numpy
 import polars
 
 from autofeat.attribute import Attribute
-from autofeat.convert import into_exprs, into_named_exprs
+from autofeat.convert.into_exprs import into_exprs
+from autofeat.convert.into_named_exprs import into_named_exprs
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
