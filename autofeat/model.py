@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Final, Generic, Protocol, TypeVar
 import boruta
 import catboost
 import lightgbm
+import loguru
 import numpy
 import pandas
 import shap
@@ -388,6 +389,8 @@ class Model:  # type: ignore[no-any-unimported]
         :return: Trained model.
         """
         # extract the known and target variables from the training data
+        loguru.logger.info("loading training data")
+
         known = (
             training_data.data
             .select([column.name for column in known_columns])
@@ -434,6 +437,8 @@ class Model:  # type: ignore[no-any-unimported]
 
         i = 0
         while True:
+            loguru.logger.info(f"training model ({i+1}/{len(iterations)})")
+
             transforms, selection_method, num_features = iterations[i]
 
             dataset = dataset.apply(Identity().then(Identity(), *transforms))
@@ -465,11 +470,15 @@ class Model:  # type: ignore[no-any-unimported]
         target: polars.Series,
     ) -> Model:
         # extract features from the dataset
+        loguru.logger.info("extracting features")
+
         features = dataset.apply(Extract(known=known))
 
-        # pre-process the input and target variables and split them into training and test data
         X = into_data_frame(features)
         y = target
+
+        # pre-process the input and target variables and split them into training and test data
+        loguru.logger.info("splitting training data")
 
         X_transformer = sklearn.pipeline.Pipeline([
             # TODO: create a custom scaler that only applies to numeric columns
@@ -490,20 +499,21 @@ class Model:  # type: ignore[no-any-unimported]
             shuffle=False,
         )
 
-        # create a prediction model
-        prediction_model = prediction_method.model()
+        # train a model that selects the n most important features to a prediction model
+        loguru.logger.info("fitting selection model")
 
-        # train a model that selects the n most important features to the prediction model
+        prediction_model = prediction_method.model()
         selection_model = selection_method.model(prediction_model, num_features)
         selection_model.fit(X_train, y_train)
 
-        # drop features that were not selected from the training data
+        # apply feature selection to the training and test data
+        loguru.logger.info("applying feature selection")
+
         X_train = selection_model.transform(X_train)
         X_test = selection_model.transform(X_test)
         X_transformer.fit(X_train)
         X = X.select(c for c, x in zip(X.columns, selection_method.mask(selection_model)) if x)
 
-        # keep only the columns that selected features are extracted from
         dataset = dataset.apply(
             Keep(
                 columns=[
@@ -517,16 +527,24 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # train the prediction model on the selected features
+        loguru.logger.info("fitting prediction model")
+
         prediction_model.fit(X_train, y_train)
 
         # evaluate the prediction model on the test data
+        loguru.logger.info("evaluating prediction model")
+
         y_predicted = prediction_model.predict(X_test)
 
         # train the baseline model on the selected features
+        loguru.logger.info("fitting baseline model")
+
         baseline_model = prediction_method.problem.baseline_method.model()
         baseline_model.fit(X_train, y_train)
 
         # evaluate the baseline model on the test data
+        loguru.logger.info("evaluating baseline model")
+
         y_baseline = baseline_model.predict(X_test)
 
         # collect all the intermediate outputs
