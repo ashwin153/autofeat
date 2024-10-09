@@ -9,6 +9,7 @@ from autofeat.model import (
     PredictionProblem,
 )
 from autofeat.table import Column, Table
+from autofeat.ui.show_log import show_log
 
 
 def train_model(
@@ -79,13 +80,14 @@ def train_model(
     if not streamlit.button("Train Model"):
         return None
 
-    return _train_model(
-        dataset=dataset,
-        known_columns=tuple(known_columns),
-        prediction_method=prediction_method,
-        training_data=training_data,
-        target_column=target_column,
-    )
+    with show_log("Training Model"):
+        return _train_model(
+            dataset=dataset,
+            known_columns=tuple(known_columns),
+            prediction_method=prediction_method,
+            training_data=training_data,
+            target_column=target_column,
+        )
 
 
 @streamlit.cache_resource(
@@ -96,6 +98,7 @@ def train_model(
         Column: id,
     },
     max_entries=1,
+    show_spinner=False,
 )
 def _train_model(
     *,
