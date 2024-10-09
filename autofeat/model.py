@@ -220,45 +220,41 @@ class AutofeatSelector(
         y: numpy.ndarray,
         /,
     ) -> Any:
-        if self._num_features > X.shape[1]:
-            # skip feature selection if num_features > X.shape[1]
-            self._support_mask = numpy.array([True for _ in range(X.shape[1])])
-        else:
-            # fit the model
-            self._model.fit(X, y)
+        # fit the model
+        self._model.fit(X, y)
 
-            # find columns that are highly correlated
-            correlated = (
-                numpy.max(
-                    numpy.triu(
-                        numpy.abs(
-                            # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
-                            pandas.DataFrame(X[:self._num_samples, :]).corr().to_numpy(),
-                        ),
-                        k=1,
+        # find columns that are highly correlated
+        correlated = (
+            numpy.max(
+                numpy.triu(
+                    numpy.abs(
+                        # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
+                        pandas.DataFrame(X[:self._num_samples, :]).corr().to_numpy(),
                     ),
-                    axis=1,
-                ) > self._max_correlation
-            )
+                    k=1,
+                ),
+                axis=1,
+            ) > self._max_correlation
+        )
 
-            # find the shap values associated with the model
-            explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
+        # find the shap values associated with the model
+        explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
 
-            # determine the shap importance of each column
-            importance = (
-                numpy
-                .abs(explanation.values)
-                .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
-            )
+        # determine the shap importance of each column
+        importance = (
+            numpy
+            .abs(explanation.values)
+            .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
+        )
 
-            selection = (
-                numpy
-                .where(correlated, 0, importance)
-                .argpartition(-self._num_features)[-self._num_features:]
-            )
+        selection = (
+            numpy
+            .where(correlated, 0, importance)
+            .argpartition(-self._num_features)[-self._num_features:]
+        )
 
-            # construct a bitmask from the selected columns
-            self._support_mask = numpy.array([i in selection for i in range(X.shape[1])])
+        # construct a bitmask from the selected columns
+        self._support_mask = numpy.array([i in selection for i in range(X.shape[1])])
 
     def _get_support_mask(
         self,
@@ -499,32 +495,35 @@ class Model:  # type: ignore[no-any-unimported]
             shuffle=False,
         )
 
-        # train a model that selects the n most important features to a prediction model
-        loguru.logger.info("fitting selection model")
-
+        # create prediction and selection models
         prediction_model = prediction_method.model()
         selection_model = selection_method.model(prediction_model, num_features)
-        selection_model.fit(X_train, y_train)
 
-        # apply feature selection to the training and test data
-        loguru.logger.info("applying feature selection")
+        if num_features < X.shape[1]:
+            # train the selection model
+            loguru.logger.info("fitting selection model")
 
-        X_train = selection_model.transform(X_train)
-        X_test = selection_model.transform(X_test)
-        X_transformer.fit(X_train)
-        X = X.select(c for c, x in zip(X.columns, selection_method.mask(selection_model)) if x)
+            selection_model.fit(X_train, y_train)
 
-        dataset = dataset.apply(
-            Keep(
-                columns=[
-                    ancestor
-                    for table in features.tables
-                    for column in table.columns
-                    if column.name in X.columns
-                    for ancestor in column.derived_from
-                ],
-            ),
-        )
+            # apply feature selection to the training and test data
+            loguru.logger.info("applying feature selection")
+
+            X_train = selection_model.transform(X_train)
+            X_test = selection_model.transform(X_test)
+            X_transformer.fit(X_train)
+            X = X.select(c for c, x in zip(X.columns, selection_method.mask(selection_model)) if x)
+
+            dataset = dataset.apply(
+                Keep(
+                    columns=[
+                        ancestor
+                        for table in features.tables
+                        for column in table.columns
+                        if column.name in X.columns
+                        for ancestor in column.derived_from
+                    ],
+                ),
+            )
 
         # train the prediction model on the selected features
         loguru.logger.info("fitting prediction model")

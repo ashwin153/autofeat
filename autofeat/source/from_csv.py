@@ -8,8 +8,6 @@ from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
-DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
-
 
 def from_csv(
     files: Iterable[str | pathlib.Path],
@@ -21,7 +19,7 @@ def from_csv(
 
     :param files: CSV files to load.
     :param null_values: Values to interpret as null values
-    :return: Dataset.
+    :return: CSV dataset.
     """
     tables = []
 

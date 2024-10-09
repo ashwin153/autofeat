@@ -8,12 +8,11 @@ import zipfile
 from autofeat.dataset import Dataset
 from autofeat.source.from_csv import from_csv
 
-DEFAULT_CACHE = pathlib.Path.home() / ".cache" / "kaggle"
 
 def from_kaggle(
     name_or_url: str,
     *,
-    cache: pathlib.Path = DEFAULT_CACHE,
+    cache: pathlib.Path = pathlib.Path.home() / ".cache" / "kaggle",
 ) -> Dataset:
     """Load from Kaggle.
 
@@ -44,7 +43,7 @@ def from_kaggle(
 
     :param name_or_url: Name of the competition or dataset or Kaggle URL to extract it from.
     :param cache: Path where data is locally cached.
-    :return: Dataset.
+    :return: Kaggle dataset.
     """
     if match := re.match(r"^.*kaggle\.com/competitions/([^\/\?\#]+).*$", name_or_url):
         name = match.group(1)

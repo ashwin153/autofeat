@@ -1,7 +1,12 @@
+from collections.abc import Callable
+from typing import ParamSpec
+
 import streamlit
 
 from autofeat import Dataset, source
 from autofeat.transform import Cast, Encode
+
+P = ParamSpec("P")
 
 
 def load_dataset(
@@ -14,52 +19,46 @@ def load_dataset(
     source_type = streamlit.selectbox(
         help="Location where your data is stored",
         label="Source Type",
-        options=["CSV", "Kaggle"],
+        options=["CSV", "Kaggle", "Example"],
         index=1,
     )
 
-    if source_type == "CSV":
-        csv_files = streamlit.file_uploader(
-            accept_multiple_files=True,
-            label="Upload Files",
-            type="csv",
-        )
+    match source_type:
+        case "CSV":
+            csv_files = streamlit.file_uploader(
+                accept_multiple_files=True,
+                label="Upload Files",
+                type="csv",
+            )
 
-        if csv_files:
-            return _source_dataset_from_csv([file.name for file in csv_files])
+            if not csv_files:
+                return None
 
-    if source_type == "Kaggle":
-        kaggle_name = streamlit.text_input(
-            help="Name of the Kaggle dataset or competition to load data from",
-            label="Dataset / Competition / URL",
-            placeholder="house-prices-advanced-regression-techniques",
-        )
+            return _source_dataset(source.from_csv, tuple(file.name for file in csv_files))
+        case "Example":
+            return _source_dataset(source.from_example)
+        case "Kaggle":
+            kaggle_name = streamlit.text_input(
+                help="Name of the Kaggle dataset or competition to load data from",
+                label="Dataset / Competition / URL",
+                placeholder="house-prices-advanced-regression-techniques",
+            )
 
-        if kaggle_name:
-            return _source_dataset_from_kaggle(kaggle_name)
+            if not kaggle_name:
+                return None
 
-    return None
-
-
-@streamlit.cache_resource(
-    max_entries=1,
-)
-def _source_dataset_from_csv(
-    files: list[str],
-) -> Dataset:
-    return _clean_dataset(source.from_csv(files))
+            return _source_dataset(source.from_kaggle, kaggle_name)
+        case _:
+            raise NotImplementedError(f"{source_type} is not supported")
 
 
 @streamlit.cache_resource(
     max_entries=1,
 )
-def _source_dataset_from_kaggle(
-    name: str,
+def _source_dataset(
+    _loader: Callable[P, Dataset],
+    *args: P.args,
+    **kwargs: P.kwargs,
 ) -> Dataset:
-    return _clean_dataset(source.from_kaggle(name))
-
-
-def _clean_dataset(
-    dataset: Dataset,
-) -> Dataset:
+    dataset = _loader(*args, **kwargs)
     return dataset.apply(Cast().then(Encode()))
