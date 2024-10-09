@@ -19,7 +19,7 @@ def from_csv(
 
     :param files: CSV files to load.
     :param null_values: Values to interpret as null values
-    :return: Dataset.
+    :return: CSV dataset.
     """
     tables = []
 

@@ -14,12 +14,12 @@ _RNG = numpy.random.Generator(numpy.random.PCG64())
 _FAKE = faker.Faker()
 
 
-def from_testdata(
+def from_example(
 
 ) -> Dataset:
-    """
+    """Load from randomized example data.
 
-    :return:
+    :return: Example dataset.
     """
     accounts = _generate_accounts()
     sessions = _generate_sessions(accounts)
@@ -147,7 +147,7 @@ def _generate_session(
     # begin session on the home page
     pages = ["home_page", "report_generation", "data_tables"]
     page = pages[0]
-    session.append((page, "enter", _RNG.integers(1, 10000)))
+    session.append((page, "enter", int(_RNG.integers(1, 10000))))
 
     # 40% chance to immediately end session if churned, 20% otherwise
     if _RNG.random() < (0.4 if is_churned else 0.2):
