@@ -64,6 +64,7 @@ jobs:
             }
   milestone:
     permissions:
+      issues: write
       pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 1
