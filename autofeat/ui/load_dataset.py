@@ -54,6 +54,7 @@ def load_dataset(
 
 @streamlit.cache_resource(
     max_entries=1,
+    show_spinner="Loading Dataset",
 )
 def _source_dataset(
     _loader: Callable[P, Dataset],
