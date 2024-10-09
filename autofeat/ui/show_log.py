@@ -27,9 +27,10 @@ def show_log(
 class _ShowLog(logging.Handler):
     def __init__(
         self,
+        messages: list[str] | None = None,
     ) -> None:
         super().__init__()
-        self._messages = []
+        self._messages = messages or []
 
     def emit(
         self,
