@@ -352,6 +352,21 @@ class Model:  # type: ignore[no-any-unimported]
     y_transformer: sklearn.base.TransformerMixin  # type: ignore[no-any-unimported]
     y: polars.Series
 
+    @functools.cached_property
+    def explanation(  # type: ignore[no-any-unimported]
+        self,
+    ) -> shap.Explanation:
+        """Get the SHAP explanation of this model.
+
+        :return: SHAP explanation.
+        """
+        explainer = shap.Explainer(
+            self.prediction_model,
+            feature_names=self.X.columns,
+        )
+
+        return explainer(self.X_test)
+
     def predict(
         self,
         known: IntoDataFrame,
