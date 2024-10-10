@@ -43,16 +43,8 @@ def train_model(
     if not target_column:
         return None
 
-    default_known_columns = {
-        column.name
-        for table in dataset.tables
-        for column in table.columns
-        if Attribute.primary_key in column.attributes
-        if any(column.name == c.name for c in training_data.columns)
-    }
-
     known_columns = streamlit.multiselect(
-        default=default_known_columns,
+        default=[c for c in training_data.columns if Attribute.primary_key in c.attributes],
         help="Columns that are known at the time of prediction",
         key="known_columns",
         label="Known Columns",
