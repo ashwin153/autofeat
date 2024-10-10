@@ -142,7 +142,7 @@ def _metrics(
                 ],
                 "Improvement": [
                     -_percent_change(baseline["RMSE"], metrics["RMSE"]),
-                    _percent_change(baseline["R2"],metrics["R2"]),
+                    abs(_percent_change(baseline["R2"],metrics["R2"])),
                 ],
             })
         case _:
