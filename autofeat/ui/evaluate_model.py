@@ -15,24 +15,22 @@ def evaluate_model(
 
     :param model: Model to evaluate.
     """
-    with streamlit.container(border=True):
-        streamlit.subheader("Model Performance")
+    streamlit.markdown(
+        _headline(model),
+        help=_caption(model),
+    )
 
-        streamlit.markdown(_headline(model))
-
-        with streamlit.expander("Show detailed model stats"):
-            streamlit.dataframe(
-                _metrics(model),
-                hide_index=True,
-                use_container_width=True,
-                column_config={
-                    "Model": streamlit.column_config.NumberColumn(format="%.4f"),
-                    "Baseline": streamlit.column_config.NumberColumn(format="%.4f"),
-                    "Improvement": streamlit.column_config.NumberColumn(format="%.2f %%"),
-                },
-            )
-
-            streamlit.caption(_caption(model))
+    with streamlit.expander("Model Performance"):
+        streamlit.dataframe(
+            _metrics(model),
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Model": streamlit.column_config.NumberColumn(format="%.4f"),
+                "Baseline": streamlit.column_config.NumberColumn(format="%.4f"),
+                "Improvement": streamlit.column_config.NumberColumn(format="%.2f %%"),
+            },
+        )
 
 
 @streamlit.cache_data(
@@ -49,19 +47,29 @@ def _headline(
         .row(0, named=True)
     )
 
-    return f"✅ Model is **:green[{metric['Improvement']:.2f}% better]** than {_baseline(model)}"
+    return (
+        f"✅ Your model is **:green[{metric['Improvement']:.2f}% better]** than baseline "
+        "performance"
+    )
 
 
-def _baseline(
+def _caption(
     model: Model,
 ) -> str:
     match model.prediction_method.problem:
         case PredictionProblem.classification:
-            return "always guessing the most frequent category"
+            return (
+                "Classification models are benchmarked against a baseline model that always "
+                "guesses the most frequently occurring, and improvement is measured in F1 scores. "
+                "F1 is a measure of the accuracy of a model's predictions. Higher F1 is better."
+            )
         case PredictionProblem.regression:
-            return "always guessing mean"
-        case _:
-            raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+            return (
+                "Regression models are benchmarked against a baseline model that always guesses "
+                "the mean, and improvement is measured in root mean squared error (RMSE). RMSE "
+                "measures the distance between a model's predictions to their true values. Lower "
+                "RMSE is better."
+            )
 
 
 def _primary_metric(
@@ -71,7 +79,7 @@ def _primary_metric(
         case PredictionProblem.classification:
             return "F1"
         case PredictionProblem.regression:
-            return "R2"
+            return "RMSE"
         case _:
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
 
@@ -133,7 +141,7 @@ def _metrics(
                     baseline["R2"],
                 ],
                 "Improvement": [
-                    _percent_change(baseline["RMSE"], metrics["RMSE"]),
+                    -_percent_change(baseline["RMSE"], metrics["RMSE"]),
                     _percent_change(baseline["R2"],metrics["R2"]),
                 ],
             })
@@ -168,31 +176,3 @@ def _percent_change(
     new: float,
 ) -> float:
     return (new - old) / old * 100
-
-
-@streamlit.cache_data(
-    hash_funcs={
-        Model: id,
-    },
-)
-def _caption(
-    model: Model,
-) -> str:
-    match model.prediction_method.problem:
-        case PredictionProblem.classification:
-            return (
-                "Comparison: model's performance against a baseline model that randomly guesses "
-                f"based on the frequency of {model.y.name} values. Higher precision indicates a "
-                "model guesses the value correctly more on average. Higher recall indicates that a "
-                "model covers more correct classifications overall."
-            )
-        case PredictionProblem.regression:
-            return (
-                "Comparison: the model's performance against a baseline model, that always "
-                f"predicts the mean of {model.y.name}. RMSE is the average error between the "
-                "actual value and the prediction by the model. Lower error is better (means "
-                "guesses are closer to true). R2 indicates how much of the variation in your data "
-                "the model captures. A higher value is better."
-            )
-        case _:
-            raise NotImplementedError(f"{model.prediction_method.problem} is not supported")

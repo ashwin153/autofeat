@@ -20,5 +20,6 @@ if dataset := load_dataset():
 
     streamlit.header("Train Model")
     if model := train_model(dataset):
+        streamlit.header("Explore Model")
         evaluate_model(model)
         explore_features(model)
