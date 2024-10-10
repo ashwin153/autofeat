@@ -1,5 +1,6 @@
 import streamlit
 
+from autofeat.ui.combine_features import combine_features
 from autofeat.ui.edit_dataset import edit_dataset
 from autofeat.ui.evaluate_model import evaluate_model
 from autofeat.ui.explore_dataset import explore_dataset
@@ -23,3 +24,4 @@ if dataset := load_dataset():
         streamlit.header("Explore Model")
         evaluate_model(model)
         explore_features(model)
+        combine_features(model)
