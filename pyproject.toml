@@ -17,7 +17,8 @@ module = [
   "plotly.*",
   "pygwalker.*",
   "shap.*",
-  "sklearn.*"
+  "sklearn.*",
+  "streamlit_theme"
 ]
 
 [tool.poetry]

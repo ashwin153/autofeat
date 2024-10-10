@@ -91,7 +91,7 @@ def _grid(
     hash_funcs={Model: id},
     max_entries=10,
 )
-def _charts(
+def _charts(  # type: ignore[no-any-unimported]
     model: Model,
     feature: str,
     plotly_theme: str,
@@ -124,7 +124,7 @@ def _charts(
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
 
 
-def _histogram(
+def _histogram(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
 ) -> plotly.graph_objects.Figure:
     buckets = []
@@ -165,7 +165,7 @@ def _histogram(
     return fig
 
 
-def _box_and_whisker_plot(
+def _box_and_whisker_plot(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
 ) -> plotly.graph_objects.Figure:
     fig = plotly.graph_objects.Figure()
@@ -201,7 +201,7 @@ def _box_and_whisker_plot(
     return fig
 
 
-def _stacked_bar_chart(
+def _stacked_bar_chart(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
 ) -> plotly.graph_objects.Figure:
     counts = (
@@ -238,7 +238,7 @@ def _stacked_bar_chart(
     return fig
 
 
-def _scatter_plot(
+def _scatter_plot(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
 ) -> plotly.graph_objects.Figure:
     fig = plotly.graph_objects.Figure()
@@ -280,7 +280,7 @@ def _scatter_plot(
     return fig
 
 
-def _box_plot(
+def _box_plot(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
 ) -> plotly.graph_objects.Figure:
     fig = plotly.graph_objects.Figure()
