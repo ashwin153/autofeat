@@ -353,7 +353,7 @@ class Model:  # type: ignore[no-any-unimported]
     y: polars.Series
 
     @functools.cached_property
-    def explanation(
+    def explanation(  # type: ignore[no-any-unimported]
         self,
     ) -> shap.Explanation:
         """Get the SHAP explanation of this model.
