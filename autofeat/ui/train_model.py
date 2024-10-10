@@ -77,7 +77,7 @@ def train_model(
             options=[method for method in PREDICTION_METHODS.values() if method.problem == problem],
         )
 
-    if not streamlit.button("Train Model"):
+    if not streamlit.button("Train"):
         return None
 
     with show_log("Training Model"):

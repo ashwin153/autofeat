@@ -9,6 +9,19 @@ from autofeat.transform import Cast, Encode
 P = ParamSpec("P")
 
 
+_SOURCE_TYPES = [
+    "BigQuery (coming soon)",
+    "CSV",
+    "Example",
+    "Iceburg (coming soon)",
+    "Kaggle",
+    "Parquet (coming soon)",
+    "RedShift (coming soon)",
+    "Salesforce (coming soon)",
+    "Snowflake (coming soon)",
+]
+
+
 def load_dataset(
 
 ) -> Dataset | None:
@@ -19,8 +32,8 @@ def load_dataset(
     source_type = streamlit.selectbox(
         help="Location where your data is stored",
         label="Source Type",
-        options=["CSV", "Kaggle", "Example"],
-        index=1,
+        options=_SOURCE_TYPES,
+        index=_SOURCE_TYPES.index("Kaggle"),
     )
 
     match source_type:
