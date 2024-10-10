@@ -5,21 +5,21 @@ import pandas
 import plotly.express
 import plotly.graph_objects
 import streamlit
-import streamlit_theme
 
 from autofeat.model import Model, PredictionProblem
+from autofeat.ui.edit_settings import Settings
 
 
 @streamlit.fragment
 def explore_features(
     model: Model,
+    settings: Settings,
 ) -> None:
     """Explore the input features to a model.
 
     :param model: Model to explore.
     """
     df = _grid(model)
-    plotly_theme = _plotly_theme()
 
     column1, column2 = streamlit.columns(2)
 
@@ -42,22 +42,12 @@ def explore_features(
 
     with column2:
         for row in event.get("selection", {}).get("rows", []):
-            for fig in _charts(model, df.iloc[row]["Feature"], plotly_theme):
+            for fig in _charts(model, df.iloc[row]["Feature"], settings):
                 streamlit.plotly_chart(
                     fig,
                     use_container_width=True,
                     config={"displayModeBar": False},
                 )
-
-
-def _plotly_theme() -> str:
-    theme = streamlit_theme.st_theme()
-
-    return (
-        "plotly"
-        if theme is None or theme["base"] == "light"
-        else "plotly_dark"
-    )
 
 
 @streamlit.cache_data(
@@ -94,7 +84,7 @@ def _grid(
 def _charts(  # type: ignore[no-any-unimported]
     model: Model,
     feature: str,
-    plotly_theme: str,
+    settings: Settings,
 ) -> list[plotly.graph_objects.Figure]:
     x, y = model.X_test[:, model.X.columns.index(feature)], model.y_test
     mask = ~(pandas.isnull(x) | pandas.isnull(y))
@@ -106,7 +96,7 @@ def _charts(  # type: ignore[no-any-unimported]
     df.attrs = {
         "x_label": feature,
         "y_label": model.y.name,
-        "plotly_theme": plotly_theme,
+        "chart_theme": settings.chart_theme,
     }
 
     match model.prediction_method.problem:
@@ -148,7 +138,7 @@ def _histogram(  # type: ignore[no-any-unimported]
         x="x",
         y="y",
         color="category",
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
         labels={"x": df.attrs["x_label"], "y": df.attrs["y_label"]},
         height=600, width=800,
     )
@@ -156,7 +146,7 @@ def _histogram(  # type: ignore[no-any-unimported]
     fig.update_layout(
         bargap=0.2,
         margin={"t": 30},
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
     )
 
     fig.update_xaxes(title_text=df.attrs["x_label"])
@@ -192,7 +182,7 @@ def _box_and_whisker_plot(  # type: ignore[no-any-unimported]
 
     fig.update_layout(
         margin={"t": 30},
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
         xaxis_title=df.attrs["y_label"],
         yaxis_title=df.attrs["x_label"],
         yaxis={"range": [y_min, y_max]},
@@ -221,14 +211,14 @@ def _stacked_bar_chart(  # type: ignore[no-any-unimported]
             "y": "Percentage",
             "color": df.attrs["y_label"],
         },
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
         x=percentages.index,
         y=percentages.columns,
     )
 
     fig.update_layout(
         margin={"t": 20},
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
         xaxis_title=df.attrs["x_label"],
         xaxis={"type": "category", "categoryorder": "total descending"},
         yaxis_title=f"{df.attrs['y_label']} (%)",
@@ -271,7 +261,7 @@ def _scatter_plot(  # type: ignore[no-any-unimported]
     )
 
     fig.update_layout(
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         margin={"t": 30},
@@ -295,7 +285,7 @@ def _box_plot(  # type: ignore[no-any-unimported]
     )
 
     fig.update_layout(
-        template=df.attrs["plotly_theme"],
+        template=df.attrs["chart_theme"],
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         margin={"t": 30},
