@@ -2,7 +2,34 @@ import polars.testing
 import pytest
 
 from autofeat import Column, convert
-from autofeat.convert import IntoNamedExprs, IntoSeries
+from autofeat.convert import IntoExprs, IntoNamedExprs, IntoSeries
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (
+            Column(name="x"),
+            [polars.col("x")],
+        ),
+        (
+            polars.col("x").mean(),
+            [polars.col("x").mean()],
+        ),
+        (
+            [Column(name="y"), polars.col("z").mean()],
+            [polars.col("y"), polars.col("z").mean()],
+        ),
+    ],
+)
+def test_into_exprs(
+    given: IntoExprs,
+    expected: list[polars.Expr],
+) -> None:
+    actual = convert.into_exprs(given)
+    assert len(actual) == len(expected)
+    for x, y in zip(actual, expected):
+        assert str(x) == str(y)
 
 
 @pytest.mark.parametrize(
