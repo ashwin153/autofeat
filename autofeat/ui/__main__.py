@@ -3,6 +3,7 @@ import streamlit
 from autofeat.ui.edit_dataset import edit_dataset
 from autofeat.ui.evaluate_model import evaluate_model
 from autofeat.ui.explore_dataset import explore_dataset
+from autofeat.ui.explore_features import explore_features
 from autofeat.ui.load_dataset import load_dataset
 from autofeat.ui.train_model import train_model
 
@@ -20,3 +21,4 @@ if dataset := load_dataset():
     streamlit.header("Train Model")
     if model := train_model(dataset):
         evaluate_model(model)
+        explore_features(model)
