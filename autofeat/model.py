@@ -76,7 +76,7 @@ class PredictionProblem(enum.Enum):
         """
         match self:
             case PredictionProblem.classification:
-                return PREDICTION_METHODS["most_frequent"]
+                return PREDICTION_METHODS["most_frequent_category"]
             case PredictionProblem.regression:
                 return PREDICTION_METHODS["mean"]
             case _:
@@ -143,9 +143,9 @@ PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
         name="Mean",
         problem=PredictionProblem.regression,
     ),
-    "most_frequent": PredictionMethod(
+    "most_frequent_category": PredictionMethod(
         model=lambda: sklearn.dummy.DummyClassifier(strategy="most_frequent"),
-        name="Most Frequent",
+        name="Most Frequent Category",
         problem=PredictionProblem.classification,
     ),
     "random_forest_classifier": PredictionMethod(
@@ -158,9 +158,9 @@ PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
         name="Random Forest",
         problem=PredictionProblem.regression,
     ),
-    "random_guess": PredictionMethod(
+    "random_category": PredictionMethod(
         model=lambda: sklearn.dummy.DummyClassifier(strategy="uniform"),
-        name="Random Guess",
+        name="Random Category",
         problem=PredictionProblem.classification,
     ),
 }
