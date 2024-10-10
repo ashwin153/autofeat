@@ -17,7 +17,8 @@ module = [
   "plotly.*",
   "pygwalker.*",
   "shap.*",
-  "sklearn.*"
+  "sklearn.*",
+  "streamlit_theme.*"
 ]
 
 [tool.poetry]
@@ -45,6 +46,7 @@ python = "^3.11"
 rich = "^13.8.1"
 scikit-learn = "^1.5.2"
 shap = "^0.46.0"
+st-theme = "^1.2.3"
 streamlit = "^1.38.0"
 xgboost = "^2.1.1"
 

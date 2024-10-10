@@ -4448,6 +4448,20 @@ dev = ["duckdb (>=0.6)", "maturin (>=1.4,<2.0)", "mypy", "pandas", "pandas-stubs
 rs = ["sqlglotrs (==0.2.12)"]
 
 [[package]]
+name = "st-theme"
+version = "1.2.3"
+description = "A component that returns the active theme of the Streamlit app."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "st-theme-1.2.3.tar.gz", hash = "sha256:ca97aece1a48ded6e83fd742c27cb0851e1bce2100ab4b6c37c7b6e003b65b42"},
+    {file = "st_theme-1.2.3-py3-none-any.whl", hash = "sha256:0a54d9817dd5f8a6d7b0d071b25ae72eacf536c63a5fb97374923938021b1389"},
+]
+
+[package.dependencies]
+streamlit = ">=1.33"
+
+[[package]]
 name = "stack-data"
 version = "0.6.3"
 description = "Extract data from python stack frames and tracebacks for informative displays"
@@ -4907,4 +4921,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e9919610cfd014410a01820d6c714f424aed335a6f9533420fe0a036028dfdfd"
+content-hash = "4b21d9658027077c23cb468893044c81957b56fe12b774c4ad43b669abb03fa4"
