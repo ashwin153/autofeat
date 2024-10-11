@@ -35,6 +35,7 @@ def explore_features(
                     min_value=0,
                 ),
             },
+            height=505,
             hide_index=True,
             use_container_width=True,
             on_select="rerun",
@@ -42,13 +43,22 @@ def explore_features(
         )
 
     with column2:
-        for row in event.get("selection", {}).get("rows", []):
-            for fig in _charts(model, df.iloc[row]["Feature"], settings):
-                streamlit.plotly_chart(
-                    fig,
-                    use_container_width=True,
-                    config={"displayModeBar": False},
-                )
+        if selected_rows := event.get("selection", {}).get("rows", []):
+            charts = _charts(
+                model,
+                df.iloc[selected_rows[0]]["Feature"],
+                settings,
+            )
+
+            for figure, tab in zip(
+                [figure for _, figure in charts],
+                streamlit.tabs([chart for chart, _ in charts]),
+            ):
+                with tab:
+                    streamlit.plotly_chart(
+                        figure,
+                        use_container_width=True,
+                    )
 
 
 @streamlit.cache_data(
@@ -86,13 +96,13 @@ def _charts(  # type: ignore[no-any-unimported]
     model: Model,
     feature: str,
     settings: Settings,
-) -> list[plotly.graph_objects.Figure]:
+) -> list[tuple[str, plotly.graph_objects.Figure]]:
     x, y = model.X_test[:, model.X.columns.index(feature)], model.y_test
     mask = ~(pandas.isnull(x) | pandas.isnull(y))
     x, y = x[mask], y[mask]
 
-    df = pandas.DataFrame({"x": x, "y": y})
-    df = df.sort_values("x")
+    df = pandas.DataFrame({"x": x, "y": y}).sort_values("x")
+    df_flip = df.rename(columns={"x": "y", "y": "x"})
 
     df.attrs = {
         "x_label": feature.split(Extract.SEPARATOR, 1)[0],
@@ -100,10 +110,16 @@ def _charts(  # type: ignore[no-any-unimported]
         "chart_theme": settings.chart_theme,
     }
 
+    df_flip.attrs = {
+        **df.attrs,
+        "x_label": df.attrs["y_label"],
+        "y_label": df.attrs["x_label"],
+    }
+
     match model.prediction_method.problem:
         case PredictionProblem.classification:
             if model.X.schema[feature].is_numeric():
-                return [_histogram(df), _box_and_whisker_plot(df)]
+                return [_histogram(df), _box_plot(df_flip)]
             else:
                 return [_stacked_bar_chart(df)]
         case PredictionProblem.regression:
@@ -115,9 +131,41 @@ def _charts(  # type: ignore[no-any-unimported]
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
 
 
+def _box_plot(  # type: ignore[no-any-unimported]
+    df: pandas.DataFrame,
+) -> tuple[str, plotly.graph_objects.Figure]:
+    figure = plotly.graph_objects.Figure()
+
+    figure.add_trace(
+        plotly.graph_objects.Box(
+            boxpoints="outliers",
+            name="Distribution",
+            x=df["x"],
+            y=df["y"],
+        ),
+    )
+
+    q1 = df["y"].quantile(0.25)
+    q3 = df["y"].quantile(0.75)
+    iqr =  q3 - q1
+
+    y_min = max(df["y"].min(), q1 - 1.5 * iqr)
+    y_max = min(df["y"].max(), q3 + 1.5 * iqr)
+
+    figure.update_layout(
+        margin={"t": 30},
+        template=df.attrs["chart_theme"],
+        xaxis_title=df.attrs["x_label"],
+        yaxis_title=df.attrs["y_label"],
+        yaxis={"range": [y_min, y_max]},
+    )
+
+    return ":material/indeterminate_check_box:", figure
+
+
 def _histogram(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
-) -> plotly.graph_objects.Figure:
+) -> tuple[str, plotly.graph_objects.Figure]:
     buckets = []
     num_buckets = 5
     bucket_size = math.ceil(len(df) / num_buckets)
@@ -134,7 +182,7 @@ def _histogram(  # type: ignore[no-any-unimported]
                 "y": len(bucket_data[bucket_data["y"] == category]),
             })
 
-    fig = plotly.express.bar(
+    figure = plotly.express.bar(
         pandas.DataFrame(buckets),
         x="x",
         y="y",
@@ -143,93 +191,20 @@ def _histogram(  # type: ignore[no-any-unimported]
         labels={"x": df.attrs["x_label"], "y": "count"},
     )
 
-    fig.update_layout(
+    figure.update_layout(
         bargap=0.2,
         margin={"t": 30},
     )
 
-    return fig
-
-
-def _box_and_whisker_plot(  # type: ignore[no-any-unimported]
-    df: pandas.DataFrame,
-) -> plotly.graph_objects.Figure:
-    fig = plotly.graph_objects.Figure()
-
-    fig.add_trace(
-        plotly.graph_objects.Box(
-            boxpoints="outliers",
-            name=df.attrs["x_label"],
-            x=df["y"],
-            y=df["x"],
-        ),
-    )
-
-    q1 = df["x"].quantile(0.25)
-    q3 = df["x"].quantile(0.75)
-    iqr =  q3 - q1
-
-    lower_whisker = max(df["x"].min(), q1 - 1.5 * iqr)
-    upper_whisker = min(df["x"].max(), q3 + 1.5 * iqr)
-    padding = (upper_whisker - lower_whisker) * 0.05
-
-    y_min = lower_whisker - padding
-    y_max = upper_whisker + padding
-
-    fig.update_layout(
-        margin={"t": 30},
-        template=df.attrs["chart_theme"],
-        xaxis_title=df.attrs["y_label"],
-        yaxis_title=df.attrs["x_label"],
-        yaxis={"range": [y_min, y_max]},
-    )
-
-    return fig
-
-
-def _stacked_bar_chart(  # type: ignore[no-any-unimported]
-    df: pandas.DataFrame,
-) -> plotly.graph_objects.Figure:
-    counts = (
-        df
-        .groupby(["x", "y"])
-        .size()
-        .unstack(fill_value=0)
-    )
-
-    percentages = counts.apply(lambda x: x / x.sum() * 100, axis=1)
-
-    fig = plotly.express.bar(
-        percentages,
-        barmode="stack",
-        labels={
-            "x": df.attrs["x_label"],
-            "y": "Percentage",
-            "color": df.attrs["y_label"],
-        },
-        template=df.attrs["chart_theme"],
-        x=percentages.index,
-        y=percentages.columns,
-    )
-
-    fig.update_layout(
-        margin={"t": 20},
-        template=df.attrs["chart_theme"],
-        xaxis_title=df.attrs["x_label"],
-        xaxis={"type": "category", "categoryorder": "total descending"},
-        yaxis_title=f"{df.attrs['y_label']} (%)",
-        yaxis={"tickformat": ".1f", "range": [0, 100]},
-    )
-
-    return fig
+    return ":material/equalizer:", figure
 
 
 def _scatter_plot(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
-) -> plotly.graph_objects.Figure:
-    fig = plotly.graph_objects.Figure()
+) -> tuple[str, plotly.graph_objects.Figure]:
+    figure = plotly.graph_objects.Figure()
 
-    fig.add_trace(
+    figure.add_trace(
         plotly.graph_objects.Scatter(
             marker={
                 "size": 5,
@@ -247,7 +222,7 @@ def _scatter_plot(  # type: ignore[no-any-unimported]
     best_fit_x = numpy.array([numpy.min(x), numpy.max(x)])
     best_fit_y = best_fit_coeffs[0] * best_fit_x + best_fit_coeffs[1]
 
-    fig.add_trace(
+    figure.add_trace(
         plotly.graph_objects.Scatter(
             mode="lines",
             name="Line of Best Fit",
@@ -256,35 +231,48 @@ def _scatter_plot(  # type: ignore[no-any-unimported]
         ),
     )
 
-    fig.update_layout(
+    figure.update_layout(
         template=df.attrs["chart_theme"],
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         margin={"t": 30},
     )
 
-    return fig
+    return ":material/scatter_plot:", figure
 
 
-def _box_plot(  # type: ignore[no-any-unimported]
+def _stacked_bar_chart(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
-) -> plotly.graph_objects.Figure:
-    fig = plotly.graph_objects.Figure()
-
-    fig.add_trace(
-        plotly.graph_objects.Box(
-            boxpoints=False,
-            name="Distribution",
-            x=df["x"],
-            y=df["y"],
-        ),
+) -> tuple[str, plotly.graph_objects.Figure]:
+    counts = (
+        df
+        .groupby(["x", "y"])
+        .size()
+        .unstack(fill_value=0)
     )
 
-    fig.update_layout(
+    percentages = counts.apply(lambda x: x / x.sum() * 100, axis=1)
+
+    figure = plotly.express.bar(
+        percentages,
+        barmode="stack",
+        labels={
+            "x": df.attrs["x_label"],
+            "y": "Percentage",
+            "color": df.attrs["y_label"],
+        },
+        template=df.attrs["chart_theme"],
+        x=percentages.index,
+        y=percentages.columns,
+    )
+
+    figure.update_layout(
+        margin={"t": 20},
         template=df.attrs["chart_theme"],
         xaxis_title=df.attrs["x_label"],
-        yaxis_title=df.attrs["y_label"],
-        margin={"t": 30},
+        xaxis={"type": "category", "categoryorder": "total descending"},
+        yaxis_title=f"{df.attrs['y_label']} (%)",
+        yaxis={"tickformat": ".1f", "range": [0, 100]},
     )
 
-    return fig
+    return ":material/stacked_bar_chart:", figure
