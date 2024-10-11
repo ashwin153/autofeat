@@ -4,6 +4,7 @@ import numpy
 import pandas
 import plotly.express
 import plotly.graph_objects
+import plotly.subplots
 import streamlit
 
 from autofeat.model import Model, PredictionProblem
@@ -121,7 +122,7 @@ def _charts(  # type: ignore[no-any-unimported]
             if model.X.schema[feature].is_numeric():
                 return [_histogram(df), _box_plot(df_flip)]
             else:
-                return [_stacked_bar_chart(df)]
+                return [_stacked_bar_chart(df), _pie_chart(df)]
         case PredictionProblem.regression:
             if model.X.schema[feature].is_numeric():
                 return [_scatter_plot(df)]
@@ -197,6 +198,47 @@ def _histogram(  # type: ignore[no-any-unimported]
     )
 
     return ":material/equalizer:", figure
+
+
+def _pie_chart(  # type: ignore[no-any-unimported]
+    df: pandas.DataFrame,
+) -> tuple[str, plotly.graph_objects.Figure]:
+    figure = plotly.subplots.make_subplots(
+        rows=1,
+        cols=2,
+        specs=[
+            [
+                {"type": "sunburst"},
+                {"type": "sunburst"},
+            ],
+        ],
+    )
+
+    figure.add_trace(
+        plotly.express.sunburst(
+            df,
+            path=["y", "x"],
+            template=df.attrs["chart_theme"],
+        ).data[0],
+        row=1,
+        col=1,
+    )
+
+    figure.add_trace(
+        plotly.express.sunburst(
+            df,
+            path=["x", "y"],
+            template=df.attrs["chart_theme"],
+        ).data[0],
+        row=1,
+        col=2,
+    )
+
+    figure.update_traces(
+        textinfo="label+percent parent",
+    )
+
+    return ":material/pie_chart:", figure
 
 
 def _scatter_plot(  # type: ignore[no-any-unimported]
