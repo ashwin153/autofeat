@@ -319,6 +319,7 @@ class Model:  # type: ignore[no-any-unimported]
 
     :param baseline_model: Model used to benchmark the performance of this model.
     :param dataset: Dataset from which features are extracted.
+    :param known: Data that are known at the time of prediction.
     :param prediction_method: Method of prediction.
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
@@ -337,10 +338,11 @@ class Model:  # type: ignore[no-any-unimported]
 
     baseline_model: PredictionModel
     dataset: Dataset
-    prediction_model: PredictionModel
+    known: polars.DataFrame
     prediction_method: PredictionMethod
-    selection_model: SelectionModel
+    prediction_model: PredictionModel
     selection_method: SelectionMethod
+    selection_model: SelectionModel
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     X_transformer: sklearn.pipeline.Pipeline  # type: ignore[no-any-unimported]
@@ -565,6 +567,7 @@ class Model:  # type: ignore[no-any-unimported]
         return Model(
             baseline_model=baseline_model,
             dataset=dataset,
+            known=known,
             prediction_method=prediction_method,
             prediction_model=prediction_model,
             selection_method=selection_method,
