@@ -434,17 +434,17 @@ class Model:  # type: ignore[no-any-unimported]
             (
                 [Aggregate(is_pivotable=known_columns)],
                 SELECTION_METHODS["feature_importance"],
-                150,
+                140,
             ),
             (
                 [],
                 SELECTION_METHODS["autofeat"],
-                100,
+                70,
             ),
             (
                 [Combine()],
                 SELECTION_METHODS["autofeat"],
-                50,
+                35,
             ),
         ]
 
