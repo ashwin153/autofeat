@@ -102,7 +102,7 @@ def _charts(  # type: ignore[no-any-unimported]
     x, y = x[mask], y[mask]
 
     df = pandas.DataFrame({"x": x, "y": y}).sort_values("x")
-    df_flip = df.rename(columns={"x": "y", "y": "x"})
+    df_flip = pandas.DataFrame({"x": y, "y": x}).sort_values("x")
 
     df.attrs = {
         "x_label": feature.split(Extract.SEPARATOR, 1)[0],
