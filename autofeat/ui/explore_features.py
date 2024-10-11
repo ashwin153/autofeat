@@ -7,6 +7,7 @@ import plotly.graph_objects
 import streamlit
 
 from autofeat.model import Model, PredictionProblem
+from autofeat.transform.extract import Extract
 from autofeat.ui.edit_settings import Settings
 
 
@@ -67,9 +68,9 @@ def _grid(
 
     df = pandas.DataFrame({
         "Feature": model.X.columns,
-        "Predictor": [c.split(" :: ", 1)[0] for c in model.X.columns],
+        "Predictor": [c.split(Extract.SEPARATOR, 1)[0] for c in model.X.columns],
         "Importance": importance,
-        "Source": [c.split(" :: ", 1)[1] for c in model.X.columns],
+        "Source": [c.split(Extract.SEPARATOR, 1)[1] for c in model.X.columns],
     })
 
     df = df.sort_values("Importance", ascending=False)
@@ -94,7 +95,7 @@ def _charts(  # type: ignore[no-any-unimported]
     df = df.sort_values("x")
 
     df.attrs = {
-        "x_label": feature,
+        "x_label": feature.split(Extract.SEPARATOR, 1)[0],
         "y_label": model.y.name,
         "chart_theme": settings.chart_theme,
     }
@@ -128,8 +129,8 @@ def _histogram(  # type: ignore[no-any-unimported]
 
         for category in categories:
             buckets.append({
+                df.attrs["y_label"]: str(category),
                 "x": bucket_name,
-                "category": category,
                 "y": len(bucket_data[bucket_data["y"] == category]),
             })
 
@@ -137,20 +138,15 @@ def _histogram(  # type: ignore[no-any-unimported]
         pandas.DataFrame(buckets),
         x="x",
         y="y",
-        color="category",
+        color=df.attrs["y_label"],
         template=df.attrs["chart_theme"],
-        labels={"x": df.attrs["x_label"], "y": df.attrs["y_label"]},
-        height=600, width=800,
+        labels={"x": df.attrs["x_label"], "y": "count"},
     )
 
     fig.update_layout(
         bargap=0.2,
         margin={"t": 30},
-        template=df.attrs["chart_theme"],
     )
-
-    fig.update_xaxes(title_text=df.attrs["x_label"])
-    fig.update_yaxes(title_text=f"count({df.attrs['y_label']})")
 
     return fig
 
