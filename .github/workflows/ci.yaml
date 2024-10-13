@@ -10,6 +10,9 @@ concurrency:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
@@ -18,7 +21,7 @@ jobs:
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
+          platforms: linux/${{ matrix.architecture }}
           push: false
   mypy:
     runs-on: ubuntu-latest
