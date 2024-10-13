@@ -23,6 +23,7 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/${{ matrix.architecture }}
           push: false
+          tags: autofeat/ui:${{ matrix.architecture }}
   mypy:
     runs-on: ubuntu-latest
     steps:
