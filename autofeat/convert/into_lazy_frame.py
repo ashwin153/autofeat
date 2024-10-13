@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeAlias, Union
 
+import numpy
+import pandas
 import polars
 
 if TYPE_CHECKING:
@@ -10,6 +12,8 @@ if TYPE_CHECKING:
 
 
 IntoLazyFrame: TypeAlias = Union[
+    numpy.ndarray,
+    pandas.DataFrame,
     polars.DataFrame,
     polars.LazyFrame,
     "Table",
@@ -28,7 +32,11 @@ def into_lazy_frame(
     from autofeat.dataset import Dataset
     from autofeat.table import Table
 
-    if isinstance(value, polars.DataFrame):
+    if isinstance(value, numpy.ndarray):
+        return polars.from_numpy(value).lazy()
+    elif isinstance(value, pandas.DataFrame):
+        return polars.from_pandas(value).lazy()
+    elif isinstance(value, polars.DataFrame):
         return value.lazy()
     elif isinstance(value, polars.LazyFrame):
         return value
