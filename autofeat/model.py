@@ -11,6 +11,7 @@ import lightgbm
 import loguru
 import numpy
 import pandas
+import polars
 import shap
 import sklearn.dummy
 import sklearn.ensemble
@@ -27,8 +28,6 @@ from autofeat.transform import Aggregate, Combine, Drop, Extract, Identity, Keep
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    import polars
 
     from autofeat.convert import IntoDataFrame
     from autofeat.dataset import Dataset
@@ -314,6 +313,37 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
+class Prediction:
+    """A prediction made by a model.
+
+    :param model: Model that made the prediction.
+    :param known: Data that are known at the time of prediction.
+    :param X: Input variables.
+    :param y: Target variable.
+    """
+
+    model: Model
+    known: polars.DataFrame
+    X: polars.DataFrame
+    y: polars.Series
+
+    @functools.cached_property
+    def explanation(  # type: ignore[no-any-unimported]
+        self,
+    ) -> shap.Explanation:
+        """Get the SHAP explanation of this prediction.
+
+        :return: SHAP explanation.
+        """
+        explainer = shap.Explainer(
+            self.model.prediction_model,
+            feature_names=self.X.columns,
+        )
+
+        return explainer(self.X.to_numpy())
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Model:  # type: ignore[no-any-unimported]
     """A prediction model trained on select features in a ``dataset``.
 
@@ -372,16 +402,33 @@ class Model:  # type: ignore[no-any-unimported]
     def predict(
         self,
         known: IntoDataFrame,
-    ) -> numpy.ndarray:
+    ) -> Prediction:
         """Predict the target variable given the ``known`` information.
 
         :param known: Data that is already known.
         :return: Target variable.
         """
-        features = self.dataset.features(known)
-        X = self.X_transformer.transform(features.to_numpy())
-        y = self.prediction_model.predict(X)
-        return self.y_transformer.inverse_transform(y)  # type: ignore[no-any-return]
+        known = into_data_frame(known)
+
+        X = self.dataset.features(known)
+
+        y = polars.Series(
+            name=self.y.name,
+            values=self.y_transformer.inverse_transform(  # pyright: ignore[reportArgumentType]
+                self.prediction_model.predict(
+                    self.X_transformer.transform(
+                        X.to_numpy(),
+                    ),
+                ),
+            ),
+        )
+
+        return Prediction(
+            model=self,
+            known=known,
+            X=X,
+            y=y,
+        )
 
     @staticmethod
     def train(
