@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .mypy_cache
+          key: mypy
       - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
         with:
           python-version: 3.11
