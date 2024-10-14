@@ -317,7 +317,7 @@ class Prediction:
     """A prediction made by a model.
 
     :param model: Model that made the prediction.
-    :param known: Data that are known at the time of prediction.
+    :param known: Data that was known at the time of prediction.
     :param X: Input variables.
     :param y: Target variable.
     """
@@ -349,7 +349,7 @@ class Model:  # type: ignore[no-any-unimported]
 
     :param baseline_model: Model used to benchmark the performance of this model.
     :param dataset: Dataset from which features are extracted.
-    :param known: Data that are known at the time of prediction.
+    :param known: Data that was known at the time of feature extraction.
     :param prediction_method: Method of prediction.
     :param prediction_model: Model used to predict the target variable given the input variables.
     :param selection_method: Method of selection.
@@ -409,6 +409,7 @@ class Model:  # type: ignore[no-any-unimported]
         :return: Target variable.
         """
         known = into_data_frame(known)
+        assert set(known.columns) == set(self.known.columns)
 
         X = self.dataset.features(known)
 
