@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import TypeAlias, Union
 
+import pandas
 import polars
 
 IntoSeries: TypeAlias = Union[
+    pandas.Series,
     polars.DataFrame,
     polars.LazyFrame,
     polars.Series,
@@ -19,7 +21,9 @@ def into_series(
     :param value: Value to convert.
     :return: Converted series.
     """
-    if isinstance(value, polars.DataFrame):
+    if isinstance(value, pandas.Series):
+        return polars.from_pandas(value)
+    elif isinstance(value, polars.DataFrame):
         return value.to_series()
     elif isinstance(value, polars.LazyFrame):
         return value.collect().to_series()
