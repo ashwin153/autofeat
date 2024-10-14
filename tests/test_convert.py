@@ -1,3 +1,4 @@
+import pandas
 import polars.testing
 import pytest
 
@@ -58,6 +59,10 @@ def test_into_named_exprs(
 @pytest.mark.parametrize(
     "given,expected",
     [
+        (
+            pandas.Series([1, 2, 3], name="x"),
+            polars.Series("x", [1, 2, 3]),
+        ),
         (
             polars.Series("x", [1, 2, 3]),
             polars.Series("x", [1, 2, 3]),
