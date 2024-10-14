@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from autofeat.transform.base import Transform
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Dataset:
     """A collection of tables.
 

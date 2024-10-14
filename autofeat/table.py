@@ -65,7 +65,7 @@ class Column:
             return {self.name}
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
 class Table:
     """A lazily-loaded data table.
 
