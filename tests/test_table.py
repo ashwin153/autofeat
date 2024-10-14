@@ -1,20 +1,22 @@
 import polars
 import pytest
 
-from autofeat import Column, Table
+from autofeat import Attribute, Column, Table
 
 X = Column(
     name="x",
+    attributes={Attribute.numeric},
 )
 
 
 Y = Column(
     name="y",
+    attributes={Attribute.boolean},
 )
 
 TABLE = Table(
     name="example",
-    data=polars.LazyFrame({X.name: [1, 2, 3]}),
+    data=polars.LazyFrame({X.name: [1, 2, 3], Y.name: [True, False, True]}),
     columns=[X, Y],
 )
 
@@ -57,3 +59,10 @@ def test_is_related(
     expected: bool,
 ) -> None:
     assert a.is_related(b) == expected
+
+
+def test_select() -> None:
+    result = TABLE.select([X])
+    assert result.name == TABLE.name
+    assert result.columns == [X]
+    polars.testing.assert_frame_equal(result.data.collect(), TABLE.data.select(X.name).collect())
