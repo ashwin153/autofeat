@@ -3118,6 +3118,28 @@ xlsx2csv = ["xlsx2csv (>=0.8.0)"]
 xlsxwriter = ["xlsxwriter"]
 
 [[package]]
+name = "polars-candle"
+version = "0.1.7"
+description = "A text embedding extension for the Polars Dataframe library."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "polars_candle-0.1.7-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2cc4db47365b2bbf429ac2fa7495797313711df5128a2506cb4802d41873f2f8"},
+    {file = "polars_candle-0.1.7-cp310-cp310-manylinux_2_34_x86_64.whl", hash = "sha256:f9ae245dbfbbb674d235f3df04bac322ef6c5bfad97206a2d4c5cf50f8cce62c"},
+    {file = "polars_candle-0.1.7-cp310-none-win_amd64.whl", hash = "sha256:c2deeee33b7cf06539a386400e8d5a9f9fed4fd4469f8f353df20e56c4cec3ca"},
+    {file = "polars_candle-0.1.7-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:26ea7c7f6773ef58d44663914ecd54bd77b2640cd1537f29035b2a24ed6a6e32"},
+    {file = "polars_candle-0.1.7-cp311-cp311-manylinux_2_34_x86_64.whl", hash = "sha256:fedd44c085217ed7a2320690371360e46c6ce885e13194cdf67700f8ade4e0d2"},
+    {file = "polars_candle-0.1.7-cp311-none-win_amd64.whl", hash = "sha256:dc4f2e57b6b0f4fc297e82e75564034bfe5dfe6ee540679a156392d0796bc469"},
+    {file = "polars_candle-0.1.7-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:30305c4eaac82771551f2609fc4c7669c739c77a9491a2c0d650fc85218133b7"},
+    {file = "polars_candle-0.1.7-cp312-cp312-manylinux_2_34_x86_64.whl", hash = "sha256:838f908197e65e7d072528a7e172d20981aa0bff8fe23148f40dd3e2e5856252"},
+    {file = "polars_candle-0.1.7-cp312-none-win_amd64.whl", hash = "sha256:da69a8aceff91b16130467bb641d3176b9f5a80f531692c15498d1b202b0c48d"},
+    {file = "polars_candle-0.1.7-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:51da3b23e88beaec7ccc778db830624b548f7e187d6a84072f355cd971e68e11"},
+    {file = "polars_candle-0.1.7-cp39-cp39-manylinux_2_34_x86_64.whl", hash = "sha256:e00daee55dbce06316d6e0830db02b79377054e1565513a3c6b31f5322eabb92"},
+    {file = "polars_candle-0.1.7-cp39-none-win_amd64.whl", hash = "sha256:0b7facdc7610bda4093ca4cca1e705d27b13a1d38318d2b546dac485a2f7da46"},
+    {file = "polars_candle-0.1.7.tar.gz", hash = "sha256:65bf42e02e1db6130d79f3925c6ef96926a6ee49a5c71a5d9434e54cef21acab"},
+]
+
+[[package]]
 name = "prometheus-client"
 version = "0.21.0"
 description = "Python client for the Prometheus monitoring system."
@@ -4927,4 +4949,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4b21d9658027077c23cb468893044c81957b56fe12b774c4ad43b669abb03fa4"
+content-hash = "969d48032defda0feb0718a6ad0d2d76d1c12ecc8d7fedaed9ad3d408f691d7d"
