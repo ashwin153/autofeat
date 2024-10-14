@@ -1,5 +1,4 @@
-import dataclasses
-
+import attrs
 import plotly.io
 import streamlit
 import streamlit_theme
@@ -7,7 +6,7 @@ import streamlit_theme
 _CHART_THEMES = sorted(plotly.io.templates.keys())
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Settings:
     """Application settings.
 

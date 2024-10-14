@@ -1,8 +1,8 @@
-import dataclasses
 import datetime
 from collections.abc import Collection, Iterable
 from typing import Any
 
+import attrs
 import polars
 
 from autofeat.attribute import Attribute
@@ -10,7 +10,7 @@ from autofeat.table import Table
 from autofeat.transform.base import Transform
 
 
-@dataclasses.dataclass(frozen=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Filter(Transform):
     """Filter out rows that do not satisfy the predicates.
 

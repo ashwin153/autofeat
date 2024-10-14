@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import dataclasses
 import functools
 from typing import TYPE_CHECKING
 
+import attrs
 import polars
 
 if TYPE_CHECKING:
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from autofeat.attribute import Attribute
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Column:
     """A column in a table.
 
@@ -20,8 +20,8 @@ class Column:
     :param name: Unique name of the column within the table.
     """
 
-    attributes: set[Attribute] = dataclasses.field(default_factory=set)
-    derived_from: list[tuple[Column, Table]] = dataclasses.field(default_factory=list)
+    attributes: set[Attribute] = attrs.field(default=set())
+    derived_from: list[tuple[Column, Table]] = attrs.field(default=[])
     name: str
 
     def __str__(
@@ -65,7 +65,7 @@ class Column:
             return {self.name}
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Table:
     """A lazily-loaded data table.
 
@@ -75,7 +75,7 @@ class Table:
     """
 
     columns: list[Column]
-    data: polars.LazyFrame = dataclasses.field(compare=False)
+    data: polars.LazyFrame = attrs.field(eq=False)
     name: str
 
     def __str__(

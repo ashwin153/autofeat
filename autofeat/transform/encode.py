@@ -1,6 +1,6 @@
-import dataclasses
 from collections.abc import Iterable, Iterator
 
+import attrs
 import polars
 
 from autofeat.attribute import Attribute
@@ -9,7 +9,7 @@ from autofeat.table import Column, Table
 from autofeat.transform import Transform
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Encode(Transform):
     """Encode categorical variables as dummy variables using one-hot encoding."""
 

@@ -29,6 +29,7 @@ readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
+attrs = "^24.2.0"
 boruta = "^0.4.3"
 catboost = "^1.2.7"
 cudf-polars-cu12 = {source = "nvidia", version = "^24.8.3"}

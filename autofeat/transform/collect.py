@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING
 
+import attrs
 import polars
 
 from autofeat.table import Table
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-@dataclasses.dataclass(kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Collect(Transform):
     """Collect all tables in memory.
 

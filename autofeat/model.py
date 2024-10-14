@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import dataclasses
 import enum
 import functools
 from typing import TYPE_CHECKING, Any, Final, Generic, Protocol, TypeVar
 
+import attrs
 import boruta
 import catboost
 import lightgbm
@@ -82,7 +82,7 @@ class PredictionProblem(enum.Enum):
                 raise NotImplementedError(f"{self} is not supported")
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class PredictionMethod:
     """A method of solving prediction problems.
 
@@ -269,7 +269,7 @@ class AutofeatSelector(
         }
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class SelectionMethod(Generic[AnySelectionModel]):
     """A method of solving feature selection problems.
 
@@ -312,7 +312,7 @@ SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
 }
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Prediction:
     """A prediction made by a model.
 
@@ -343,7 +343,7 @@ class Prediction:
         return explainer(self.X.to_numpy())
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Model:  # type: ignore[no-any-unimported]
     """A prediction model trained on select features in a ``dataset``.
 
