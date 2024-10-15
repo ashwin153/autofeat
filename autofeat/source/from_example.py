@@ -15,13 +15,15 @@ _FAKE = faker.Faker()
 
 
 def from_example(
-
+    *,
+    num_accounts: int = 250,
 ) -> Dataset:
     """Load from randomized example data.
 
+    :param num_accounts: Number of accounts to generate.
     :return: Example dataset.
     """
-    accounts = _generate_accounts()
+    accounts = _generate_accounts(num_accounts)
     sessions = _generate_sessions(accounts)
 
     return Dataset([
@@ -39,12 +41,11 @@ def from_example(
 
 
 def _generate_accounts(
-    *,
-    count: int = 250,
+    num_accounts: int,
 ) -> polars.DataFrame:
     accounts = []
 
-    for i in range(1, count + 1):
+    for i in range(1, num_accounts + 1):
         company_name = _FAKE.company()
         company_id = f"COMP{i:03d}"
         first_name = _FAKE.first_name()
