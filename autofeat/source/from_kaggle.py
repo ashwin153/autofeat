@@ -45,8 +45,8 @@ def from_kaggle(
     :param cache: Path where data is locally cached.
     :return: Kaggle dataset.
     """
-    if match := re.match(r"^.*kaggle\.com/competitions/([^\/\?\#]+).*$", name_or_url):
-        name = match.group(1)
+    if match := re.match(r"^.*kaggle\.com/c(ompetitions)?/([^\/\?\#]+).*$", name_or_url):
+        name = match.group(2)
     elif match := re.match(r"^.*kaggle\.com/datasets/([^\/]+/[^\/\?\#]+).*$", name_or_url):
         name = match.group(1)
     else:
