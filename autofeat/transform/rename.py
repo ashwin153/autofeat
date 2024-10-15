@@ -1,11 +1,12 @@
-import dataclasses
 from collections.abc import Iterable
+
+import attrs
 
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@attrs.define(frozen=True, kw_only=True, slots=True)
 class Rename(Transform):
     """Rename aliased columns.
 

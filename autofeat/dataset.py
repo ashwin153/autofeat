@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING
+
+import attrs
 
 from autofeat.convert import IntoDataFrame, into_data_frame
 from autofeat.transform import Extract
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from autofeat.transform.base import Transform
 
 
-@dataclasses.dataclass(frozen=True)
+@attrs.define(frozen=True, slots=True)
 class Dataset:
     """A collection of tables.
 
