@@ -20,7 +20,7 @@ settings = edit_settings()
 streamlit.header("Setup Dataset")
 if dataset := load_dataset():
     dataset = edit_dataset(dataset)
-    explore_dataset(dataset)
+    explore_dataset(dataset, settings)
 
     streamlit.header("Train Model")
     if model := train_model(dataset):

@@ -1,4 +1,5 @@
-import attrs
+import dataclasses
+
 import plotly.io
 import streamlit
 import streamlit_theme
@@ -6,7 +7,7 @@ import streamlit_theme
 _CHART_THEMES = sorted(plotly.io.templates.keys())
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
 class Settings:
     """Application settings.
 
@@ -32,7 +33,7 @@ def edit_settings() -> Settings:
             index=_CHART_THEMES.index("streamlit"),
         )
 
-        dark_mode = theme is None or theme["base"] == "light"
+        dark_mode = theme is not None and theme["base"] == "dark"
 
         return Settings(
             chart_theme=chart_theme,
