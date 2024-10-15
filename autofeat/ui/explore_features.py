@@ -26,10 +26,10 @@ def explore_features(
     column1, column2 = streamlit.columns(2)
 
     with column1:
-        event = streamlit.dataframe(
+        on_select = streamlit.dataframe(
             df,
             column_config={
-                "Feature": None,
+                "Id": None,
                 "Importance": streamlit.column_config.ProgressColumn(
                     format="%.2f",
                     max_value=1,
@@ -44,10 +44,12 @@ def explore_features(
         )
 
     with column2:
-        if selected_rows := event.get("selection", {}).get("rows", []):
+        if rows := on_select.get("selection", {}).get("rows", []):
+            assert len(rows) == 1
+
             charts = _charts(
                 model,
-                df.iloc[selected_rows[0]]["Feature"],
+                df.iloc[rows[0]]["Id"],
                 settings,
             )
 
@@ -78,8 +80,8 @@ def _grid(
     importance = importance / numpy.max(importance)
 
     df = pandas.DataFrame({
-        "Feature": model.X.columns,
-        "Predictor": [c.split(Extract.SEPARATOR, 1)[0] for c in model.X.columns],
+        "Id": model.X.columns,
+        "Feature": [c.split(Extract.SEPARATOR, 1)[0] for c in model.X.columns],
         "Importance": importance,
         "Source": [c.split(Extract.SEPARATOR, 1)[1] for c in model.X.columns],
     })
