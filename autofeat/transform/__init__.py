@@ -15,6 +15,7 @@ __all__ = [
     "Keep",
     "Rename",
     "Require",
+    "Shrink",
     "Transform",
     "Window",
 ]
@@ -36,4 +37,5 @@ from autofeat.transform.join import Join
 from autofeat.transform.keep import Keep
 from autofeat.transform.rename import Rename
 from autofeat.transform.require import Require
+from autofeat.transform.shrink import Shrink
 from autofeat.transform.window import Window
