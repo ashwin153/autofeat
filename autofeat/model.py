@@ -496,6 +496,8 @@ class Model:  # type: ignore[no-any-unimported]
             ),
         ]
 
+        prediction_model = prediction_method.model()
+
         i = 0
         while True:
             loguru.logger.info(f"training model ({i+1}/{len(iterations)})")
@@ -509,6 +511,7 @@ class Model:  # type: ignore[no-any-unimported]
                 known=known,
                 num_features=num_features,
                 prediction_method=prediction_method,
+                prediction_model=prediction_model,
                 selection_method=selection_method,
                 target=target,
             )
@@ -527,6 +530,7 @@ class Model:  # type: ignore[no-any-unimported]
         known: polars.DataFrame,
         num_features: int,
         prediction_method: PredictionMethod,
+        prediction_model: PredictionModel,
         selection_method: SelectionMethod,
         target: polars.Series,
     ) -> Model:
@@ -561,7 +565,6 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # create prediction and selection models
-        prediction_model = prediction_method.model()
         selection_model = selection_method.model(prediction_model, num_features)
 
         if num_features < X.shape[1]:
