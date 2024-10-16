@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import enum
 import functools
-from typing import TYPE_CHECKING, Any, Final, Generic, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Final, Protocol, TypeVar
 
 import attrs
-import boruta
 import catboost
 import lightgbm
 import loguru
@@ -24,7 +23,7 @@ import sklearn.preprocessing
 import xgboost
 
 from autofeat.convert import into_data_frame
-from autofeat.transform import Aggregate, Combine, Drop, Extract, Identity, Keep, Transform
+from autofeat.transform import Aggregate, Drop, Extract, Identity, Keep, Transform
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -183,34 +182,30 @@ class SelectionModel(Protocol):
     ) -> Any:
         ...
 
+    def get_support(
+        self,
+    ) -> numpy.ndarray:
+        ...
+
 
 AnySelectionModel = TypeVar("AnySelectionModel", bound=SelectionModel)
 
 
-class AutofeatSelector(
+class PairwiseCorrelation(
     sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
     sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
 ):
-    """Select the features with the highest SHAP values that are not correlated with other features.
+    """Select the features that are least correlated to other features.
 
-    :param max_correlation: Maximum correlation that a selected feature can have with any feature.
-    :param model: Model to select features from.
     :param num_features: Number of features to select.
-    :param num_samples: Number of samples to use for the correlation and SHAP calculations.
     """
 
     def __init__(
         self,
         *,
-        max_correlation: float = 0.4,
-        model: PredictionModel,
         num_features: int,
-        num_samples: int = 2500,
     ) -> None:
-        self._max_correlation = max_correlation
-        self._model = model
         self._num_features = num_features
-        self._num_samples = num_samples
         self._support_mask: numpy.ndarray | None = None
 
     def fit(
@@ -219,41 +214,22 @@ class AutofeatSelector(
         y: numpy.ndarray,
         /,
     ) -> Any:
-        # fit the model
-        self._model.fit(X, y)
-
-        # find columns that are highly correlated
-        correlated = (
-            numpy.max(
+        low_correlation = (
+            numpy
+            .max(
                 numpy.triu(
                     numpy.abs(
                         # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
-                        pandas.DataFrame(X[:self._num_samples, :]).corr().to_numpy(),
+                        pandas.DataFrame(X).corr().to_numpy(),
                     ),
                     k=1,
                 ),
                 axis=1,
-            ) > self._max_correlation
+            )
+            .argpartition(self._num_features)[:self._num_features]
         )
 
-        # find the shap values associated with the model
-        explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
-
-        # determine the shap importance of each column
-        importance = (
-            numpy
-            .abs(explanation.values)
-            .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
-        )
-
-        selection = (
-            numpy
-            .where(correlated, 0, importance)
-            .argpartition(-self._num_features)[-self._num_features:]
-        )
-
-        # construct a bitmask from the selected columns
-        self._support_mask = numpy.array([i in selection for i in range(X.shape[1])])
+        self._support_mask = numpy.array([i in low_correlation for i in range(X.shape[1])])
 
     def _get_support_mask(
         self,
@@ -269,47 +245,60 @@ class AutofeatSelector(
         }
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
-class SelectionMethod(Generic[AnySelectionModel]):
-    """A method of solving feature selection problems.
+class ShapleyImportance(
+    sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
+    sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
+):
+    """Select the features with the highest SHAP values.
 
-    :param mask: Extract the feature selection mask from the model.
-    :param model: Model constructor.
-    :param name: Name of this method.
+    :param model: Model to select features from.
+    :param num_features: Number of features to select.
+    :param num_samples: Number of samples to use for the correlation and SHAP calculations.
     """
 
-    mask: Callable[[AnySelectionModel], numpy.ndarray]
-    model: Callable[[PredictionModel, int], AnySelectionModel]
-    name: str
-
-    def __str__(
+    def __init__(
         self,
-    ) -> str:
-        return self.name
+        *,
+        model: PredictionModel,
+        num_features: int,
+        num_samples: int = 2500,
+    ) -> None:
+        self._model = model
+        self._num_features = num_features
+        self._num_samples = num_samples
+        self._support_mask: numpy.ndarray | None = None
 
+    def fit(
+        self,
+        X: numpy.ndarray,
+        y: numpy.ndarray,
+        /,
+    ) -> Any:
+        self._model.fit(X, y)
 
-SELECTION_METHODS: Final[dict[str, SelectionMethod]] = {
-    "feature_importance": SelectionMethod(
-        mask=lambda model: model.get_support(),
-        model=lambda model, n: sklearn.feature_selection.SelectFromModel(model, max_features=n),
-        name="Feature Importance",
-    ),
-    "autofeat": SelectionMethod(
-        mask=lambda model: model.get_support(),
-        model=lambda model, n: AutofeatSelector(model=model, num_features=n),
-        name="autofeat",
-    ),
-    "recursive_feature_elimination": SelectionMethod(
-        mask=lambda model: model.get_support(),
-        model=lambda model, n: sklearn.feature_selection.RFE(model, n_features_to_select=n),  # pyright: ignore[reportArgumentType]
-        name="Recursive Feature Elimination",
-    ),
-    "boruta": SelectionMethod(
-        mask=lambda model: model.support_,
-        model=lambda model, n: boruta.BorutaPy(model),  # TODO: support n
-        name="Boruta",
-    ),
-}
+        explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
+
+        high_importance = (
+            numpy
+            .abs(explanation.values)
+            .mean(tuple(i for i in range(len(explanation.shape)) if i != 1))
+            .argpartition(-self._num_features)[-self._num_features:]
+        )
+
+        self._support_mask = numpy.array([i in high_importance for i in range(X.shape[1])])
+
+    def _get_support_mask(
+        self,
+    ) -> numpy.ndarray:
+        assert self._support_mask is not None
+        return self._support_mask
+
+    def _more_tags(
+        self,
+    ) -> dict[str, bool]:
+        return {
+            "allow_nan": True,
+        }
 
 
 @attrs.define(frozen=True, kw_only=True, slots=True)
@@ -371,8 +360,6 @@ class Model:  # type: ignore[no-any-unimported]
     known: polars.DataFrame
     prediction_method: PredictionMethod
     prediction_model: PredictionModel
-    selection_method: SelectionMethod
-    selection_model: SelectionModel
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     X_transformer: sklearn.pipeline.Pipeline  # type: ignore[no-any-unimported]
@@ -478,41 +465,35 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # repeatedly transform the dataset and train a prediction model on the top n features
-        iterations: list[tuple[list[Transform], SelectionMethod, int]] = [
+        prediction_model = prediction_method.model()
+
+        iterations: list[tuple[list[Transform], list[SelectionModel]]] = [
             (
-                [Aggregate(is_pivotable=known_columns)],
-                SELECTION_METHODS["feature_importance"],
-                140,
-            ),
-            (
-                [],
-                SELECTION_METHODS["autofeat"],
-                70,
-            ),
-            (
-                [Combine()],
-                SELECTION_METHODS["autofeat"],
-                35,
+                [
+                    Aggregate(is_pivotable=known_columns, max_pivots=2),
+                ],
+                [
+                    sklearn.feature_selection.SelectFromModel(prediction_model, max_features=150),
+                    PairwiseCorrelation(num_features=75),
+                    ShapleyImportance(model=prediction_model, num_features=50),
+                ],
             ),
         ]
-
-        prediction_model = prediction_method.model()
 
         i = 0
         while True:
             loguru.logger.info(f"training model ({i+1}/{len(iterations)})")
 
-            transforms, selection_method, num_features = iterations[i]
+            transforms, selection_models = iterations[i]
 
             dataset = dataset.apply(Identity().then(Identity(), *transforms))
 
             model = Model._train_once(
                 dataset=dataset,
                 known=known,
-                num_features=num_features,
                 prediction_method=prediction_method,
                 prediction_model=prediction_model,
-                selection_method=selection_method,
+                selection_models=selection_models,
                 target=target,
             )
 
@@ -528,10 +509,9 @@ class Model:  # type: ignore[no-any-unimported]
         *,
         dataset: Dataset,
         known: polars.DataFrame,
-        num_features: int,
         prediction_method: PredictionMethod,
         prediction_model: PredictionModel,
-        selection_method: SelectionMethod,
+        selection_models: list[SelectionModel],
         target: polars.Series,
     ) -> Model:
         # extract features from the dataset
@@ -565,11 +545,9 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # create prediction and selection models
-        selection_model = selection_method.model(prediction_model, num_features)
-
-        if num_features < X.shape[1]:
+        for i, selection_model in enumerate(selection_models):
             # train the selection model
-            loguru.logger.info("fitting selection model")
+            loguru.logger.info(f"fitting selection model ({i+1}/{len(selection_models)})")
 
             selection_model.fit(X_train, y_train)
 
@@ -579,7 +557,7 @@ class Model:  # type: ignore[no-any-unimported]
             X_train = selection_model.transform(X_train)
             X_test = selection_model.transform(X_test)
             X_transformer.fit(X_train)
-            X = X.select(c for c, x in zip(X.columns, selection_method.mask(selection_model)) if x)
+            X = X.select(c for c, x in zip(X.columns, selection_model.get_support()) if x)
 
             dataset = dataset.apply(
                 Keep(
@@ -621,8 +599,6 @@ class Model:  # type: ignore[no-any-unimported]
             known=known,
             prediction_method=prediction_method,
             prediction_model=prediction_model,
-            selection_method=selection_method,
-            selection_model=selection_model,
             X_test=X_transformer.inverse_transform(X_test),
             X_train=X_transformer.inverse_transform(X_train),
             X_transformer=X_transformer,
