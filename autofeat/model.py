@@ -461,7 +461,7 @@ class Model:  # type: ignore[no-any-unimported]
                     for column in table.columns
                     if column.is_related(target_column)
                 ],
-            ),
+            ).then(Join()),
         )
 
         # repeatedly transform the dataset and train a prediction model on the top n features

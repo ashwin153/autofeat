@@ -9,7 +9,7 @@ from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 # Number of rows to test casts on.
-SAMPLE_SIZE = 10
+SAMPLE_SIZE = 25
 
 
 @attrs.define(frozen=True, kw_only=True, slots=True)

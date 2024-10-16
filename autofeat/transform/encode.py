@@ -73,14 +73,14 @@ class Encode(Transform):
         for column in self._categorical_columns(table):
             categories = next(category_iterator).to_series()
 
-            if Attribute.textual in column.attributes:
-                column = Column(
-                    name=column.name,
-                    attributes=column.attributes,
-                    derived_from=[(column, table)],
-                )
+            # if Attribute.textual in column.attributes:
+            #     column = Column(
+            #         name=column.name,
+            #         attributes=column.attributes,
+            #         derived_from=[(column, table)],
+            #     )
 
-                yield column, column.expr.cast(polars.Enum(categories=categories))
+            #     yield column, column.expr.cast(polars.Enum(categories=categories))
 
             for category in categories:
                 encoded_column = Column(
