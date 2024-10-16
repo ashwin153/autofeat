@@ -16,9 +16,9 @@ class Union(Transform):
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        for related_tables in self._related_tables(list(tables)):
-            if len(related_tables) == 1:
-                yield related_tables[0]
+        for group in self._groups(list(tables)):
+            if len(group) == 1:
+                yield group[0]
             else:
                 columns = [
                     Column(
@@ -26,28 +26,28 @@ class Union(Transform):
                         attributes=set.intersection(
                             *[
                                 c.attributes
-                                for t in related_tables
+                                for t in group
                                 for c in t.columns
                                 if c.name == column.name
                             ],
                         ),
                         derived_from=[
                             (c, t)
-                            for t in related_tables
+                            for t in group
                             for c in t.columns
                             if c.name == column.name
                         ],
                     )
-                    for column in related_tables[0].columns
+                    for column in group[0].columns
                 ]
 
                 yield Table(
-                    name=f"union({', '.join([t.name for t in related_tables])})",
-                    data=polars.concat([t.data for t in related_tables], how="vertical"),
+                    name=f"union({', '.join([t.name for t in group])})",
+                    data=polars.concat([t.data for t in group], how="vertical"),
                     columns=columns,
                 )
 
-    def _related_tables(
+    def _groups(
         self,
         tables: list[Table],
     ) -> list[list[Table]]:
