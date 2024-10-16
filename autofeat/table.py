@@ -74,7 +74,7 @@ class Table:
     :param name: Name of this table.
     """
 
-    columns: list[Column]
+    columns: list[Column] = attrs.field(eq=False)
     data: polars.LazyFrame = attrs.field(eq=False)
     name: str
 
