@@ -61,4 +61,7 @@ class Union(Transform):
             if {c.name for c in x.columns} == {c.name for c in y.columns}:
                 graph.add_edge(x, y)
 
-        return list(networkx.connected_components(graph))
+        return [
+            list(connected_component)
+            for connected_component in networkx.connected_components(graph)
+        ]
