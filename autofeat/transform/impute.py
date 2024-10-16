@@ -4,7 +4,6 @@ import attrs
 import polars
 
 from autofeat.attribute import Attribute
-from autofeat.convert.into_exprs import into_exprs
 from autofeat.convert.into_named_exprs import into_named_exprs
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
@@ -12,56 +11,36 @@ from autofeat.transform.base import Transform
 
 @attrs.define(frozen=True, kw_only=True, slots=True)
 class Impute(Transform):
-    """Fill missing data in different ways."""
+    """Zero-fill missing data."""
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
         for table in tables:
-            if imputations := list(self._imputations(table)):
-                extra_columns = [
-                    column
-                    for column in table.columns
-                    if Attribute.primary_key in column.attributes
-                ]
-
-                columns = [
-                    *extra_columns,
-                    *[column for column, _ in imputations],
-                ]
-
-                yield Table(
-                    data=table.data.select(
-                        *into_exprs(extra_columns),
-                        **into_named_exprs(imputations),
-                    ),
-                    name=f"impute({table.name})",
-                    columns=columns,
-                )
-
-    def _imputations(
-        self,
-        table: Table,
-    ) -> Iterable[tuple[Column, polars.Expr]]:
-        numeric_columns = [
-            column
-            for column in table.columns
-            if Attribute.numeric in column.attributes
-            if Attribute.not_null not in column.attributes
-            if Attribute.categorical not in column.attributes
-        ]
-
-        for x in numeric_columns:
             imputations = [
-                (f"fill_mean({x})", x.expr.fill_null(strategy="mean")),
+                self._impute(table, column)
+                for column in table.columns
             ]
 
-            for name, expr in imputations:
-                column = Column(
-                    name=name,
-                    attributes=x.attributes | {Attribute.not_null},
-                    derived_from=[(x, table)],
-                )
+            yield Table(
+                data=table.data.select(**into_named_exprs(imputations)),
+                name=table.name,
+                columns=[column for column, _ in imputations],
+            )
 
-                yield column, expr
+    def _impute(
+        self,
+        table: Table,
+        column: Column,
+    ) -> tuple[Column, polars.Expr]:
+        if Attribute.numeric in column.attributes:
+            result = Column(
+                name=column.name,
+                attributes=column.attributes | {Attribute.not_null},
+                derived_from=[(column, table)],
+            )
+
+            return result, column.expr.fill_null(0).fill_nan(0)
+
+        return column, column.expr
