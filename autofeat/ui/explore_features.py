@@ -124,7 +124,7 @@ def _charts(  # type: ignore[no-any-unimported]
             if model.X.schema[feature].is_numeric():
                 return [_histogram(df), _box_plot(df_flip)]
             else:
-                return [_stacked_bar_chart(df), _pie_chart(df)]
+                return [_stacked_bar_chart(df), _stacked_bar_chart(df_flip), _pie_chart(df)]
         case PredictionProblem.regression:
             if model.X.schema[feature].is_numeric():
                 return [_scatter_plot(df)]
@@ -294,6 +294,7 @@ def _scatter_plot(  # type: ignore[no-any-unimported]
 def _stacked_bar_chart(  # type: ignore[no-any-unimported]
     df: pandas.DataFrame,
 ) -> tuple[str, plotly.graph_objects.Figure]:
+
     counts = (
         df
         .groupby(["x", "y"])
@@ -312,8 +313,6 @@ def _stacked_bar_chart(  # type: ignore[no-any-unimported]
             "color": df.attrs["y_label"],
         },
         template=df.attrs["chart_theme"],
-        x=percentages.index,
-        y=percentages.columns,
     )
 
     figure.update_layout(
