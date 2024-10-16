@@ -178,11 +178,16 @@ def _histogram(  # type: ignore[no-any-unimported]
         bucket_data = df.iloc[i*bucket_size:(i+1)*bucket_size]
         bucket_name = f"{bucket_data['x'].min():.2f} - {bucket_data['x'].max():.2f}"
 
+        total_count = len(bucket_data)
+
         for category in categories:
+            category_count = len(bucket_data[bucket_data["y"] == category])
+            percentage = (category_count / total_count) * 100 if total_count > 0 else 0
             buckets.append({
                 df.attrs["y_label"]: str(category),
                 "x": bucket_name,
                 "y": len(bucket_data[bucket_data["y"] == category]),
+                "percentage": f"{percentage:.2f}",
             })
 
     figure = plotly.express.bar(
@@ -192,6 +197,7 @@ def _histogram(  # type: ignore[no-any-unimported]
         color=df.attrs["y_label"],
         template=df.attrs["chart_theme"],
         labels={"x": df.attrs["x_label"], "y": "count"},
+        hover_data=["percentage"],
     )
 
     figure.update_layout(
