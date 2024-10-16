@@ -1,8 +1,7 @@
-import itertools
+import collections
 from collections.abc import Iterable
 
 import attrs
-import networkx
 import polars
 
 from autofeat.table import Column, Table
@@ -52,16 +51,9 @@ class Union(Transform):
         self,
         tables: list[Table],
     ) -> list[list[Table]]:
-        graph: networkx.Graph[Table] = networkx.Graph()
-
+        groups = collections.defaultdict(list)
         for table in tables:
-            graph.add_node(table)
+            columns = frozenset(column.name for column in table.columns)
+            groups[columns].append(table)
 
-        for x, y in itertools.combinations(tables, 2):
-            if {c.name for c in x.columns} == {c.name for c in y.columns}:
-                graph.add_edge(x, y)
-
-        return [
-            list(connected_component)
-            for connected_component in networkx.connected_components(graph)
-        ]
+        return list(groups.values())
