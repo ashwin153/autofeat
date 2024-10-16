@@ -191,20 +191,23 @@ class SelectionModel(Protocol):
 AnySelectionModel = TypeVar("AnySelectionModel", bound=SelectionModel)
 
 
-class PairwiseCorrelation(
+class FeatureImportance(
     sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
     sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
 ):
-    """Select the features that are least correlated to other features.
+    """Select the features with the highest feature importance.
 
+    :param model: Model to select features from.
     :param num_features: Number of features to select.
     """
 
     def __init__(
         self,
         *,
+        model: PredictionModel,
         num_features: int,
     ) -> None:
+        self._model = model
         self._num_features = num_features
         self._support_mask: numpy.ndarray | None = None
 
@@ -214,9 +217,58 @@ class PairwiseCorrelation(
         y: numpy.ndarray,
         /,
     ) -> Any:
+        if self._num_features >= X.shape[1]:
+            self._support_mask = numpy.ones(X.shape[1], dtype=int)
+            return
+
+        selector = sklearn.feature_selection.SelectFromModel(
+            self._model,
+            max_features=self._num_features,
+        )
+
+        selector.fit(X, y)
+
+        self._support_mask = selector.get_support()
+
+    def _get_support_mask(
+        self,
+    ) -> numpy.ndarray:
+        assert self._support_mask is not None
+        return self._support_mask
+
+    def _more_tags(
+        self,
+    ) -> dict[str, bool]:
+        return {
+            "allow_nan": True,
+        }
+
+
+class PairwiseCorrelation(
+    sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
+    sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
+):
+    """Select the features that are least correlated to other features.
+
+    :param max_correlation: Maximum correlation between a feature and any other feature.
+    """
+
+    def __init__(
+        self,
+        *,
+        max_correlation: float,
+    ) -> None:
+        self._max_correlation = max_correlation
+        self._support_mask: numpy.ndarray | None = None
+
+    def fit(
+        self,
+        X: numpy.ndarray,
+        y: numpy.ndarray,
+        /,
+    ) -> Any:
         low_correlation = (
-            numpy
-            .max(
+            numpy.max(
                 numpy.triu(
                     numpy.abs(
                         # TODO: use numpy.ma.corrcoeff and numpy.ma.masked_invalid
@@ -225,11 +277,10 @@ class PairwiseCorrelation(
                     k=1,
                 ),
                 axis=1,
-            )
-            .argpartition(self._num_features)[:self._num_features]
+            ) < self._max_correlation
         )
 
-        self._support_mask = numpy.array([i in low_correlation for i in range(X.shape[1])])
+        self._support_mask = numpy.array([low_correlation[i] for i in range(X.shape[1])])
 
     def _get_support_mask(
         self,
@@ -274,6 +325,10 @@ class ShapleyImportance(
         y: numpy.ndarray,
         /,
     ) -> Any:
+        if self._num_features >= X.shape[1]:
+            self._support_mask = numpy.ones(X.shape[1], dtype=int)
+            return
+
         self._model.fit(X, y)
 
         explanation = shap.Explainer(self._model)(X[:self._num_samples, :])
@@ -473,8 +528,8 @@ class Model:  # type: ignore[no-any-unimported]
                     Aggregate(is_pivotable=known_columns, max_pivots=2),
                 ],
                 [
-                    sklearn.feature_selection.SelectFromModel(prediction_model, max_features=150),
-                    PairwiseCorrelation(num_features=75),
+                    FeatureImportance(model=prediction_model, num_features=150),
+                    PairwiseCorrelation(max_correlation=0.9),
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
             ),
