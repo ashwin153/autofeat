@@ -1,7 +1,7 @@
+import dataclasses
 import itertools
 from collections.abc import Iterable
 
-import attrs
 import numpy
 import polars
 
@@ -12,7 +12,7 @@ from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Combine(Transform):
     """Combine numeric columns using arithmetic operators."""
 

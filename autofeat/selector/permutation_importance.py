@@ -1,4 +1,5 @@
-import attrs
+import dataclasses
+
 import numpy
 import sklearn.inspection
 import sklearn.utils
@@ -7,7 +8,7 @@ from autofeat.predictor.base import Predictor
 from autofeat.selector.base import Selector
 
 
-@attrs.define(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class PermutationImportance(Selector):
     """Select the ``n`` most important features to the ``predictor`` through permutation analysis.
 

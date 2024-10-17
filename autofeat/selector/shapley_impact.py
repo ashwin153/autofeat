@@ -1,4 +1,5 @@
-import attrs
+import dataclasses
+
 import numpy
 import shap
 
@@ -6,7 +7,7 @@ from autofeat.predictor.base import Predictor
 from autofeat.selector.base import Selector
 
 
-@attrs.define(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class ShapelyImpact(Selector):
     """Select the top ``n`` features by average SHAP impact across the training data.
 

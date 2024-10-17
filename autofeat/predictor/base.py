@@ -43,7 +43,7 @@ class PredictionMethod(abc.ABC):
         """
 
     @classmethod
-    def __attrs_init_subclass__(
+    def __init_subclass__(
         cls,
     ) -> None:
         PREDICTION_METHODS[cls.__name__] = cls()

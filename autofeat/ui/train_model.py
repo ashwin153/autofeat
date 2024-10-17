@@ -72,6 +72,7 @@ def train_model(
             key="prediction_method",
             label="Prediction Method",
             options=PREDICTION_METHODS,
+            index=list(PREDICTION_METHODS).index("XGBoost"),
         )
 
     with show_log("Training Model"):

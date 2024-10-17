@@ -1,6 +1,6 @@
+import dataclasses
 from collections.abc import Collection
 
-import attrs
 import boruta
 import numpy
 
@@ -8,7 +8,7 @@ from autofeat.predictor.base import Predictor
 from autofeat.selector.base import Selector
 
 
-@attrs.define(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class Boruta(Selector):
     """Select the most important features to the ``predictor`` using the Boruta algorithm.
 

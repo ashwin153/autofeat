@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import dataclasses
 import functools
 from typing import TYPE_CHECKING
 
-import attrs
 import loguru
 import numpy
 import polars
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from autofeat.table import Column, Table
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Prediction:
     """A prediction made by a model.
 
@@ -61,7 +61,7 @@ class Prediction:
         return explainer(self.X.to_numpy())
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Model:  # type: ignore[no-any-unimported]
     """A prediction model trained on select features in a ``dataset``.
 

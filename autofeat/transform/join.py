@@ -1,14 +1,13 @@
+import dataclasses
 import itertools
 from collections.abc import Iterable
-
-import attrs
 
 from autofeat.attribute import Attribute
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Join(Transform):
     """Join tables on common primary key columns."""
 

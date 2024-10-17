@@ -1,13 +1,13 @@
+import dataclasses
 from typing import Literal
 
-import attrs
 import numpy
 import pandas
 
 from autofeat.selector.base import Selector
 
 
-@attrs.define(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class Correlation(Selector):
     """Select features that are at most ``max`` correlated with any other selected feature.
 

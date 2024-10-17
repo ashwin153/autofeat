@@ -1,12 +1,11 @@
+import dataclasses
 from collections.abc import Iterable
-
-import attrs
 
 from autofeat.table import Table
 from autofeat.transform.base import Transform
 
 
-@attrs.define(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True)
 class AnyOf(Transform):
     """Apply each of the ``transforms`` to every table.
 

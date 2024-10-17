@@ -1,12 +1,11 @@
+import dataclasses
 from collections.abc import Collection, Iterable
-
-import attrs
 
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Drop(Transform):
     """Drop any of the ``columns`` from all tables.
 

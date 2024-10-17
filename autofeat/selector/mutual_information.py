@@ -1,6 +1,6 @@
+import dataclasses
 from collections.abc import Collection
 
-import attrs
 import numpy
 import sklearn.feature_selection
 
@@ -8,7 +8,7 @@ from autofeat.problem import Problem
 from autofeat.selector.base import Selector
 
 
-@attrs.define(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class MutualInformation(Selector):
     """Select the top ``n`` features by mutual information with the target variable.
 
