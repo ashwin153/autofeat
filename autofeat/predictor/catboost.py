@@ -9,7 +9,7 @@ from autofeat.problem import Problem
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CatBoost(PredictionMethod):
-    """"""
+    """An ensemble of gradient boosted decision trees."""
 
     def create(
         self,
