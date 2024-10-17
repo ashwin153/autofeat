@@ -9,7 +9,7 @@ from autofeat.problem import Problem
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class RandomForest(PredictionMethod):
-    """"""
+    """An ensemble of decision trees."""
 
     def create(
         self,
