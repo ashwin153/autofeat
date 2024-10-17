@@ -4,7 +4,7 @@ from typing import ParamSpec
 import streamlit
 
 from autofeat import Dataset, source
-from autofeat.transform import Cast, Encode, Union
+from autofeat.transform import Cast, Encode, Shrink, Union
 
 P = ParamSpec("P")
 
@@ -75,4 +75,4 @@ def _source_dataset(
     **kwargs: P.kwargs,
 ) -> Dataset:
     dataset = _loader(*args, **kwargs)
-    return dataset.apply(Cast().then(Union()).then(Encode()))
+    return dataset.apply(Cast().then(Shrink()).then(Union()).then(Encode()))

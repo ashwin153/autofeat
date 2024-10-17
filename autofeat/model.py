@@ -525,11 +525,11 @@ class Model:  # type: ignore[no-any-unimported]
         iterations: list[tuple[list[Transform], list[SelectionModel]]] = [
             (
                 [
-                    Aggregate(is_pivotable=known_columns, max_pivots=2),
+                    Aggregate(is_pivotable=known_columns, max_pivots=1),
                 ],
                 [
                     FeatureImportance(model=prediction_model, num_features=150),
-                    PairwiseCorrelation(max_correlation=0.9),
+                    PairwiseCorrelation(max_correlation=0.8),
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
             ),
