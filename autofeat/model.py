@@ -374,7 +374,7 @@ class ShapleyImportance(
         *,
         model: PredictionModel,
         num_features: int,
-        num_samples: int = 2500,
+        num_samples: int = 10000,
     ) -> None:
         self._model = model
         self._num_features = num_features
@@ -591,25 +591,16 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
                 [
                     FeatureImportance(model=prediction_model, num_features=200),
-                    PairwiseCorrelation(max_correlation=0.8),
-                    ShapleyImportance(model=prediction_model, num_features=50),
+                    PairwiseCorrelation(max_correlation=0.7),
+                    ShapleyImportance(model=prediction_model, num_features=75),
                 ],
             ),
             (
                 [
-                    Filter(),
+                    Filter().then(Aggregate(is_pivotable=known_columns, max_pivots=1)),
                 ],
                 [
-                    PairwiseCorrelation(max_correlation=0.8),
-                    ShapleyImportance(model=prediction_model, num_features=50),
-                ],
-            ),
-            (
-                [
-                    Aggregate(is_pivotable=known_columns, max_pivots=2),
-                ],
-                [
-                    PairwiseCorrelation(max_correlation=0.8),
+                    PairwiseCorrelation(max_correlation=0.5),
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
             ),
