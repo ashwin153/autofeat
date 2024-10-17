@@ -23,7 +23,6 @@ from autofeat.selector import Correlation, FeatureImportance, Selector, ShapelyI
 from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
-
     from autofeat.convert import IntoDataFrame
     from autofeat.dataset import Dataset
     from autofeat.predictor import PredictionMethod, Predictor
@@ -129,7 +128,7 @@ class Model:  # type: ignore[no-any-unimported]
 
         y = polars.Series(
             name=self.y.name,
-            values=self.y_transformer.inverse_transform(  # pyright: ignore[reportArgumentType]
+            values=self.y_transformer.inverse_transform(  # pyright: ignore[reportAttributeAccessIssue]
                 self.predictor.predict(
                     self.X_transformer.transform(
                         X.to_numpy(),
