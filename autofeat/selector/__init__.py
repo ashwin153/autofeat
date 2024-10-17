@@ -4,9 +4,11 @@ __all__ = [
     "FeatureImportance",
     "MutualInformation",
     "PermutationImportance",
+    "Selector",
     "ShapelyImpact",
 ]
 
+from autofeat.selector.base import Selector
 from autofeat.selector.boruta import Boruta
 from autofeat.selector.correlation import Correlation
 from autofeat.selector.feature_importance import FeatureImportance
