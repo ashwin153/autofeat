@@ -23,7 +23,7 @@ import sklearn.preprocessing
 import xgboost
 
 from autofeat.convert import into_data_frame
-from autofeat.transform import Aggregate, Combine, Drop, Extract, Filter, Identity, Keep, Transform
+from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -601,14 +601,6 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
                 [
                     PairwiseCorrelation(max_correlation=0.5),
-                    ShapleyImportance(model=prediction_model, num_features=50),
-                ],
-            ),
-            (
-                [
-                    Combine(),
-                ],
-                [
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
             ),
