@@ -20,8 +20,8 @@ class Column:
     :param name: Unique name of the column within the table.
     """
 
-    attributes: set[Attribute] = attrs.field(default=set())
-    derived_from: list[tuple[Column, Table]] = attrs.field(default=[])
+    attributes: set[Attribute] = attrs.field(default=set(), repr=False)
+    derived_from: list[tuple[Column, Table]] = attrs.field(default=[], repr=False)
     name: str
 
     def __str__(
@@ -74,8 +74,8 @@ class Table:
     :param name: Name of this table.
     """
 
-    columns: list[Column] = attrs.field(eq=False)
-    data: polars.LazyFrame = attrs.field(eq=False)
+    columns: list[Column] = attrs.field(eq=False, repr=False)
+    data: polars.LazyFrame = attrs.field(eq=False, repr=False)
     name: str
 
     def __str__(
