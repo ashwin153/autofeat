@@ -1,10 +1,10 @@
-from collections.abc import Iterable
+from collections.abc import Collection
 
 import attrs
 import numpy
 import sklearn.feature_selection
 
-from autofeat.model import Problem
+from autofeat.model import PredictionProblem
 from autofeat.selector.base import Selector
 
 
@@ -17,22 +17,24 @@ class MutualInformation(Selector):
     """
 
     n: int
-    problem: Problem
+    problem: PredictionProblem
 
     def select(
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
-    ) -> Iterable[bool]:
+    ) -> Collection[bool]:
         if self.n >= X.shape[1]:
             return [True] * X.shape[1]
 
         scorer = (
             sklearn.feature_selection.mutual_info_classif
-            if self.problem == Problem.classification
+            if self.problem == PredictionProblem.classification
             else sklearn.feature_selection.mutual_info_regression
         )
 
         selector = sklearn.feature_selection.SelectKBest(scorer, k=self.n)
+
         selector.fit(numpy.nan_to_num(X), numpy.nan_to_num(y))
-        return selector.get_support()
+
+        return selector.get_support()  # type: ignore[no-any-return]

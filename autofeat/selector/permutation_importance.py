@@ -3,7 +3,7 @@ import numpy
 import sklearn.inspection
 import sklearn.utils
 
-from autofeat.model import Predictor
+from autofeat.model import PredictionModel
 from autofeat.selector.base import Selector
 
 
@@ -16,7 +16,7 @@ class PermutationImportance(Selector):
     """
 
     n: int
-    predictor: Predictor
+    predictor: PredictionModel
 
     def select(
         self,

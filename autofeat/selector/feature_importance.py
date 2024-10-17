@@ -1,10 +1,10 @@
-from collections.abc import Iterable
+from collections.abc import Collection
 
 import attrs
 import numpy
 import sklearn.feature_selection
 
-from autofeat.model import Predictor
+from autofeat.model import PredictionModel
 from autofeat.selector.base import Selector
 
 
@@ -17,21 +17,21 @@ class FeatureImportance(Selector):
     """
 
     n: int
-    predictor: Predictor
+    predictor: PredictionModel
 
     def select(
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
-    ) -> Iterable[bool]:
+    ) -> Collection[bool]:
         if self.n >= X.shape[1]:
             return [True] * X.shape[1]
 
         selector = sklearn.feature_selection.SelectFromModel(
-            self.model,
+            self.predictor,
             max_features=self.n,
         )
 
         selector.fit(X, y)
 
-        return selector.get_support()
+        return selector.get_support()  # type: ignore[no-any-return]
