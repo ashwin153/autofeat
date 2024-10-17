@@ -1,10 +1,12 @@
 from collections.abc import Callable
 from typing import ParamSpec
 
+import loguru
 import streamlit
 
 from autofeat import Dataset, source
-from autofeat.transform import Cast, Encode, Shrink, Union
+from autofeat.transform import Cast, Encode, Union
+from autofeat.ui.show_log import show_log
 
 P = ParamSpec("P")
 
@@ -47,9 +49,9 @@ def load_dataset(
             if not csv_files:
                 return None
 
-            return _source_dataset(source.from_csv, tuple(file.name for file in csv_files))
+            return _clean_dataset(source.from_csv, tuple(file.name for file in csv_files))
         case "Example":
-            return _source_dataset(source.from_example)
+            return _clean_dataset(source.from_example)
         case "Kaggle":
             kaggle_name = streamlit.text_input(
                 help="Name of the Kaggle dataset or competition to load data from",
@@ -60,19 +62,31 @@ def load_dataset(
             if not kaggle_name:
                 return None
 
-            return _source_dataset(source.from_kaggle, kaggle_name)
+            return _clean_dataset(source.from_kaggle, kaggle_name)
         case _:
             raise NotImplementedError(f"{source_type} is not supported")
 
 
+@show_log("Loading Dataset")
 @streamlit.cache_resource(
     max_entries=1,
-    show_spinner="Loading Dataset",
+    show_spinner=False,
 )
-def _source_dataset(
+def _clean_dataset(
     _loader: Callable[P, Dataset],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> Dataset:
+    loguru.logger.info("scanning dataset")
     dataset = _loader(*args, **kwargs)
-    return dataset.apply(Cast().then(Shrink()).then(Union()).then(Encode()))
+
+    loguru.logger.info("casting data types")
+    dataset = dataset.apply(Cast())
+
+    loguru.logger.info("concatenating tables")
+    dataset = dataset.apply(Union())
+
+    loguru.logger.info("encoding categorical variables")
+    dataset = dataset.apply(Encode())
+
+    return dataset
