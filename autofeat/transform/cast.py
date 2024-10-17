@@ -81,4 +81,7 @@ class Cast(Transform):
 
                 return result, column.expr.cast(polars.Boolean)
 
-        return column, column.expr.shrink_dtype()
+        if {Attribute.numeric} <= column.attributes:
+            return column, column.expr.shrink_dtype()
+
+        return column, column.expr
