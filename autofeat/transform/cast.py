@@ -75,7 +75,7 @@ class Cast(Transform):
             if set(sample.get_column(column.name).unique()) == {0, 1}:
                 result = Column(
                     name=column.name,
-                    attributes={Attribute.boolean},
+                    attributes={Attribute.boolean, Attribute.categorical, Attribute.not_null},
                     derived_from=[(column, table)],
                 )
 

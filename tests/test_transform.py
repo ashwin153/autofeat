@@ -64,6 +64,10 @@ def test_apply(
             Cast(),
         ),
         (
+            Identity().then(Identity(), Cast()),
+            AnyOf([Identity(), Cast()]),
+        ),
+        (
             Cast().then(Combine()).then(Encode()),
             AllOf([Cast(), Combine(), Encode()]),
         ),

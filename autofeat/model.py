@@ -23,7 +23,7 @@ import sklearn.preprocessing
 import xgboost
 
 from autofeat.convert import into_data_frame
-from autofeat.transform import Aggregate, Drop, Extract, Identity, Keep, Transform
+from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -244,6 +244,68 @@ class FeatureImportance(
         }
 
 
+class MutualInformation(
+    sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
+    sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
+):
+    """Select the features with the highest mutual information with the target variable.
+
+    :param num_features: Number of features to select.
+    :param problem: Type of prediction problem.
+    """
+
+    def __init__(
+        self,
+        *,
+        num_features: int,
+        problem: PredictionProblem,
+    ) -> None:
+        self._num_features = num_features
+        self._problem = problem
+        self._support_mask: numpy.ndarray | None = None
+
+    def fit(
+        self,
+        X: numpy.ndarray,
+        y: numpy.ndarray,
+        /,
+    ) -> Any:
+        if self._num_features >= X.shape[1]:
+            self._support_mask = numpy.ones(X.shape[1], dtype=bool)
+            return
+
+        scorer = (
+            sklearn.feature_selection.mutual_info_classif
+            if self._problem == PredictionProblem.classification
+            else sklearn.feature_selection.mutual_info_regression
+        )
+
+        selector = sklearn.feature_selection.SelectKBest(
+            scorer,
+            k=self._num_features,
+        )
+
+        selector.fit(
+            numpy.nan_to_num(X),
+            numpy.nan_to_num(y),
+        )
+
+        self._support_mask = selector.get_support()
+
+    def _get_support_mask(
+        self,
+    ) -> numpy.ndarray:
+        assert self._support_mask is not None
+        return self._support_mask
+
+    def _more_tags(
+        self,
+    ) -> dict[str, bool]:
+        return {
+            "allow_nan": True,
+        }
+
+
 class PairwiseCorrelation(
     sklearn.base.BaseEstimator,  # type: ignore[no-any-unimported]
     sklearn.feature_selection.SelectorMixin,  # type: ignore[no-any-unimported]
@@ -326,7 +388,7 @@ class ShapleyImportance(
         /,
     ) -> Any:
         if self._num_features >= X.shape[1]:
-            self._support_mask = numpy.ones(X.shape[1], dtype=int)
+            self._support_mask = numpy.ones(X.shape[1], dtype=bool)
             return
 
         self._model.fit(X, y)
@@ -528,7 +590,25 @@ class Model:  # type: ignore[no-any-unimported]
                     Aggregate(is_pivotable=known_columns, max_pivots=1),
                 ],
                 [
-                    FeatureImportance(model=prediction_model, num_features=150),
+                    FeatureImportance(model=prediction_model, num_features=200),
+                    PairwiseCorrelation(max_correlation=0.8),
+                    ShapleyImportance(model=prediction_model, num_features=50),
+                ],
+            ),
+            (
+                [
+                    Filter(),
+                ],
+                [
+                    PairwiseCorrelation(max_correlation=0.8),
+                    ShapleyImportance(model=prediction_model, num_features=50),
+                ],
+            ),
+            (
+                [
+                    Aggregate(is_pivotable=known_columns, max_pivots=2),
+                ],
+                [
                     PairwiseCorrelation(max_correlation=0.8),
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
