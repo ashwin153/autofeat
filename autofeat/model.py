@@ -23,7 +23,7 @@ import sklearn.preprocessing
 import xgboost
 
 from autofeat.convert import into_data_frame
-from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
+from autofeat.transform import Aggregate, Combine, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -374,7 +374,7 @@ class ShapleyImportance(
         *,
         model: PredictionModel,
         num_features: int,
-        num_samples: int = 2500,
+        num_samples: int = 10000,
     ) -> None:
         self._model = model
         self._num_features = num_features
@@ -591,25 +591,24 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
                 [
                     FeatureImportance(model=prediction_model, num_features=200),
-                    PairwiseCorrelation(max_correlation=0.8),
+                    PairwiseCorrelation(max_correlation=0.7),
+                    ShapleyImportance(model=prediction_model, num_features=75),
+                ],
+            ),
+            (
+                [
+                    Filter().then(Aggregate(is_pivotable=known_columns, max_pivots=1)),
+                ],
+                [
+                    PairwiseCorrelation(max_correlation=0.5),
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
             ),
             (
                 [
-                    Filter(),
+                    Combine(),
                 ],
                 [
-                    PairwiseCorrelation(max_correlation=0.8),
-                    ShapleyImportance(model=prediction_model, num_features=50),
-                ],
-            ),
-            (
-                [
-                    Aggregate(is_pivotable=known_columns, max_pivots=2),
-                ],
-                [
-                    PairwiseCorrelation(max_correlation=0.8),
                     ShapleyImportance(model=prediction_model, num_features=50),
                 ],
             ),

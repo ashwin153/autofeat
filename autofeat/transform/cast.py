@@ -81,4 +81,4 @@ class Cast(Transform):
 
                 return result, column.expr.cast(polars.Boolean)
 
-        return column, column.expr
+        return column, column.expr.shrink_dtype()
