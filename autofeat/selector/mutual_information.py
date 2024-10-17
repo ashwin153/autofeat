@@ -1,0 +1,38 @@
+from collections.abc import Iterable
+
+import attrs
+import numpy
+import sklearn.feature_selection
+
+from autofeat.model import Problem
+from autofeat.selector.base import Selector
+
+
+@attrs.define(frozen=True, kw_only=True)
+class MutualInformation(Selector):
+    """Select the top ``n`` features by mutual information with the target variable.
+
+    :param n: Number of features to select.
+    :param problem: Type of prediction problem.
+    """
+
+    n: int
+    problem: Problem
+
+    def select(
+        self,
+        X: numpy.ndarray,
+        y: numpy.ndarray,
+    ) -> Iterable[bool]:
+        if self.n >= X.shape[1]:
+            return [True] * X.shape[1]
+
+        scorer = (
+            sklearn.feature_selection.mutual_info_classif
+            if self.problem == Problem.classification
+            else sklearn.feature_selection.mutual_info_regression
+        )
+
+        selector = sklearn.feature_selection.SelectKBest(scorer, k=self.n)
+        selector.fit(numpy.nan_to_num(X), numpy.nan_to_num(y))
+        return selector.get_support()
