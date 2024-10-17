@@ -4,7 +4,7 @@ import attrs
 import boruta
 import numpy
 
-from autofeat.model import PredictionModel
+from autofeat.predictor.base import Predictor
 from autofeat.selector.base import Selector
 
 
@@ -15,7 +15,7 @@ class Boruta(Selector):
     :param predictor: Prediction model.
     """
 
-    predictor: PredictionModel
+    predictor: Predictor
 
     def select(
         self,

@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import enum
 import functools
-from typing import TYPE_CHECKING, Any, Final, Protocol
+from typing import TYPE_CHECKING
 
 import attrs
-import catboost
-import lightgbm
 import loguru
 import polars
 import shap
@@ -17,151 +14,19 @@ import sklearn.metrics
 import sklearn.model_selection
 import sklearn.pipeline
 import sklearn.preprocessing
-import xgboost
 
 from autofeat.convert import into_data_frame
+from autofeat.problem import Problem
 from autofeat.selector import Correlation, FeatureImportance, Selector, ShapelyImpact
 from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     import numpy
 
     from autofeat.convert import IntoDataFrame
     from autofeat.dataset import Dataset
+    from autofeat.predictor import PredictionMethod, Predictor
     from autofeat.table import Column, Table
-
-
-class PredictionModel(Protocol):
-    """Any sklearn predictor."""
-
-    def fit(
-        self,
-        X: numpy.ndarray,
-        y: numpy.ndarray,
-        /,
-    ) -> Any:
-        ...
-
-    def predict(
-        self,
-        X: numpy.ndarray,
-        /,
-    ) -> numpy.ndarray:
-        ...
-
-
-@enum.unique
-class PredictionProblem(enum.Enum):
-    """A kind of prediction problem."""
-
-    classification = enum.auto()
-    regression = enum.auto()
-
-    def __str__(
-        self,
-    ) -> str:
-        return self.name
-
-    @functools.cached_property
-    def baseline_method(
-        self,
-    ) -> PredictionMethod:
-        """Get the baseline method for this kind of problem.
-
-        :return: Baseline method.
-        """
-        match self:
-            case PredictionProblem.classification:
-                return PREDICTION_METHODS["most_frequent_category"]
-            case PredictionProblem.regression:
-                return PREDICTION_METHODS["mean"]
-            case _:
-                raise NotImplementedError(f"{self} is not supported")
-
-
-@attrs.define(frozen=True, kw_only=True, slots=True)
-class PredictionMethod:
-    """A method of solving prediction problems.
-
-    :param model: Model constructor.
-    :param name: Name of the method.
-    :param problem: Types of problems that this method can solve.
-    """
-
-    model: Callable[[], PredictionModel]
-    name: str
-    problem: PredictionProblem
-
-    def __str__(
-        self,
-    ) -> str:
-        return self.name
-
-
-PREDICTION_METHODS: Final[dict[str, PredictionMethod]] = {
-    "xgboost_classifier": PredictionMethod(
-        model=lambda: xgboost.XGBClassifier(device="cuda"),
-        name="XGBoost",
-        problem=PredictionProblem.classification,
-    ),
-    "xgboost_regressor": PredictionMethod(
-        model=lambda: xgboost.XGBRegressor(device="cuda"),
-        name="XGBoost",
-        problem=PredictionProblem.regression,
-    ),
-    "catboost_classifier": PredictionMethod(
-        model=catboost.CatBoostClassifier,
-        name="CatBoost",
-        problem=PredictionProblem.classification,
-    ),
-    "catboost_regressor": PredictionMethod(
-        model=catboost.CatBoostRegressor,
-        name="CatBoost",
-        problem=PredictionProblem.regression,
-    ),
-    "lightgbm_classifier": PredictionMethod(
-        model=lightgbm.LGBMClassifier,  # pyright: ignore[reportArgumentType]
-        name="LightGBM",
-        problem=PredictionProblem.classification,
-    ),
-    "lightgbm_regressor": PredictionMethod(
-        model=lightgbm.LGBMRegressor,  # pyright: ignore[reportArgumentType]
-        name="LightGBM",
-        problem=PredictionProblem.regression,
-    ),
-    "linear_regression": PredictionMethod(
-        model=sklearn.linear_model.LinearRegression,
-        name="Linear Regression",
-        problem=PredictionProblem.regression,
-    ),
-    "mean": PredictionMethod(
-        model=lambda: sklearn.dummy.DummyRegressor(strategy="mean"),  # pyright: ignore[reportArgumentType]
-        name="Mean",
-        problem=PredictionProblem.regression,
-    ),
-    "most_frequent_category": PredictionMethod(
-        model=lambda: sklearn.dummy.DummyClassifier(strategy="most_frequent"),
-        name="Most Frequent Category",
-        problem=PredictionProblem.classification,
-    ),
-    "random_forest_classifier": PredictionMethod(
-        model=sklearn.ensemble.RandomForestClassifier,
-        name="Random Forest",
-        problem=PredictionProblem.classification,
-    ),
-    "random_forest_regressor": PredictionMethod(
-        model=sklearn.ensemble.RandomForestRegressor,
-        name="Random Forest",
-        problem=PredictionProblem.regression,
-    ),
-    "random_category": PredictionMethod(
-        model=lambda: sklearn.dummy.DummyClassifier(strategy="uniform"),
-        name="Random Category",
-        problem=PredictionProblem.classification,
-    ),
-}
 
 
 @attrs.define(frozen=True, kw_only=True, slots=True)
@@ -188,7 +53,7 @@ class Prediction:
         :return: SHAP explanation.
         """
         explainer = shap.Explainer(
-            self.model.prediction_model,
+            self.model.predictor,
             feature_names=self.X.columns,
         )
 
@@ -199,7 +64,6 @@ class Prediction:
 class Model:  # type: ignore[no-any-unimported]
     """A prediction model trained on select features in a ``dataset``.
 
-    :param baseline_model: Model used to benchmark the performance of this model.
     :param dataset: Dataset from which features are extracted.
     :param known: Data that was known at the time of feature extraction.
     :param prediction_method: Method of prediction.
@@ -218,11 +82,10 @@ class Model:  # type: ignore[no-any-unimported]
     :param y: Target variable.
     """
 
-    baseline_model: PredictionModel
     dataset: Dataset
     known: polars.DataFrame
-    prediction_method: PredictionMethod
-    prediction_model: PredictionModel
+    predictor: Predictor
+    problem: Problem
     X_test: numpy.ndarray
     X_train: numpy.ndarray
     X_transformer: sklearn.pipeline.Pipeline  # type: ignore[no-any-unimported]
@@ -243,7 +106,7 @@ class Model:  # type: ignore[no-any-unimported]
         :return: SHAP explanation.
         """
         explainer = shap.Explainer(
-            self.prediction_model,
+            self.predictor,
             feature_names=self.X.columns,
         )
 
@@ -266,7 +129,7 @@ class Model:  # type: ignore[no-any-unimported]
         y = polars.Series(
             name=self.y.name,
             values=self.y_transformer.inverse_transform(  # pyright: ignore[reportArgumentType]
-                self.prediction_model.predict(
+                self.predictor.predict(
                     self.X_transformer.transform(
                         X.to_numpy(),
                     ),
@@ -287,8 +150,9 @@ class Model:  # type: ignore[no-any-unimported]
         *,
         known_columns: tuple[Column, ...],
         prediction_method: PredictionMethod,
-        training_data: Table,
+        problem: Problem,
         target_column: Column,
+        training_data: Table,
     ) -> Model:
         """Train a model that predicts the ``target_column`` given the ``known_columns``.
 
@@ -327,8 +191,8 @@ class Model:  # type: ignore[no-any-unimported]
             ),
         )
 
-        # repeatedly transform the dataset and train a prediction model on the top n features
-        prediction_model = prediction_method.model()
+        # repeatedly transform the dataset and train a predictor on the top n features
+        predictor = prediction_method.create(problem)
 
         iterations: list[tuple[list[Transform], list[Selector]]] = [
             (
@@ -336,9 +200,9 @@ class Model:  # type: ignore[no-any-unimported]
                     Aggregate(is_pivotable=known_columns, max_pivots=1),
                 ],
                 [
-                    FeatureImportance(predictor=prediction_model, n=200),
+                    FeatureImportance(predictor=predictor, n=200),
                     Correlation(max=0.7),
-                    ShapelyImpact(predictor=prediction_model, n=75),
+                    ShapelyImpact(predictor=predictor, n=75),
                 ],
             ),
             (
@@ -347,7 +211,7 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
                 [
                     Correlation(max=0.5),
-                    ShapelyImpact(predictor=prediction_model, n=50),
+                    ShapelyImpact(predictor=predictor, n=50),
                 ],
             ),
         ]
@@ -363,8 +227,8 @@ class Model:  # type: ignore[no-any-unimported]
             model = Model._train_once(
                 dataset=dataset,
                 known=known,
-                prediction_method=prediction_method,
-                prediction_model=prediction_model,
+                predictor=predictor,
+                problem=problem,
                 selectors=selectors,
                 target=target,
             )
@@ -381,8 +245,8 @@ class Model:  # type: ignore[no-any-unimported]
         *,
         dataset: Dataset,
         known: polars.DataFrame,
-        prediction_method: PredictionMethod,
-        prediction_model: PredictionModel,
+        predictor: Predictor,
+        problem: Problem,
         selectors: list[Selector],
         target: polars.Series,
     ) -> Model:
@@ -405,7 +269,7 @@ class Model:  # type: ignore[no-any-unimported]
 
         y_transformer = (
             sklearn.preprocessing.LabelEncoder()
-            if prediction_method.problem == PredictionProblem.classification
+            if problem == Problem.classification
             else sklearn.preprocessing.FunctionTransformer()
         )
 
@@ -446,17 +310,17 @@ class Model:  # type: ignore[no-any-unimported]
         # train the prediction model on the selected features
         loguru.logger.info("fitting prediction model")
 
-        prediction_model.fit(X_train, y_train)
+        predictor.fit(X_train, y_train)
 
         # evaluate the prediction model on the test data
         loguru.logger.info("evaluating prediction model")
 
-        y_predicted = prediction_model.predict(X_test)
+        y_predicted = predictor.predict(X_test)
 
         # train the baseline model on the selected features
         loguru.logger.info("fitting baseline model")
 
-        baseline_model = prediction_method.problem.baseline_method.model()
+        baseline_model = problem.baseline_method.model()
         baseline_model.fit(X_train, y_train)
 
         # evaluate the baseline model on the test data
@@ -469,8 +333,8 @@ class Model:  # type: ignore[no-any-unimported]
             baseline_model=baseline_model,
             dataset=dataset,
             known=known,
-            prediction_method=prediction_method,
-            prediction_model=prediction_model,
+            problem=problem,
+            predictor=predictor,
             X_test=X_transformer.inverse_transform(X_test),
             X_train=X_transformer.inverse_transform(X_train),
             X_transformer=X_transformer,

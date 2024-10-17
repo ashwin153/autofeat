@@ -4,7 +4,7 @@ import attrs
 import numpy
 import sklearn.feature_selection
 
-from autofeat.model import PredictionModel
+from autofeat.predictor.base import Predictor
 from autofeat.selector.base import Selector
 
 
@@ -17,7 +17,7 @@ class FeatureImportance(Selector):
     """
 
     n: int
-    predictor: PredictionModel
+    predictor: Predictor
 
     def select(
         self,

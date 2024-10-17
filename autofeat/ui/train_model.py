@@ -6,8 +6,8 @@ from autofeat.model import (
     PREDICTION_METHODS,
     Model,
     PredictionMethod,
-    PredictionProblem,
 )
+from autofeat.problem import Problem
 from autofeat.table import Column, Table
 from autofeat.ui.show_log import show_log
 
@@ -55,9 +55,9 @@ def train_model(
         return None
 
     default_problem = (
-        PredictionProblem.classification
+        Problem.classification
         if Attribute.categorical in target_column.attributes
-        else PredictionProblem.regression
+        else Problem.regression
     )
 
     problem = streamlit.selectbox(
@@ -66,7 +66,7 @@ def train_model(
         key="problem",
         label="Problem",
         on_change=lambda: _clear_state("prediction_method"),
-        options=list(PredictionProblem),
+        options=list(Problem),
     )
 
     with streamlit.expander("Configure Methodology"):

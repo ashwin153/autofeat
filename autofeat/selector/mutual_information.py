@@ -4,7 +4,7 @@ import attrs
 import numpy
 import sklearn.feature_selection
 
-from autofeat.model import PredictionProblem
+from autofeat.problem import Problem
 from autofeat.selector.base import Selector
 
 
@@ -17,7 +17,7 @@ class MutualInformation(Selector):
     """
 
     n: int
-    problem: PredictionProblem
+    problem: Problem
 
     def select(
         self,
@@ -29,7 +29,7 @@ class MutualInformation(Selector):
 
         scorer = (
             sklearn.feature_selection.mutual_info_classif
-            if self.problem == PredictionProblem.classification
+            if self.problem == Problem.classification
             else sklearn.feature_selection.mutual_info_regression
         )
 

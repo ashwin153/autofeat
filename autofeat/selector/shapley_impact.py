@@ -2,7 +2,7 @@ import attrs
 import numpy
 import shap
 
-from autofeat.model import PredictionModel
+from autofeat.predictor.base import Predictor
 from autofeat.selector.base import Selector
 
 
@@ -15,7 +15,7 @@ class ShapelyImpact(Selector):
     """
 
     n: int
-    predictor: PredictionModel
+    predictor: Predictor
 
     def select(
         self,

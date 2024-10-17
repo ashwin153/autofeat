@@ -7,7 +7,8 @@ import plotly.graph_objects
 import plotly.subplots
 import streamlit
 
-from autofeat.model import Model, PredictionProblem
+from autofeat.model import Model
+from autofeat.problem import Problem
 from autofeat.transform.extract import Extract
 from autofeat.ui.edit_settings import Settings
 
@@ -120,12 +121,12 @@ def _charts(  # type: ignore[no-any-unimported]
     }
 
     match model.prediction_method.problem:
-        case PredictionProblem.classification:
+        case Problem.classification:
             if model.X.schema[feature].is_numeric():
                 return [_histogram(df), _box_plot(df_flip)]
             else:
                 return [_stacked_bar_chart(df), _stacked_bar_chart(df_flip), _pie_chart(df)]
-        case PredictionProblem.regression:
+        case Problem.regression:
             if model.X.schema[feature].is_numeric():
                 return [_scatter_plot(df)]
             else:

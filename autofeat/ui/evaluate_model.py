@@ -5,7 +5,8 @@ import polars
 import sklearn.metrics
 import streamlit
 
-from autofeat.model import Model, PredictionProblem
+from autofeat.model import Model
+from autofeat.problem import Problem
 
 
 def evaluate_model(
@@ -57,13 +58,13 @@ def _caption(
     model: Model,
 ) -> str:
     match model.prediction_method.problem:
-        case PredictionProblem.classification:
+        case Problem.classification:
             return (
                 "Classification models are benchmarked against a baseline model that always "
                 "guesses the most frequently occurring, and improvement is measured in F1 scores. "
                 "F1 is a measure of the accuracy of a model's predictions. Higher F1 is better."
             )
-        case PredictionProblem.regression:
+        case Problem.regression:
             return (
                 "Regression models are benchmarked against a baseline model that always guesses "
                 "the mean, and improvement is measured in root mean squared error (RMSE). RMSE "
@@ -76,9 +77,9 @@ def _primary_metric(
     model: Model,
 ) -> str:
     match model.prediction_method.problem:
-        case PredictionProblem.classification:
+        case Problem.classification:
             return "F1"
-        case PredictionProblem.regression:
+        case Problem.regression:
             return "RMSE"
         case _:
             raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
@@ -93,7 +94,7 @@ def _metrics(
     model: Model,
 ) -> polars.DataFrame:
     match model.prediction_method.problem:
-        case PredictionProblem.classification:
+        case Problem.classification:
             metrics = _classification_metrics(model.y_test, model.y_predicted)
             baseline = _classification_metrics(model.y_test, model.y_baseline)
 
@@ -123,7 +124,7 @@ def _metrics(
                     _percent_change(baseline["Recall"], metrics["Recall"]),
                 ],
             })
-        case PredictionProblem.regression:
+        case Problem.regression:
             metrics = _regression_metrics(model.y_test, model.y_predicted)
             baseline = _regression_metrics(model.y_test, model.y_baseline)
 
