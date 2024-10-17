@@ -15,8 +15,8 @@ class Baseline(PredictionMethod):
     ) -> Predictor:
         match problem:
             case Problem.classification:
-                return sklearn.dummy.DummyClassifier(strategy="most_frequent")
+                return sklearn.dummy.DummyClassifier(strategy="most_frequent")  # type: ignore[no-any-return]
             case Problem.regression:
-                return sklearn.dummy.DummyRegressor(strategy="mean")  # pyright: ignore[reportReturnType]
+                return sklearn.dummy.DummyRegressor(strategy="mean")  # type: ignore[no-any-return]
             case _:
                 assert_never(problem)

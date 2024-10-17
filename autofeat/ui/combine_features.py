@@ -118,7 +118,7 @@ def combine_features(
             group_percentage = group_size / total_size * 100
 
             y_true = model.y_test
-            match model.prediction_method.problem:
+            match model.problem:
                 case Problem.classification:
                     unique_classes = numpy.unique(y_true)
                     class_stats = []

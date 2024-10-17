@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import attrs
 import loguru
+import numpy
 import polars
 import shap
 import sklearn.dummy
@@ -16,12 +17,12 @@ import sklearn.pipeline
 import sklearn.preprocessing
 
 from autofeat.convert import into_data_frame
+from autofeat.predictor import Baseline
 from autofeat.problem import Problem
 from autofeat.selector import Correlation, FeatureImportance, Selector, ShapelyImpact
 from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
-    import numpy
 
     from autofeat.convert import IntoDataFrame
     from autofeat.dataset import Dataset
@@ -291,9 +292,18 @@ class Model:  # type: ignore[no-any-unimported]
             loguru.logger.info("applying feature selection")
 
             X_train = selector.transform(X_train)
+            assert isinstance(X_train, numpy.ndarray)
+
             X_test = selector.transform(X_test)
+            assert isinstance(X_test, numpy.ndarray)
+
             X_transformer.fit(X_train)
-            X = X.select(c for c, x in zip(X.columns, selector.get_support()) if x)
+
+            X = X.select(
+                column
+                for column, is_selected in zip(X.columns, selector.get_support())
+                if is_selected
+            )
 
             dataset = dataset.apply(
                 Keep(
@@ -311,26 +321,18 @@ class Model:  # type: ignore[no-any-unimported]
         loguru.logger.info("fitting prediction model")
 
         predictor.fit(X_train, y_train)
-
-        # evaluate the prediction model on the test data
-        loguru.logger.info("evaluating prediction model")
-
         y_predicted = predictor.predict(X_test)
 
         # train the baseline model on the selected features
         loguru.logger.info("fitting baseline model")
 
-        baseline_model = problem.baseline_method.model()
-        baseline_model.fit(X_train, y_train)
-
-        # evaluate the baseline model on the test data
-        loguru.logger.info("evaluating baseline model")
-
-        y_baseline = baseline_model.predict(X_test)
+        baseline = Baseline()
+        baseline_predictor = baseline.create(problem)
+        baseline_predictor.fit(X_train, y_train)
+        y_baseline = baseline_predictor.predict(X_test)
 
         # collect all the intermediate outputs
         return Model(
-            baseline_model=baseline_model,
             dataset=dataset,
             known=known,
             problem=problem,

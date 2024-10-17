@@ -57,7 +57,7 @@ def _headline(
 def _caption(
     model: Model,
 ) -> str:
-    match model.prediction_method.problem:
+    match model.problem:
         case Problem.classification:
             return (
                 "Classification models are benchmarked against a baseline model that always "
@@ -76,13 +76,13 @@ def _caption(
 def _primary_metric(
     model: Model,
 ) -> str:
-    match model.prediction_method.problem:
+    match model.problem:
         case Problem.classification:
             return "F1"
         case Problem.regression:
             return "RMSE"
         case _:
-            raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+            raise NotImplementedError(f"{model.problem} is not supported")
 
 
 @streamlit.cache_data(
@@ -93,7 +93,7 @@ def _primary_metric(
 def _metrics(
     model: Model,
 ) -> polars.DataFrame:
-    match model.prediction_method.problem:
+    match model.problem:
         case Problem.classification:
             metrics = _classification_metrics(model.y_test, model.y_predicted)
             baseline = _classification_metrics(model.y_test, model.y_baseline)
@@ -147,7 +147,7 @@ def _metrics(
                 ],
             })
         case _:
-            raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+            raise NotImplementedError(f"{model.problem} is not supported")
 
 
 def _classification_metrics(

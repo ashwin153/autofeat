@@ -2,11 +2,8 @@ import streamlit
 
 from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
-from autofeat.model import (
-    PREDICTION_METHODS,
-    Model,
-    PredictionMethod,
-)
+from autofeat.model import Model
+from autofeat.predictor import PREDICTION_METHODS, PredictionMethod
 from autofeat.problem import Problem
 from autofeat.table import Column, Table
 from autofeat.ui.show_log import show_log
@@ -74,14 +71,15 @@ def train_model(
             help="Method of predicting the target variable given the input features",
             key="prediction_method",
             label="Prediction Method",
-            options=[method for method in PREDICTION_METHODS.values() if method.problem == problem],
+            options=PREDICTION_METHODS,
         )
 
     with show_log("Training Model"):
         return _train_model(
             dataset=dataset,
             known_columns=tuple(known_columns),
-            prediction_method=prediction_method,
+            prediction_method=PREDICTION_METHODS[prediction_method],
+            problem=problem,
             training_data=training_data,
             target_column=target_column,
         )
@@ -90,7 +88,6 @@ def train_model(
 @streamlit.cache_resource(
     hash_funcs={
         Dataset: id,
-        PredictionMethod: lambda x: x.name,
         Table: lambda x: x.name,
         Column: lambda x: x.name,
     },
@@ -102,15 +99,17 @@ def _train_model(
     dataset: Dataset,
     known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
-    training_data: Table,
+    problem: Problem,
     target_column: Column,
+    training_data: Table,
 ) -> Model:
     return Model.train(
         dataset=dataset,
         known_columns=known_columns,
         prediction_method=prediction_method,
-        training_data=training_data,
+        problem=problem,
         target_column=target_column,
+        training_data=training_data,
     )
 
 

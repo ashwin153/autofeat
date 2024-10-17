@@ -1,6 +1,5 @@
 import abc
 from collections.abc import Collection
-from typing import Any
 
 import numpy
 import sklearn.base
@@ -37,7 +36,7 @@ class Selector(
         X: numpy.ndarray,
         y: numpy.ndarray,
         /,
-    ) -> Any:
+    ) -> None:
         self._support_mask = numpy.array(self.select(X, y), dtype=bool)
 
     def _get_support_mask(

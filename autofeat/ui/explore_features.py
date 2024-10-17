@@ -120,7 +120,7 @@ def _charts(  # type: ignore[no-any-unimported]
         "y_label": df.attrs["x_label"],
     }
 
-    match model.prediction_method.problem:
+    match model.problem:
         case Problem.classification:
             if model.X.schema[feature].is_numeric():
                 return [_histogram(df), _box_plot(df_flip)]
@@ -132,7 +132,7 @@ def _charts(  # type: ignore[no-any-unimported]
             else:
                 return [_box_plot(df)]
         case _:
-            raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+            raise NotImplementedError(f"{model.problem} is not supported")
 
 
 def _box_plot(  # type: ignore[no-any-unimported]

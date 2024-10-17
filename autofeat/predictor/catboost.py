@@ -15,8 +15,8 @@ class CatBoost(PredictionMethod):
     ) -> Predictor:
         match problem:
             case Problem.classification:
-                return catboost.CatBoostClassifier()
+                return catboost.CatBoostClassifier()  # type: ignore[no-any-return]
             case Problem.regression:
-                return catboost.CatBoostRegressor()
+                return catboost.CatBoostRegressor()  # type: ignore[no-any-return]
             case _:
                 assert_never(problem)
