@@ -1,7 +1,7 @@
+import dataclasses
 from collections.abc import Iterable
 from typing import ClassVar
 
-import attrs
 import polars
 
 from autofeat.attribute import Attribute
@@ -10,7 +10,7 @@ from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Extract(Transform):
     """Extract features that are relevant to the ``known`` data.
 

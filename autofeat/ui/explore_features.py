@@ -7,7 +7,8 @@ import plotly.graph_objects
 import plotly.subplots
 import streamlit
 
-from autofeat.model import Model, PredictionProblem
+from autofeat.model import Model
+from autofeat.problem import Problem
 from autofeat.transform.extract import Extract
 from autofeat.ui.edit_settings import Settings
 
@@ -119,19 +120,19 @@ def _charts(  # type: ignore[no-any-unimported]
         "y_label": df.attrs["x_label"],
     }
 
-    match model.prediction_method.problem:
-        case PredictionProblem.classification:
+    match model.problem:
+        case Problem.classification:
             if model.X.schema[feature].is_numeric():
                 return [_histogram(df), _box_plot(df_flip)]
             else:
                 return [_stacked_bar_chart(df), _stacked_bar_chart(df_flip), _pie_chart(df)]
-        case PredictionProblem.regression:
+        case Problem.regression:
             if model.X.schema[feature].is_numeric():
                 return [_scatter_plot(df)]
             else:
                 return [_box_plot(df)]
         case _:
-            raise NotImplementedError(f"{model.prediction_method.problem} is not supported")
+            raise NotImplementedError(f"{model.problem} is not supported")
 
 
 def _box_plot(  # type: ignore[no-any-unimported]

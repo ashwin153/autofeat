@@ -1,6 +1,6 @@
+import dataclasses
 from collections.abc import Iterable
 
-import attrs
 import polars
 
 from autofeat.attribute import Attribute
@@ -12,7 +12,7 @@ from autofeat.transform.base import Transform
 SAMPLE_SIZE = 10
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Cast(Transform):
     """Cast columns to more appropriate types.
 

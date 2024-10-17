@@ -3,7 +3,8 @@ import pandas
 import plotly.graph_objects as go
 import streamlit
 
-from autofeat.model import Model, PredictionProblem
+from autofeat.model import Model
+from autofeat.problem import Problem
 
 
 def combine_features(
@@ -117,8 +118,8 @@ def combine_features(
             group_percentage = group_size / total_size * 100
 
             y_true = model.y_test
-            match model.prediction_method.problem:
-                case PredictionProblem.classification:
+            match model.problem:
+                case Problem.classification:
                     unique_classes = numpy.unique(y_true)
                     class_stats = []
 
@@ -175,7 +176,7 @@ def combine_features(
                     streamlit.dataframe(df, hide_index=True, use_container_width=True)
                     streamlit.write(f"Selected group size: {group_size} ({group_percentage:.2f}% of total)")  #noqa
 
-                case PredictionProblem.regression:
+                case Problem.regression:
                     # 1. Create a box plot for the selected group vs. the rest
                     selected_y_values = y_true[mask]
                     rest_y_values = y_true[~mask]

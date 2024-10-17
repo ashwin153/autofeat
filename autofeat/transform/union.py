@@ -1,14 +1,14 @@
 import collections
+import dataclasses
 from collections.abc import Iterable
 
-import attrs
 import polars
 
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
 
-@attrs.define(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Union(Transform):
     """Vertically stack tables that have the same columns."""
 
