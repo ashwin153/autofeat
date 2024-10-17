@@ -11,7 +11,7 @@ def edit_dataset(
     with streamlit.expander("Edit Dataset"):
         edited_schemas: list[list[dict[str, Any]]] = []
 
-        for tab, table, schemas in zip(
+        for tab, table, schema in zip(
             streamlit.tabs([table.name for table in dataset.tables]),
             dataset.tables,
             _load_schemas(dataset),
@@ -20,7 +20,13 @@ def edit_dataset(
                 if streamlit.toggle("Redacted", key=table.name):
                     edited_schemas.append([])
                 else:
-                    edited_schemas.append(streamlit.data_editor(schemas, hide_index=True))
+                    edited_schema = streamlit.data_editor(
+                        schema,
+                        hide_index=True,
+                        disabled=["column"],
+                    )
+
+                    edited_schemas.append(edited_schema)
 
         return _edit_schemas(dataset, edited_schemas)
 
