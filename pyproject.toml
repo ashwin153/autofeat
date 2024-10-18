@@ -12,7 +12,7 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
 module = [
-  "boruta.*",
+  "BorutaShap.*",
   "catboost.*",
   "plotly.*",
   "pygwalker.*",
