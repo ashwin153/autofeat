@@ -49,7 +49,7 @@ def load_dataset(
             if not csv_files:
                 return None
 
-            return _clean_dataset(source.from_csv, tuple(file.name for file in csv_files))
+            return _clean_dataset(source.from_csv, tuple(csv_files))
         case "Example":
             return _clean_dataset(source.from_example)
         case "Kaggle":
