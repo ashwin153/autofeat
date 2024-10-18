@@ -1,6 +1,7 @@
 import os
 import pathlib
 from collections.abc import Iterable
+from typing import IO
 
 import polars
 
@@ -10,7 +11,7 @@ from autofeat.table import Table
 
 
 def from_csv(
-    files: Iterable[str | pathlib.Path],
+    files: Iterable[str | pathlib.Path | IO[str] | IO[bytes]],
     *,
     ignore_errors: bool = False,
     null_values: list[str] | None = None,
