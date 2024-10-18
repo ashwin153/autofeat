@@ -19,8 +19,13 @@ import sklearn.preprocessing
 from autofeat.convert import into_data_frame
 from autofeat.predictor import Baseline
 from autofeat.problem import Problem
-from autofeat.selector import Correlation, FeatureImportance, Selector, ShapelyImpact
-from autofeat.transform import Aggregate, Drop, Extract, Filter, Identity, Keep, Transform
+from autofeat.selector import (
+    Correlation,
+    FeatureImportance,
+    Selector,
+    ShapelyImpact,
+)
+from autofeat.transform import Aggregate, Combine, Drop, Extract, Filter, Identity, Keep, Transform
 
 if TYPE_CHECKING:
     from autofeat.convert import IntoDataFrame
@@ -201,8 +206,8 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
                 [
                     FeatureImportance(predictor=predictor, n=200),
-                    Correlation(max=0.7),
-                    ShapelyImpact(predictor=predictor, n=75),
+                    Correlation(max=0.8),
+                    ShapelyImpact(predictor=predictor, n=100),
                 ],
             ),
             (
@@ -210,8 +215,18 @@ class Model:  # type: ignore[no-any-unimported]
                     Filter().then(Aggregate(is_pivotable=known_columns, max_pivots=1)),
                 ],
                 [
-                    Correlation(max=0.5),
-                    ShapelyImpact(predictor=predictor, n=50),
+                    FeatureImportance(predictor=predictor, n=150),
+                    Correlation(max=0.7),
+                    ShapelyImpact(predictor=predictor, n=100),
+                ],
+            ),
+            (
+                [
+                    Combine(),
+                ],
+                [
+                    FeatureImportance(predictor=predictor, n=100),
+                    ShapelyImpact(predictor=predictor, n=35),
                 ],
             ),
         ]
@@ -263,7 +278,7 @@ class Model:  # type: ignore[no-any-unimported]
 
         X_transformer = sklearn.pipeline.Pipeline([
             # TODO: create a custom scaler that only applies to numeric columns
-            # ("scale", sklearn.preprocessing.RobustScaler()),
+            # ("scale", sklearn.preprocessing.StandardScalar()),
             ("identity", sklearn.preprocessing.FunctionTransformer()),
         ])
 
