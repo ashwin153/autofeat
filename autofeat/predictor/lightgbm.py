@@ -17,8 +17,8 @@ class LightGBM(PredictionMethod):
     ) -> Predictor:
         match problem:
             case Problem.classification:
-                return lightgbm.LGBMClassifier()  # pyright: ignore[reportReturnType]
+                return lightgbm.LGBMClassifier(device="cpu")  # pyright: ignore[reportReturnType]
             case Problem.regression:
-                return lightgbm.LGBMRegressor()  # pyright: ignore[reportReturnType]
+                return lightgbm.LGBMRegressor(device="cpu")  # pyright: ignore[reportReturnType]
             case _:
                 assert_never(problem)

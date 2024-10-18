@@ -41,6 +41,15 @@ class Impute(Transform):
                 derived_from=[(column, table)],
             )
 
-            return result, column.expr.fill_null(0).fill_nan(0)
+            return result, column.expr.fill_null(value=0)
+
+        if Attribute.boolean in column.attributes:
+            result = Column(
+                name=column.name,
+                attributes=column.attributes | {Attribute.not_null},
+                derived_from=[(column, table)],
+            )
+
+            return result, column.expr.fill_null(value=False)
 
         return column, column.expr
