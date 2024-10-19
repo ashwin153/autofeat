@@ -3,7 +3,6 @@ import pandas
 import streamlit
 
 from autofeat.model import Model
-from autofeat.problem import Problem
 
 
 @streamlit.fragment
@@ -40,9 +39,8 @@ def explore_predictions(
     with col2:
         selected_rows = event.get("selection", {}).get("rows", [])
         if selected_rows:
-            selected_row_index = selected_rows[0]
-            print(f"{results.iloc[selected_row_index]['LotArea :: train.csv']} prediction for the Lot Area of the selected row")
-            shap_df = _grid(model, selected_row_index, shap_values, predictions, results)
+            selected_row = selected_rows[0]
+            shap_df = _grid(model, selected_row, shap_values, predictions, results.drop(columns=[prediction_column]))
 
             streamlit.dataframe(
                 shap_df,
@@ -79,85 +77,27 @@ def _grid(
     # Get the SHAP values for the specific row
     row_shap_values = shap_values[row_index]
     # For multi-output models, we need to select the predicted class
-    predicted_value = 0
     if row_shap_values.ndim == 2:
         predicted_class_index = predictions[row_index].argmax()
         shap_values_selected = row_shap_values[predicted_class_index, :]
-        predicted_value = predicted_class_index
     else:
         shap_values_selected = row_shap_values
-        predicted_value = predictions[row_index]
 
-      # Normalize the SHAP values
+    # Normalize the SHAP values
     importance = numpy.abs(shap_values_selected)
     importance = importance / numpy.max(importance)
 
+    print(features)
     # Create a DataFrame with feature names and their SHAP values
     df = pandas.DataFrame({
-        "Predictor": model.X.columns,
+        "Predictor": [c.split(" :: ", 1)[0] for c in features.columns],
         "Importance": importance,
-        "Source": [c.split(" :: ", 1)[1] if " :: " in c else "" for c in model.X.columns],
+        "Source": [c.split(" :: ", 1)[1] if " :: " in c else "" for c in features.columns],
+        "Feature Value": features.iloc[row_index].values,
     })
-
-    # Analyze numerical features
-    for feature in df["Predictor"]:
-        if model.X.schema[feature].is_numeric():
-            print(f"feature value: {features[feature].iloc[row_index]}")
-            best_change, best_bounds = max([bucket_stats(feature, n, model, row_index, predicted_value, features) for n in [4]], key=lambda x: abs(x[0]))
-            df.loc[df["Predictor"] == feature, "Bucket Change"] = best_change
-            df.loc[df["Predictor"] == feature, "Bucket Bounds"] = str(best_bounds)
 
     # Sort by importance
     df = df.sort_values("Importance", ascending=False)
 
     return df
 
-
-def bucket_stats(feature, n_splits, model, row_index, predicted_value, features):
-    # Extract the feature column from the features DataFrame
-    feature_values = pandas.to_numeric(features[feature], errors='coerce').to_numpy()
-    y_values = model.y.to_numpy()
-
-    # Remove NaN values
-    mask = ~numpy.isnan(feature_values)
-    feature_values = feature_values[mask]
-    y_values = y_values[mask]
-
-    if len(feature_values) == 0:
-        print(f"No valid numeric values for feature {feature}")
-        return 0, (None, None)
-
-    # Get the original feature value for the specific row
-    original_feature_value = pandas.to_numeric(features[feature].iloc[row_index], errors='coerce')
-
-    splits = numpy.percentile(feature_values, numpy.linspace(0, 100, n_splits+1))
-
-    # Use the original feature value to determine the bucket
-    bucket = numpy.digitize([original_feature_value], splits) - 1
-    if bucket == n_splits:
-        bucket = n_splits - 1
-
-    bucket_mask = (feature_values > splits[bucket]) & (feature_values <= splits[bucket+1])
-
-    if model.problem == Problem.regression:
-        overall_stat = numpy.nanmean(y_values)
-        bucket_stat = numpy.nanmean(y_values[bucket_mask])
-    else:  # Classification (binary or multiclass)
-        overall_stat = numpy.nanmean(y_values == predicted_value)
-        bucket_stat = numpy.nanmean(y_values[bucket_mask] == predicted_value)
-
-    change = (bucket_stat - overall_stat) / overall_stat * 100 if overall_stat != 0 else 0
-
-    # Debug information
-    print(f"Feature: {feature}")
-    print(f"Feature value: {original_feature_value}")
-    print(f"Bucket: {bucket}")
-    print(f"Bucket bounds: ({splits[bucket]}, {splits[bucket+1]})")
-    print(f"Number of values in bucket: {numpy.sum(bucket_mask)}")
-    print(f"Overall stat: {overall_stat}")
-    print(f"Bucket stat: {bucket_stat}")
-    print(f"Change: {change}")
-    print("Splits:", splits)
-    print("---")
-
-    return change, (splits[bucket], splits[bucket+1])
