@@ -25,18 +25,29 @@ _SOURCE_TYPES = [
 
 
 def load_dataset(
-
+    key: str 
 ) -> Dataset | None:
     """Load a dataset from a configurable source.
 
     :return: Loaded dataset.
     """
-    source_type = streamlit.selectbox(
-        help="Location where your data is stored",
-        label="Source Type",
-        options=_SOURCE_TYPES,
-        index=_SOURCE_TYPES.index("Kaggle"),
-    )
+    match key:
+        case "predict_data":
+            source_type = streamlit.selectbox(
+                help="Location of the data you want to predict",
+                label="Source Type",
+                options=_SOURCE_TYPES,
+                index=_SOURCE_TYPES.index("CSV"),
+                key=key + "selector",
+            )
+        case _: 
+            source_type = streamlit.selectbox(
+                help="Location where your data is stored",
+                label="Source Type",
+                options=_SOURCE_TYPES,
+                index=_SOURCE_TYPES.index("Kaggle"),
+                key=key + "selector",
+            )
 
     match source_type:
         case "CSV":
@@ -44,12 +55,13 @@ def load_dataset(
                 accept_multiple_files=True,
                 label="Upload Files",
                 type="csv",
+                key=key+"csv_input",
             )
 
             if not csv_files:
                 return None
 
-            return _clean_dataset(source.from_csv, tuple(csv_files))
+            return _clean_dataset(source.from_csv, tuple(csv_files), ignore_errors=True, null_values=["NA"])
         case "Example":
             return _clean_dataset(source.from_example)
         case "Kaggle":
@@ -57,6 +69,7 @@ def load_dataset(
                 help="Name of the Kaggle dataset or competition to load data from",
                 label="Dataset / Competition / URL",
                 placeholder="house-prices-advanced-regression-techniques",
+                key=key + "kaggle_input",
             )
 
             if not kaggle_name:

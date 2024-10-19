@@ -10,7 +10,6 @@ from autofeat.ui.explore_features import explore_features
 from autofeat.ui.explore_predictions import explore_predictions
 from autofeat.ui.load_dataset import load_dataset
 from autofeat.ui.train_model import train_model
-from autofeat.ui.upload_new_predictions import upload_new_predictions
 
 streamlit.set_page_config(
     initial_sidebar_state="collapsed",
@@ -21,7 +20,7 @@ streamlit.set_page_config(
 settings = edit_settings()
 
 streamlit.header("Setup Dataset")
-if dataset := load_dataset():
+if dataset := load_dataset(key="initial_data"):
     dataset = edit_dataset(dataset)
     explore_dataset(dataset, settings)
 
@@ -31,7 +30,7 @@ if dataset := load_dataset():
         evaluate_model(model)
         explore_features(model, settings)
         combine_features(model)
-        if new_data := upload_new_predictions():
+        if new_data := load_dataset(key="predict_data"):
             importance = numpy.abs(model.explanation.values)
             predictions = model.y_predicted
             features = model.X_test
