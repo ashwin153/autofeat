@@ -1,4 +1,3 @@
-import numpy
 import streamlit
 
 from autofeat.ui.combine_features import combine_features
@@ -31,7 +30,6 @@ if dataset := load_dataset(key="initial_data"):
         explore_features(model, settings)
         combine_features(model)
         if new_data := load_dataset(key="predict_data"):
-            importance = numpy.abs(model.explanation.values)
-            predictions = model.y_predicted
-            features = model.X_test
-            explore_predictions(model, importance, predictions, features)
+            explore_predictions(model, new_data)
+
+
