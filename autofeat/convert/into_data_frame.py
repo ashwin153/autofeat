@@ -48,8 +48,9 @@ def into_data_frame(
         #     .concat([table.data for table in value.tables], how="horizontal")
         #     .collect(engine="gpu")
         # )
+        # TODO: put streaming back here
         return polars.concat(
-            polars.collect_all([table.data for table in value.tables], streaming=True),
+            polars.collect_all([table.data for table in value.tables]),
             how="horizontal",
         )
     else:
