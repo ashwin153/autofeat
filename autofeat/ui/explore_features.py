@@ -23,7 +23,7 @@ def explore_features(
     :param model: Model to explore.
     """
     df = _grid(model)
-
+    streamlit.subheader(f"Top Predictors of {model.y.name}")
     column1, column2 = streamlit.columns(2)
 
     with column1:
@@ -63,6 +63,8 @@ def explore_features(
                         figure,
                         use_container_width=True,
                     )
+        else:
+            streamlit.info(f"Select feature to explore relationship with {model.y.name}")
 
 
 @streamlit.cache_data(
