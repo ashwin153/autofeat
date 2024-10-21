@@ -9,8 +9,8 @@ import streamlit
 
 from autofeat.model import Model
 from autofeat.problem import Problem
+from autofeat.settings import Settings
 from autofeat.transform.extract import Extract
-from autofeat.ui.edit_settings import Settings
 
 
 @streamlit.fragment
@@ -23,6 +23,8 @@ def explore_features(
     :param model: Model to explore.
     """
     df = _grid(model)
+
+    streamlit.subheader(f"Top Predictors of {model.y.name}")
 
     column1, column2 = streamlit.columns(2)
 

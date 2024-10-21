@@ -2,7 +2,7 @@ import pygwalker.api.streamlit
 import streamlit
 
 from autofeat import Dataset, Table
-from autofeat.ui.edit_settings import Settings
+from autofeat.settings import Settings
 
 
 def explore_dataset(
