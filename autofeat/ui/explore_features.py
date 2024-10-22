@@ -65,6 +65,8 @@ def explore_features(
                         figure,
                         use_container_width=True,
                     )
+        else:
+            streamlit.info(f"Select feature to explore relationship with {model.y.name}")
 
 
 @streamlit.cache_data(
