@@ -33,6 +33,7 @@ class Settings:
     @enum.unique
     class PolarsEngine(enum.Enum):
         gpu = enum.auto()
+        in_memory = enum.auto()
         streaming = enum.auto()
 
         def __str__(

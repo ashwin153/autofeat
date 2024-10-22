@@ -56,6 +56,11 @@ def into_data_frame(
                     .concat(data, how="horizontal")
                     .collect(engine="gpu")
                 )
+            case SETTINGS.PolarsEngine.in_memory:
+                return polars.concat(
+                    polars.collect_all(data, streaming=False),
+                    how="horizontal",
+                )
             case SETTINGS.PolarsEngine.streaming:
                 return polars.concat(
                     polars.collect_all(data, streaming=True),
