@@ -25,7 +25,18 @@ from autofeat.selector import (
     Selector,
     ShapelyImpact,
 )
-from autofeat.transform import Aggregate, Combine, Drop, Extract, Filter, Identity, Keep, Transform
+from autofeat.transform import (
+    Aggregate,
+    Combine,
+    Drop,
+    Encode,
+    Extract,
+    Filter,
+    Identity,
+    Keep,
+    Transform,
+    Union,
+)
 
 if TYPE_CHECKING:
     from autofeat.convert import IntoDataFrame
@@ -230,6 +241,8 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
             ),
         ]
+
+        dataset = dataset.apply(Union().then(Encode()))
 
         i = 0
         while True:

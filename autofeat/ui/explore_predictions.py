@@ -1,139 +1,154 @@
-from typing import Optional
+from typing import Any
 
 import numpy
 import pandas
+import polars
 import streamlit
+import streamlit.elements.lib.column_types
 
-from autofeat.dataset import Dataset
-from autofeat.model import Model
-from autofeat.table import Table
+from autofeat.model import Model, Prediction
+from autofeat.transform import Extract
 
 
 @streamlit.fragment
 def explore_predictions(
     model: Model,
-    prediction_dataset: Dataset,
 ) -> None:
-    if known_column_table := _get_known_columns(prediction_dataset, model.known.columns):
-        # TODO: Right now there are no features for the new data I am giving the system
-        # in the trained model. we need to make sure those IDs somehow have feature values
-        prediction = model.predict(known_column_table)
-    else:
-        return
+    left, middle, right = streamlit.columns(3)
 
-    results = prediction.X.to_pandas()
+    with left:
+        known = _into_input_widgets(model.known)
 
-    prediction_column = f"{prediction.model.y.name} prediction"
-    results[prediction_column] = prediction.y.to_pandas()
+    with middle:
+        _into_input_widgets(_extract_features(model, known))
 
-    results = results.join(prediction.known.to_pandas())
+    with right:
+        # TODO: this should use `features` instead of `known`
+        prediction = _make_prediction(model, known)
 
-    # Move prediction column to the front
-    cols = [prediction_column] + [col for col in results.columns if col != prediction_column]
-    results = results[cols]
-
-    col1, col2 = streamlit.columns(2)
-
-    with col1:
-        event = streamlit.dataframe(
-            results,
-            hide_index=True,
-            use_container_width=True,
-            column_config={
-                "original_index": None,
-            },
-            on_select="rerun",
-            selection_mode="single-row",
+        streamlit.metric(
+            label=prediction.y.name,
+            value=prediction.y[0],
         )
 
-    with col2:
-        selected_rows = event.get("selection", {}).get("rows", [])
-        if selected_rows:
-            selected_row = selected_rows[0]
-            shap_df = _grid(
-                            selected_row,
-                            numpy.abs(prediction.explanation.values),
-                            prediction.y.to_numpy(),
-                            prediction.X.to_pandas(),
-                        )
-
-            streamlit.dataframe(
-                shap_df,
-                column_config={
-                    "Source": None,
-                    "Importance": streamlit.column_config.ProgressColumn(
-                        format="%.2f",
-                        max_value=1,
-                        min_value=0,
-                    ),
-                },
-                hide_index=True,
-                use_container_width=True,
-            )
-        else:
-            streamlit.write("Select a row from the predictions table to see SHAP values.")
+        streamlit.dataframe(
+            _explain_prediction(prediction),
+            hide_index=True,
+            column_config={
+                "Id": None,
+                "Importance": streamlit.column_config.ProgressColumn(
+                    format="%.2f",
+                    max_value=1,
+                    min_value=0,
+                ),
+            },
+        )
 
 
-# given a Model, a predicted row, and SHAP explanation.values,
-# return the SHAP explanation values for each prediciton.
-# For multi-class, only return the SHAP value for the predicted class by the model
-# Return it sorted by most important feature to least important.
 @streamlit.cache_data(
-    hash_funcs={Model: id},
-    max_entries=2,
+    hash_funcs={
+        Model: id,
+        polars.DataFrame: polars.DataFrame.to_pandas,
+    },
+    max_entries=1,
 )
-def _grid(
-    row_index: int,
-    shap_values: numpy.ndarray,
-    predictions: numpy.ndarray,
-    features: pandas.DataFrame,
-) -> pandas.DataFrame:
-    # Get the SHAP values for the specific row
-    row_shap_values = shap_values[row_index]
-    # For multi-output models, we need to select the predicted class
-    if row_shap_values.ndim == 2:
-        predicted_class_index = predictions[row_index].argmax()
-        shap_values_selected = row_shap_values[predicted_class_index, :]
-    else:
-        shap_values_selected = row_shap_values
+def _extract_features(
+    model: Model,
+    known: polars.DataFrame,
+) -> polars.DataFrame:
+    return model.dataset.features(known)
 
-    # Normalize the SHAP values
-    importance = numpy.abs(shap_values_selected)
+
+@streamlit.cache_resource(
+    hash_funcs={
+        Model: id,
+        polars.DataFrame: polars.DataFrame.to_pandas,
+    },
+    max_entries=1,
+)
+def _make_prediction(
+    model: Model,
+    known: polars.DataFrame,
+) -> Prediction:
+    return model.predict(known)
+
+
+@streamlit.cache_data(
+    hash_funcs={Prediction: id},
+    max_entries=1,
+)
+def _explain_prediction(
+    prediction: Prediction,
+) -> pandas.DataFrame:
+    importance = (
+        numpy.abs(prediction.explanation.values).mean((0, 2))
+        if len(prediction.explanation.shape) == 3
+        else numpy.abs(prediction.explanation.values).mean(0)
+    )
+
     importance = importance / numpy.max(importance)
 
-    print(features)
-    print(importance)
-    # Create a DataFrame with feature names and their SHAP values
+    feature_names = [
+        feature_name.split(Extract.SEPARATOR, 1)
+        for feature_name in prediction.explanation.feature_names
+    ]
+
     df = pandas.DataFrame({
-        "Predictor": [c.split(" :: ", 1)[0] for c in features.columns],
+        "Id": prediction.explanation.feature_names,
         "Importance": importance,
-        "Source": [c.split(" :: ", 1)[1] if " :: " in c else "" for c in features.columns],
-        "Feature Value": features.iloc[row_index].values,
+        "Feature": [column_name for column_name, _ in feature_names],
+        "Source": [table_name for _, table_name in feature_names],
     })
 
-    # Sort by importance
     df = df.sort_values("Importance", ascending=False)
 
     return df
 
 
-#Find the first set of known columns in a table in the data.
-# Currently assumes that one table is being inputted
-# TODO: Make work with known columns across tables, etc.
-def _get_known_columns(
-    prediction_dataset: Dataset,
-    known_column_names: list[str],
-) -> Optional[Table]:
-    for table in prediction_dataset.tables:
-        try:
-            # Attempt to get all known columns from the current table
-            found_columns = [table.column(name) for name in known_column_names]
-            return table.select(found_columns)
-        except Exception as e:
-            # If any column is not found, move to the next table
-            print(f"Not all columns found in table {table.name}. Error: {e}")
-            continue
-    # If we've checked all tables and haven't returned, no matching table was found
-    print("No table found with all known columns")
-    return None
+def _into_input_widgets(
+    df: polars.DataFrame,
+) -> polars.DataFrame:
+    return polars.DataFrame(
+        [
+            {
+                column: _into_input_widget(column, data_type, default)
+                # TODO: they should be sorted in order of importance
+                for (column, data_type), default in sorted(zip(df.schema.items(), df.row(0)))
+            },
+        ], schema=df.schema,
+    )
 
+
+def _into_input_widget(
+    column: str,
+    data_type: polars.DataType,
+    default: Any,
+) -> Any:
+    parts = column.split(Extract.SEPARATOR, 1)
+    label = parts[0]
+    help = parts[1] if len(parts) > 1 else None
+
+    if isinstance(data_type, polars.Boolean):
+        return streamlit.checkbox(
+            label=label,
+            help=help,
+            value=default,
+        )
+    elif data_type.is_temporal():
+        return streamlit.date_input(
+            label=label,
+            help=help,
+            value=default,
+        )
+    elif data_type.is_numeric():
+        return streamlit.number_input(
+            label=label,
+            help=help,
+            value=default,
+        )
+    else:
+        return streamlit.text_input(
+            label=label,
+            help=help,
+            value=default,
+        )

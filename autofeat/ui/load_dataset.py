@@ -5,7 +5,7 @@ import loguru
 import streamlit
 
 from autofeat import Dataset, source
-from autofeat.transform import Cast, Encode, Union
+from autofeat.transform import Cast, Union
 from autofeat.ui.show_log import show_log
 
 P = ParamSpec("P")
@@ -25,29 +25,18 @@ _SOURCE_TYPES = [
 
 
 def load_dataset(
-    key: str 
+
 ) -> Dataset | None:
     """Load a dataset from a configurable source.
 
     :return: Loaded dataset.
     """
-    match key:
-        case "predict_data":
-            source_type = streamlit.selectbox(
-                help="Location of the data you want to predict",
-                label="Source Type",
-                options=_SOURCE_TYPES,
-                index=_SOURCE_TYPES.index("CSV"),
-                key=key + "selector",
-            )
-        case _: 
-            source_type = streamlit.selectbox(
-                help="Location where your data is stored",
-                label="Source Type",
-                options=_SOURCE_TYPES,
-                index=_SOURCE_TYPES.index("Kaggle"),
-                key=key + "selector",
-            )
+    source_type = streamlit.selectbox(
+        help="Location where your data is stored",
+        label="Source Type",
+        options=_SOURCE_TYPES,
+        index=_SOURCE_TYPES.index("Kaggle"),
+    )
 
     match source_type:
         case "CSV":
@@ -55,13 +44,12 @@ def load_dataset(
                 accept_multiple_files=True,
                 label="Upload Files",
                 type="csv",
-                key=key+"csv_input",
             )
 
             if not csv_files:
                 return None
 
-            return _clean_dataset(source.from_csv, tuple(csv_files), ignore_errors=True, null_values=["NA"])
+            return _clean_dataset(source.from_csv, tuple(csv_files))
         case "Example":
             return _clean_dataset(source.from_example)
         case "Kaggle":
@@ -69,7 +57,6 @@ def load_dataset(
                 help="Name of the Kaggle dataset or competition to load data from",
                 label="Dataset / Competition / URL",
                 placeholder="house-prices-advanced-regression-techniques",
-                key=key + "kaggle_input",
             )
 
             if not kaggle_name:
@@ -98,8 +85,5 @@ def _clean_dataset(
 
     loguru.logger.info("concatenating tables")
     dataset = dataset.apply(Union())
-
-    loguru.logger.info("encoding categorical variables")
-    dataset = dataset.apply(Encode())
 
     return dataset

@@ -19,7 +19,7 @@ streamlit.set_page_config(
 settings = edit_settings()
 
 streamlit.header("Setup Dataset")
-if dataset := load_dataset(key="initial_data"):
+if dataset := load_dataset():
     dataset = edit_dataset(dataset)
     explore_dataset(dataset, settings)
 
@@ -29,7 +29,4 @@ if dataset := load_dataset(key="initial_data"):
         evaluate_model(model)
         explore_features(model, settings)
         combine_features(model)
-        if new_data := load_dataset(key="predict_data"):
-            explore_predictions(model, new_data)
-
-
+        explore_predictions(model)
