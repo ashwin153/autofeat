@@ -12,7 +12,7 @@ class Settings:
     """
 
     @enum.unique
-    class PlotlyTemplate(enum.StrEnum):
+    class PlotlyTemplate(enum.Enum):
         ggplot2 = enum.auto()
         gridon = enum.auto()
         plotly = enum.auto()
@@ -24,11 +24,21 @@ class Settings:
         xgridoff = enum.auto()
         ygridoff = enum.auto()
 
+        def __str__(
+            self,
+        ) -> str:
+            return self.name
+
 
     @enum.unique
-    class PolarsEngine(enum.StrEnum):
+    class PolarsEngine(enum.Enum):
         gpu = enum.auto()
         streaming = enum.auto()
+
+        def __str__(
+            self,
+        ) -> str:
+            return self.name
 
     dark_mode: bool = False
     plotly_template: PlotlyTemplate = PlotlyTemplate.plotly
