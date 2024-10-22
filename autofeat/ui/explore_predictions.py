@@ -20,11 +20,10 @@ def explore_predictions(
         known = _into_input_widgets(model.known)
 
     with middle:
-        _into_input_widgets(_extract_features(model, known))
+        features = _into_input_widgets(_extract_features(model, known))
 
     with right:
-        # TODO: this should use `features` instead of `known`
-        prediction = _make_prediction(model, known)
+        prediction = _make_prediction(model, known, features)
 
         streamlit.metric(
             label=prediction.y.name,
@@ -36,7 +35,7 @@ def explore_predictions(
             hide_index=True,
             use_container_width=True,
             column_config={
-                "Importance": streamlit.column_config.ProgressColumn(
+                "Impact": streamlit.column_config.ProgressColumn(
                     format="%.2f",
                     max_value=1,
                     min_value=0,
@@ -118,8 +117,25 @@ def _extract_features(
 def _make_prediction(
     model: Model,
     known: polars.DataFrame,
+    features: polars.DataFrame,
 ) -> Prediction:
-    return model.predict(known)
+    y = polars.Series(
+        name=model.y.name,
+        values=model.y_transformer.inverse_transform(  # pyright: ignore[reportAttributeAccessIssue]
+            model.predictor.predict(
+                model.X_transformer.transform(
+                    features.to_numpy(),
+                ),
+            ),
+        ),
+    )
+
+    return Prediction(
+        known=known,
+        model=model,
+        X=features,
+        y=y,
+    )
 
 
 @streamlit.cache_data(
@@ -129,13 +145,11 @@ def _make_prediction(
 def _explain_prediction(
     prediction: Prediction,
 ) -> pandas.DataFrame:
-    importance = (
-        numpy.abs(prediction.explanation.values).mean((0, 2))
+    impact = (
+        numpy.array(prediction.explanation.values).mean((0, 2))
         if len(prediction.explanation.shape) == 3
-        else numpy.abs(prediction.explanation.values).mean(0)
+        else numpy.array(prediction.explanation.values).mean(0)
     )
-
-    importance = importance / numpy.max(importance)
 
     feature_names = [
         feature_name.split(Extract.SEPARATOR, 1)
@@ -144,9 +158,9 @@ def _explain_prediction(
 
     df = pandas.DataFrame({
         "Feature": [column_name for column_name, _ in feature_names],
-        "Importance": importance,
+        "Impact": impact,
     })
 
-    df = df.sort_values("Importance", ascending=False)
+    df = df.sort_values("Impact", ascending=False, key=abs)
 
     return df
