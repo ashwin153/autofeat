@@ -34,14 +34,63 @@ def explore_predictions(
         streamlit.dataframe(
             _explain_prediction(prediction),
             hide_index=True,
+            use_container_width=True,
             column_config={
-                "Id": None,
                 "Importance": streamlit.column_config.ProgressColumn(
                     format="%.2f",
                     max_value=1,
                     min_value=0,
                 ),
             },
+        )
+
+
+def _into_input_widgets(
+    df: polars.DataFrame,
+) -> polars.DataFrame:
+    return polars.DataFrame(
+        [
+            {
+                column: _into_input_widget(column, data_type, default)
+                # TODO: they should be sorted in order of importance
+                for (column, data_type), default in sorted(zip(df.schema.items(), df.row(0)))
+            },
+        ], schema=df.schema,
+    )
+
+
+def _into_input_widget(
+    column: str,
+    data_type: polars.DataType,
+    default: Any,
+) -> Any:
+    parts = column.split(Extract.SEPARATOR, 1)
+    label = parts[0]
+    help = parts[1] if len(parts) > 1 else None
+
+    if isinstance(data_type, polars.Boolean):
+        return streamlit.checkbox(
+            label=label,
+            help=help,
+            value=default,
+        )
+    elif data_type.is_temporal():
+        return streamlit.date_input(
+            label=label,
+            help=help,
+            value=default,
+        )
+    elif data_type.is_numeric():
+        return streamlit.number_input(
+            label=label,
+            help=help,
+            value=default,
+        )
+    else:
+        return streamlit.text_input(
+            label=label,
+            help=help,
+            value=default,
         )
 
 
@@ -94,61 +143,10 @@ def _explain_prediction(
     ]
 
     df = pandas.DataFrame({
-        "Id": prediction.explanation.feature_names,
-        "Importance": importance,
         "Feature": [column_name for column_name, _ in feature_names],
-        "Source": [table_name for _, table_name in feature_names],
+        "Importance": importance,
     })
 
     df = df.sort_values("Importance", ascending=False)
 
     return df
-
-
-def _into_input_widgets(
-    df: polars.DataFrame,
-) -> polars.DataFrame:
-    return polars.DataFrame(
-        [
-            {
-                column: _into_input_widget(column, data_type, default)
-                # TODO: they should be sorted in order of importance
-                for (column, data_type), default in sorted(zip(df.schema.items(), df.row(0)))
-            },
-        ], schema=df.schema,
-    )
-
-
-def _into_input_widget(
-    column: str,
-    data_type: polars.DataType,
-    default: Any,
-) -> Any:
-    parts = column.split(Extract.SEPARATOR, 1)
-    label = parts[0]
-    help = parts[1] if len(parts) > 1 else None
-
-    if isinstance(data_type, polars.Boolean):
-        return streamlit.checkbox(
-            label=label,
-            help=help,
-            value=default,
-        )
-    elif data_type.is_temporal():
-        return streamlit.date_input(
-            label=label,
-            help=help,
-            value=default,
-        )
-    elif data_type.is_numeric():
-        return streamlit.number_input(
-            label=label,
-            help=help,
-            value=default,
-        )
-    else:
-        return streamlit.text_input(
-            label=label,
-            help=help,
-            value=default,
-        )
