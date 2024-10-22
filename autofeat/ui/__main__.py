@@ -6,6 +6,7 @@ from autofeat.ui.edit_settings import edit_settings
 from autofeat.ui.evaluate_model import evaluate_model
 from autofeat.ui.explore_dataset import explore_dataset
 from autofeat.ui.explore_features import explore_features
+from autofeat.ui.explore_predictions import explore_predictions
 from autofeat.ui.load_dataset import load_dataset
 from autofeat.ui.train_model import train_model
 
@@ -28,3 +29,4 @@ if dataset := load_dataset():
         evaluate_model(model)
         explore_features(model, settings)
         combine_features(model)
+        explore_predictions(model)

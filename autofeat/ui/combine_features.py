@@ -7,6 +7,7 @@ from autofeat.model import Model
 from autofeat.problem import Problem
 
 
+@streamlit.fragment
 def combine_features(
     model: Model,
 ) -> None:
