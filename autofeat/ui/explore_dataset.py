@@ -2,12 +2,11 @@ import pygwalker.api.streamlit
 import streamlit
 
 from autofeat import Dataset, Table
-from autofeat.settings import Settings
+from autofeat.settings import SETTINGS
 
 
 def explore_dataset(
     dataset: Dataset,
-    settings: Settings,
 ) -> None:
     """Explore a sample of the ``dataset``.
 
@@ -33,7 +32,7 @@ def explore_dataset(
             load = streamlit.form_submit_button("Load")
 
         if load:
-            sample = _render_sample(table, sample_size, settings)
+            sample = _render_sample(table, sample_size)
             sample.table(key=table.name)
 
 
@@ -46,9 +45,8 @@ def explore_dataset(
 def _render_sample(  # type: ignore[no-any-unimported]
     table: Table,
     sample_size: int,
-    settings: Settings,
 ) -> pygwalker.api.streamlit.StreamlitRenderer:
     return pygwalker.api.streamlit.StreamlitRenderer(
         table.data.head(sample_size).collect(),
-        appearance="dark" if settings.dark_mode else "light",
+        appearance="dark" if SETTINGS.dark_mode else "light",
     )

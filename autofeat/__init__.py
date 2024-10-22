@@ -1,10 +1,11 @@
 __all__ = [
     "Attribute",
+    "Column",
     "convert",
     "Dataset",
-    "Column",
-    "Settings",
     "model",
+    "Settings",
+    "SETTINGS",
     "source",
     "Table",
     "transform",
@@ -13,5 +14,5 @@ __all__ = [
 from autofeat import convert, model, source, transform
 from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
-from autofeat.settings import Settings
+from autofeat.settings import SETTINGS, Settings
 from autofeat.table import Column, Table

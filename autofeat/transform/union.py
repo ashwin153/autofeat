@@ -43,7 +43,7 @@ class Union(Transform):
 
                 yield Table(
                     name=f"union({', '.join([t.name for t in group])})",
-                    data=polars.concat([t.data for t in group], how="vertical"),
+                    data=polars.concat([t.data for t in group], how="vertical_relaxed"),
                     columns=columns,
                 )
 

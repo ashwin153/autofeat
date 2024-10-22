@@ -6,6 +6,8 @@ import numpy
 import pandas
 import polars
 
+from autofeat.settings import SETTINGS
+
 if TYPE_CHECKING:
     from autofeat.dataset import Dataset
     from autofeat.table import Table
@@ -42,15 +44,24 @@ def into_data_frame(
     elif isinstance(value, Table):
         return value.data.collect()
     elif isinstance(value, Dataset):
-        # TODO: Make this configurable through settings. Add Settings.engine to switch between the
-        # gpu engine `polars.concat([table.data for table in value.tables]).collect(engine="gpu"))`,
-        # the streaming engine below, and a streaming=False engine.
-        return polars.concat(
-            polars.collect_all(
-                [table.data for table in value.tables],
-                streaming=True,
-            ),
-            how="horizontal",
-        )
+        data = [
+            table.data
+            for table in value.tables
+        ]
+
+        match SETTINGS.polars_engine:
+            case SETTINGS.PolarsEngine.gpu:
+                return (
+                    polars
+                    .concat(data, how="horizontal")
+                    .collect(engine="gpu")
+                )
+            case SETTINGS.PolarsEngine.streaming:
+                return polars.concat(
+                    polars.collect_all(data, streaming=True),
+                    how="horizontal",
+                )
+            case _:
+                raise NotImplementedError(f"f{SETTINGS.polars_engine} is not supported")
     else:
         raise NotImplementedError(f"`{type(value)}` cannot be converted to a data frame")
