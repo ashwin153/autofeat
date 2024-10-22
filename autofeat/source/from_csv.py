@@ -14,12 +14,15 @@ def from_csv(
     files: Iterable[str | pathlib.Path | IO[str] | IO[bytes]],
     *,
     ignore_errors: bool = False,
+    low_memory: bool = False,
     null_values: list[str] | None = None,
 ) -> Dataset:
     """Load from CSV.
 
     :param files: CSV files to load.
-    :param null_values: Values to interpret as null values
+    :param ignore_errors: Keep reading even if some lines are invalid.
+    :param low_memory: Reduce memory pressure at the expense of performance.
+    :param null_values: Values to interpret as null values.
     :return: CSV dataset.
     """
     tables = []
@@ -28,6 +31,7 @@ def from_csv(
         data = polars.scan_csv(
             file,
             ignore_errors=ignore_errors,
+            low_memory=low_memory,
             null_values=null_values,
         )
 
