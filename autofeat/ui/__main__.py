@@ -8,6 +8,7 @@ from autofeat.ui.explore_dataset import explore_dataset
 from autofeat.ui.explore_features import explore_features
 from autofeat.ui.explore_predictions import explore_predictions
 from autofeat.ui.load_dataset import load_dataset
+from autofeat.ui.make_predictions import make_predictions
 from autofeat.ui.train_model import train_model
 
 streamlit.set_page_config(
@@ -29,4 +30,5 @@ if dataset := load_dataset():
         evaluate_model(model)
         explore_features(model)
         combine_features(model)
+        make_predictions(model)
         explore_predictions(model)
