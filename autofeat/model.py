@@ -29,13 +29,11 @@ from autofeat.transform import (
     Aggregate,
     Combine,
     Drop,
-    Encode,
     Extract,
     Filter,
     Identity,
     Keep,
     Transform,
-    Union,
 )
 
 if TYPE_CHECKING:
@@ -241,8 +239,6 @@ class Model:  # type: ignore[no-any-unimported]
                 ],
             ),
         ]
-
-        dataset = dataset.apply(Union().then(Encode()))
 
         i = 0
         while True:

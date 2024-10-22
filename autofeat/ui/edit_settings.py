@@ -1,29 +1,22 @@
-import plotly.io
 import streamlit
 import streamlit_theme
 
-from autofeat.settings import Settings
-
-_CHART_THEMES = sorted(plotly.io.templates.keys())
+from autofeat.settings import SETTINGS
 
 
-def edit_settings() -> Settings:
-    """Configure application settings.
-
-    :return: Application settings.
-    """
-    theme = streamlit_theme.st_theme()
-
+def edit_settings() -> None:
+    """Configure global settings."""
     with streamlit.sidebar:
-        chart_theme = streamlit.selectbox(
-            "Chart Theme",
-            _CHART_THEMES,
-            index=_CHART_THEMES.index("streamlit"),
+        SETTINGS.plotly_template = streamlit.selectbox(
+            "Plotly Template",
+            SETTINGS.PlotlyTemplate,
+            index=list(SETTINGS.PlotlyTemplate).index(SETTINGS.PlotlyTemplate.plotly),
         )
 
-        dark_mode = theme is not None and theme["base"] == "dark"
+        SETTINGS.dark_mode = "dark" == (streamlit_theme.st_theme() or {}).get("base")
 
-        return Settings(
-            chart_theme=chart_theme,
-            dark_mode=dark_mode,
+        SETTINGS.polars_engine = streamlit.selectbox(
+            "Polars Engine",
+            SETTINGS.PolarsEngine,
+            index=list(SETTINGS.PolarsEngine).index(SETTINGS.PolarsEngine.streaming),
         )

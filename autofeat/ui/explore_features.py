@@ -9,14 +9,13 @@ import streamlit
 
 from autofeat.model import Model
 from autofeat.problem import Problem
-from autofeat.settings import Settings
+from autofeat.settings import SETTINGS
 from autofeat.transform.extract import Extract
 
 
 @streamlit.fragment
 def explore_features(
     model: Model,
-    settings: Settings,
 ) -> None:
     """Explore the input features to a model.
 
@@ -53,7 +52,6 @@ def explore_features(
             charts = _charts(
                 model,
                 df.iloc[rows[0]]["Id"],
-                settings,
             )
 
             for figure, tab in zip(
@@ -103,7 +101,6 @@ def _grid(
 def _charts(  # type: ignore[no-any-unimported]
     model: Model,
     feature: str,
-    settings: Settings,
 ) -> list[tuple[str, plotly.graph_objects.Figure]]:
     x, y = model.X_test[:, model.X.columns.index(feature)], model.y_test
     mask = ~(pandas.isnull(x) | pandas.isnull(y))
@@ -115,7 +112,6 @@ def _charts(  # type: ignore[no-any-unimported]
     df.attrs = {
         "x_label": feature.split(Extract.SEPARATOR, 1)[0],
         "y_label": model.y.name,
-        "chart_theme": settings.chart_theme,
     }
 
     df_flip.attrs = {
@@ -162,7 +158,7 @@ def _box_plot(  # type: ignore[no-any-unimported]
 
     figure.update_layout(
         margin={"t": 30},
-        template=df.attrs["chart_theme"],
+        template=SETTINGS.plotly_template.name,
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         yaxis={"range": [y_min, y_max]},
@@ -200,7 +196,7 @@ def _histogram(  # type: ignore[no-any-unimported]
         x="x",
         y="y",
         color=df.attrs["y_label"],
-        template=df.attrs["chart_theme"],
+        template=SETTINGS.plotly_template.name,
         labels={"x": df.attrs["x_label"], "y": "count"},
         hover_data=["percentage"],
     )
@@ -231,7 +227,7 @@ def _pie_chart(  # type: ignore[no-any-unimported]
         plotly.express.sunburst(
             df,
             path=["y", "x"],
-            template=df.attrs["chart_theme"],
+            template=SETTINGS.plotly_template.name,
         ).data[0],
         row=1,
         col=1,
@@ -241,7 +237,7 @@ def _pie_chart(  # type: ignore[no-any-unimported]
         plotly.express.sunburst(
             df,
             path=["x", "y"],
-            template=df.attrs["chart_theme"],
+            template=SETTINGS.plotly_template.name,
         ).data[0],
         row=1,
         col=2,
@@ -287,7 +283,7 @@ def _scatter_plot(  # type: ignore[no-any-unimported]
     )
 
     figure.update_layout(
-        template=df.attrs["chart_theme"],
+        template=SETTINGS.plotly_template.name,
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         margin={"t": 30},
@@ -317,12 +313,12 @@ def _stacked_bar_chart(  # type: ignore[no-any-unimported]
             "y": "Percentage",
             "color": df.attrs["y_label"],
         },
-        template=df.attrs["chart_theme"],
+        template=SETTINGS.plotly_template.name,
     )
 
     figure.update_layout(
         margin={"t": 20},
-        template=df.attrs["chart_theme"],
+        template=SETTINGS.plotly_template.name,
         xaxis_title=df.attrs["x_label"],
         xaxis={"type": "category", "categoryorder": "total descending"},
         yaxis_title=f"{df.attrs['y_label']} (%)",

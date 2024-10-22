@@ -16,17 +16,17 @@ streamlit.set_page_config(
     page_title="autofeat",
 )
 
-settings = edit_settings()
+edit_settings()
 
 streamlit.header("Setup Dataset")
 if dataset := load_dataset():
     dataset = edit_dataset(dataset)
-    explore_dataset(dataset, settings)
+    explore_dataset(dataset)
 
     streamlit.header("Train Model")
     if model := train_model(dataset):
         streamlit.header("Explore Model")
         evaluate_model(model)
-        explore_features(model, settings)
+        explore_features(model)
         combine_features(model)
         explore_predictions(model)

@@ -5,7 +5,7 @@ import loguru
 import streamlit
 
 from autofeat import Dataset, source
-from autofeat.transform import Cast, Union
+from autofeat.transform import Cast, Encode, Union
 from autofeat.ui.show_log import show_log
 
 P = ParamSpec("P")
@@ -85,5 +85,8 @@ def _clean_dataset(
 
     loguru.logger.info("concatenating tables")
     dataset = dataset.apply(Union())
+
+    loguru.logger.info("encoding categorical variables")
+    dataset = dataset.apply(Encode())
 
     return dataset

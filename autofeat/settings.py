@@ -1,13 +1,39 @@
 import dataclasses
+import enum
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(kw_only=True)
 class Settings:
-    """Application settings.
+    """Global configuration.
 
-    :param chart_theme: Plotly template to use in charts.
     :param dark_mode: Whether or not dark mode is enabled.
+    :param plotly_template: Plotly template to use for charts in the UI.
+    :param polars_engine: Polars computation backend.
     """
 
-    chart_theme: str
-    dark_mode: bool
+    @enum.unique
+    class PlotlyTemplate(enum.StrEnum):
+        ggplot2 = enum.auto()
+        gridon = enum.auto()
+        plotly = enum.auto()
+        plotly_dark = enum.auto()
+        plotly_white = enum.auto()
+        presentation = enum.auto()
+        seaborn = enum.auto()
+        simple_white = enum.auto()
+        xgridoff = enum.auto()
+        ygridoff = enum.auto()
+
+
+    @enum.unique
+    class PolarsEngine(enum.StrEnum):
+        gpu = enum.auto()
+        streaming = enum.auto()
+
+    dark_mode: bool = False
+    plotly_template: PlotlyTemplate = PlotlyTemplate.plotly
+    polars_engine: PolarsEngine = PolarsEngine.streaming
+
+
+# global configuration
+SETTINGS = Settings()
