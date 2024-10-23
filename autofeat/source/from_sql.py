@@ -62,7 +62,7 @@ def _scan_data(
             return_type="arrow2",
         )
 
-        for batch in table.to_batches():
+        for batch in table.to_batches(batch_size):
             df = polars.from_arrow(batch)
 
             # TODO: push predicates down to the where clause
