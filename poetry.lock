@@ -623,6 +623,31 @@ traitlets = ">=4"
 test = ["pytest"]
 
 [[package]]
+name = "connectorx"
+version = "0.3.3"
+description = ""
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "connectorx-0.3.3-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:4c0e61e44a62eaee2ffe89bf938c7431b8f3d2d3ecdf09e8abb2d159f09138f0"},
+    {file = "connectorx-0.3.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:da1970ec09ad7a65e25936a6d613f15ad2ce916f97f17c64180415dc58493881"},
+    {file = "connectorx-0.3.3-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:b43b0abcfb954c497981bcf8f2b5339dcf7986399a401b9470f0bf8055a58562"},
+    {file = "connectorx-0.3.3-cp310-none-win_amd64.whl", hash = "sha256:dff9e04396a76d3f2ca9ab1abed0df52497f19666b222c512d7b10f1699636c8"},
+    {file = "connectorx-0.3.3-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:d1d0cbb1b97643337fb7f3e30fa2b44f63d8629eadff55afffcdf10b2afeaf9c"},
+    {file = "connectorx-0.3.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4010b466cafd728ec80adf387e53cc10668e2bc1a8c52c42a0604bea5149c412"},
+    {file = "connectorx-0.3.3-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:f430c359e7977818f90ac8cce3bb7ba340469dcabee13e4ac7926f80e34e8c4d"},
+    {file = "connectorx-0.3.3-cp311-none-win_amd64.whl", hash = "sha256:6e6495cab5f23e638456622a880c774c4bcfc17ee9ed7009d4217756a7e9e2c8"},
+    {file = "connectorx-0.3.3-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:dfefa3c55601b1a229dd27359a61c18977921455eae0c5068ec15d79900a096c"},
+    {file = "connectorx-0.3.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:1b62f6cac84a7c41c4f61746262da059dd8af06d10de64ebde2d59c73e28c22b"},
+    {file = "connectorx-0.3.3-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:2eaca398a5dae6da595c8c521d2a27050100a94e4d5778776b914b919e54ab1e"},
+    {file = "connectorx-0.3.3-cp312-none-win_amd64.whl", hash = "sha256:a37762f26ced286e9c06528f0179877148ea83f24263ac53b906c33c430af323"},
+    {file = "connectorx-0.3.3-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:9267431fa88b00c60c6113d9deabe86a2ad739c8be56ee4b57164d3ed983b5dc"},
+    {file = "connectorx-0.3.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:823170c06b61c7744fc668e6525b26a11ca462c1c809354aa2d482bd5a92bb0e"},
+    {file = "connectorx-0.3.3-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:9b001b78406dd7a1b8b7d61330bbcb73ea68f478589fc439fbda001ed875e8ea"},
+    {file = "connectorx-0.3.3-cp39-none-win_amd64.whl", hash = "sha256:e1e16404e353f348120d393586c58cad8a4ebf81e07f3f1dff580b551dbc863d"},
+]
+
+[[package]]
 name = "contourpy"
 version = "1.3.0"
 description = "Python library for calculating contours of 2D quadrilateral grids"
@@ -2967,8 +2992,8 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -3481,8 +3506,8 @@ files = [
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
 typing-extensions = [
-    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
     {version = ">=4.6.1", markers = "python_version < \"3.13\""},
+    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
 ]
 
 [package.extras]
@@ -5205,4 +5230,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "2d52a189e8853d5e247b83dcaa077471388d9c0ac08aa1f058c789928d2c1951"
+content-hash = "e9deff3af2a9450cfc4b943b2f437b1eecee88a6a5cbde18129888eb73af63ab"
