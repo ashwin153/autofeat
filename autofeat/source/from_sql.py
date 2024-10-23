@@ -63,7 +63,8 @@ def _scan_data(
         )
 
         for batch in table.to_batches(batch_size):
-            df = polars.from_arrow(batch)
+            df = polars.from_arrow(batch, schema)
+            assert isinstance(df, polars.DataFrame)
 
             # TODO: push predicates down to the where clause
             if predicate is not None:
