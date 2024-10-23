@@ -1,12 +1,17 @@
 import functools
 from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
+import connectorx
 import polars.io.plugins
 import sqlalchemy
 
 from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
+
+if TYPE_CHECKING:
+    import pyarrow
 
 
 def from_sql(
@@ -51,16 +56,20 @@ def _scan_data(
         if n_rows is not None:
             query += f" LIMIT {n_rows}"
 
-        df = polars.read_database_uri(
+        table: pyarrow.Table = connectorx.read_sql(
+            conn=uri,
             query=query,
-            uri=uri,
+            return_type="arrow2",
         )
 
-        # TODO: push predicates down to the where clause
-        if predicate is not None:
-            df = df.filter(predicate)
+        for batch in table.to_batches():
+            df = polars.from_arrow(batch)
 
-        yield df
+            # TODO: push predicates down to the where clause
+            if predicate is not None:
+                df = df.filter(predicate)
+
+            yield df
 
     return polars.io.plugins.register_io_source(
         callable=data,
