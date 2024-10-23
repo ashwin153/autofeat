@@ -98,5 +98,13 @@ def _load_schemas(
 def _into_data_type(
     column_type: sqlalchemy.types.TypeEngine,
 ) -> polars.DataType:
-    # TODO: convert between sqlalchemy and polars types
-    ...
+    if isinstance(column_type, sqlalchemy.types.String):
+        return polars.String()
+    elif isinstance(column_type, sqlalchemy.types.Boolean):
+        return polars.Boolean()
+    elif isinstance(column_type, sqlalchemy.types.Integer):
+        return polars.Int64()
+    elif isinstance(column_type, sqlalchemy.types.Numeric):
+        return polars.Float64()
+    else:
+        raise NotImplementedError(f"{column_type} is not supported")
