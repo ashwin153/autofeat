@@ -623,6 +623,31 @@ traitlets = ">=4"
 test = ["pytest"]
 
 [[package]]
+name = "connectorx"
+version = "0.3.3"
+description = ""
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "connectorx-0.3.3-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:4c0e61e44a62eaee2ffe89bf938c7431b8f3d2d3ecdf09e8abb2d159f09138f0"},
+    {file = "connectorx-0.3.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:da1970ec09ad7a65e25936a6d613f15ad2ce916f97f17c64180415dc58493881"},
+    {file = "connectorx-0.3.3-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:b43b0abcfb954c497981bcf8f2b5339dcf7986399a401b9470f0bf8055a58562"},
+    {file = "connectorx-0.3.3-cp310-none-win_amd64.whl", hash = "sha256:dff9e04396a76d3f2ca9ab1abed0df52497f19666b222c512d7b10f1699636c8"},
+    {file = "connectorx-0.3.3-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:d1d0cbb1b97643337fb7f3e30fa2b44f63d8629eadff55afffcdf10b2afeaf9c"},
+    {file = "connectorx-0.3.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4010b466cafd728ec80adf387e53cc10668e2bc1a8c52c42a0604bea5149c412"},
+    {file = "connectorx-0.3.3-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:f430c359e7977818f90ac8cce3bb7ba340469dcabee13e4ac7926f80e34e8c4d"},
+    {file = "connectorx-0.3.3-cp311-none-win_amd64.whl", hash = "sha256:6e6495cab5f23e638456622a880c774c4bcfc17ee9ed7009d4217756a7e9e2c8"},
+    {file = "connectorx-0.3.3-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:dfefa3c55601b1a229dd27359a61c18977921455eae0c5068ec15d79900a096c"},
+    {file = "connectorx-0.3.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:1b62f6cac84a7c41c4f61746262da059dd8af06d10de64ebde2d59c73e28c22b"},
+    {file = "connectorx-0.3.3-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:2eaca398a5dae6da595c8c521d2a27050100a94e4d5778776b914b919e54ab1e"},
+    {file = "connectorx-0.3.3-cp312-none-win_amd64.whl", hash = "sha256:a37762f26ced286e9c06528f0179877148ea83f24263ac53b906c33c430af323"},
+    {file = "connectorx-0.3.3-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:9267431fa88b00c60c6113d9deabe86a2ad739c8be56ee4b57164d3ed983b5dc"},
+    {file = "connectorx-0.3.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:823170c06b61c7744fc668e6525b26a11ca462c1c809354aa2d482bd5a92bb0e"},
+    {file = "connectorx-0.3.3-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:9b001b78406dd7a1b8b7d61330bbcb73ea68f478589fc439fbda001ed875e8ea"},
+    {file = "connectorx-0.3.3-cp39-none-win_amd64.whl", hash = "sha256:e1e16404e353f348120d393586c58cad8a4ebf81e07f3f1dff580b551dbc863d"},
+]
+
+[[package]]
 name = "contourpy"
 version = "1.3.0"
 description = "Python library for calculating contours of 2D quadrilateral grids"
@@ -3308,22 +3333,22 @@ wcwidth = "*"
 
 [[package]]
 name = "protobuf"
-version = "5.28.2"
+version = "5.28.3"
 description = ""
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "protobuf-5.28.2-cp310-abi3-win32.whl", hash = "sha256:eeea10f3dc0ac7e6b4933d32db20662902b4ab81bf28df12218aa389e9c2102d"},
-    {file = "protobuf-5.28.2-cp310-abi3-win_amd64.whl", hash = "sha256:2c69461a7fcc8e24be697624c09a839976d82ae75062b11a0972e41fd2cd9132"},
-    {file = "protobuf-5.28.2-cp38-abi3-macosx_10_9_universal2.whl", hash = "sha256:a8b9403fc70764b08d2f593ce44f1d2920c5077bf7d311fefec999f8c40f78b7"},
-    {file = "protobuf-5.28.2-cp38-abi3-manylinux2014_aarch64.whl", hash = "sha256:35cfcb15f213449af7ff6198d6eb5f739c37d7e4f1c09b5d0641babf2cc0c68f"},
-    {file = "protobuf-5.28.2-cp38-abi3-manylinux2014_x86_64.whl", hash = "sha256:5e8a95246d581eef20471b5d5ba010d55f66740942b95ba9b872d918c459452f"},
-    {file = "protobuf-5.28.2-cp38-cp38-win32.whl", hash = "sha256:87317e9bcda04a32f2ee82089a204d3a2f0d3c8aeed16568c7daf4756e4f1fe0"},
-    {file = "protobuf-5.28.2-cp38-cp38-win_amd64.whl", hash = "sha256:c0ea0123dac3399a2eeb1a1443d82b7afc9ff40241433296769f7da42d142ec3"},
-    {file = "protobuf-5.28.2-cp39-cp39-win32.whl", hash = "sha256:ca53faf29896c526863366a52a8f4d88e69cd04ec9571ed6082fa117fac3ab36"},
-    {file = "protobuf-5.28.2-cp39-cp39-win_amd64.whl", hash = "sha256:8ddc60bf374785fb7cb12510b267f59067fa10087325b8e1855b898a0d81d276"},
-    {file = "protobuf-5.28.2-py3-none-any.whl", hash = "sha256:52235802093bd8a2811abbe8bf0ab9c5f54cca0a751fdd3f6ac2a21438bffece"},
-    {file = "protobuf-5.28.2.tar.gz", hash = "sha256:59379674ff119717404f7454647913787034f03fe7049cbef1d74a97bb4593f0"},
+    {file = "protobuf-5.28.3-cp310-abi3-win32.whl", hash = "sha256:0c4eec6f987338617072592b97943fdbe30d019c56126493111cf24344c1cc24"},
+    {file = "protobuf-5.28.3-cp310-abi3-win_amd64.whl", hash = "sha256:91fba8f445723fcf400fdbe9ca796b19d3b1242cd873907979b9ed71e4afe868"},
+    {file = "protobuf-5.28.3-cp38-abi3-macosx_10_9_universal2.whl", hash = "sha256:a3f6857551e53ce35e60b403b8a27b0295f7d6eb63d10484f12bc6879c715687"},
+    {file = "protobuf-5.28.3-cp38-abi3-manylinux2014_aarch64.whl", hash = "sha256:3fa2de6b8b29d12c61911505d893afe7320ce7ccba4df913e2971461fa36d584"},
+    {file = "protobuf-5.28.3-cp38-abi3-manylinux2014_x86_64.whl", hash = "sha256:712319fbdddb46f21abb66cd33cb9e491a5763b2febd8f228251add221981135"},
+    {file = "protobuf-5.28.3-cp38-cp38-win32.whl", hash = "sha256:3e6101d095dfd119513cde7259aa703d16c6bbdfae2554dfe5cfdbe94e32d548"},
+    {file = "protobuf-5.28.3-cp38-cp38-win_amd64.whl", hash = "sha256:27b246b3723692bf1068d5734ddaf2fccc2cdd6e0c9b47fe099244d80200593b"},
+    {file = "protobuf-5.28.3-cp39-cp39-win32.whl", hash = "sha256:135658402f71bbd49500322c0f736145731b16fc79dc8f367ab544a17eab4535"},
+    {file = "protobuf-5.28.3-cp39-cp39-win_amd64.whl", hash = "sha256:70585a70fc2dd4818c51287ceef5bdba6387f88a578c86d47bb34669b5552c36"},
+    {file = "protobuf-5.28.3-py3-none-any.whl", hash = "sha256:cee1757663fa32a1ee673434fcf3bf24dd54763c79690201208bafec62f19eed"},
+    {file = "protobuf-5.28.3.tar.gz", hash = "sha256:64badbc49180a5e401f373f9ce7ab1d18b63f7dd4a9cdc43c92b9f0b481cef7b"},
 ]
 
 [[package]]
@@ -3444,6 +3469,16 @@ files = [
 
 [package.dependencies]
 numpy = ">=1.16.6"
+
+[[package]]
+name = "pyarrow-stubs"
+version = "10.0.1.9"
+description = "Type annotations for pyarrow"
+optional = false
+python-versions = "<4.0,>=3.7"
+files = [
+    {file = "pyarrow_stubs-10.0.1.9-py3-none-any.whl", hash = "sha256:8d6b200d1a70ec42bab8efb65c2f0655cc964ad25b917fbd82dd7731b37c0722"},
+]
 
 [[package]]
 name = "pycparser"
@@ -4623,13 +4658,13 @@ sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
 name = "sqlglot"
-version = "25.26.0"
+version = "25.27.0"
 description = "An easily customizable SQL parser and transpiler"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "sqlglot-25.26.0-py3-none-any.whl", hash = "sha256:638264ab99b3aa837cd85d8864b655632580a7979162b4f740407d170dd8b376"},
-    {file = "sqlglot-25.26.0.tar.gz", hash = "sha256:863e7539ec20ff9168cf030359e23af87d323a0936a94e5f46cbc8ab7ea3a525"},
+    {file = "sqlglot-25.27.0-py3-none-any.whl", hash = "sha256:6dbed60971542f1a69775f1f642359097859df4db440d4601cb75cb4cd9fe936"},
+    {file = "sqlglot-25.27.0.tar.gz", hash = "sha256:0a225bd0967bb1830a4fa9e9072eb1a4e74e9f80b5ff99f4bba52a60330322e9"},
 ]
 
 [package.extras]
@@ -4804,13 +4839,13 @@ files = [
 
 [[package]]
 name = "textual"
-version = "0.83.0"
+version = "0.84.0"
 description = "Modern Text User Interface framework"
 optional = false
 python-versions = "<4.0.0,>=3.8.1"
 files = [
-    {file = "textual-0.83.0-py3-none-any.whl", hash = "sha256:d6efc1e5c54086fd0a4fe274f18b5638ca24a69325c07e1b4400a7d0a1a14c55"},
-    {file = "textual-0.83.0.tar.gz", hash = "sha256:fc3b97796092d9c7e685e5392f38f3eb2007ffe1b3b1384dee6d3f10d256babd"},
+    {file = "textual-0.84.0-py3-none-any.whl", hash = "sha256:1457d2cb66ba4ea46812355f31adbb4b693424a94e69d052e4affe1dc410ec96"},
+    {file = "textual-0.84.0.tar.gz", hash = "sha256:fb89717960fea7a539823fa264252f7be1c84844e4b8d27360e6d4edb36846a8"},
 ]
 
 [package.dependencies]
@@ -5195,4 +5230,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "104294ef6d555f3179a1ee4b8b8b6507c1ef9b2a57b8d68738de333aa8971647"
+content-hash = "e9deff3af2a9450cfc4b943b2f437b1eecee88a6a5cbde18129888eb73af63ab"
