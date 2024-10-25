@@ -273,7 +273,7 @@ FEEDBACK_BUCKETS = {
             "Do you offer volume discounts for large teams?",
             "Can I downgrade my subscription if needed?",
             "Are updates included in the subscription price?",
-            "Is there a difference in support levels between the plans?"
+            "Is there a difference in support levels between the plans?",
         ],
         "Negative": [
             "The pricing seems a bit steep for the features offered.",
