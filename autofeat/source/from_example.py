@@ -25,6 +25,7 @@ def from_example(
     """
     accounts = _generate_accounts(num_accounts)
     sessions = _generate_sessions(accounts)
+    feedback = _generate_feedback(accounts)
 
     return Dataset([
         Table(
@@ -36,6 +37,11 @@ def from_example(
             name="Sessions",
             data=sessions.lazy(),
             columns=into_columns(sessions),
+        ),
+        Table(
+            name="Feedback",
+            data=feedback.lazy(),
+            columns=into_columns(feedback),
         ),
     ])
 
@@ -69,7 +75,6 @@ def _generate_accounts(
             "Company Name": company_name,
             "Contract Size per Year": contract_size,
             "Contract Start Date": contract_start_date,
-            "Did Churn": "Y" if churned else "N",
             "Renewal or Churn Date": renewal_or_churn_date,
             "Seats Available": seats_available,
             "Start Date": start_date,
@@ -168,3 +173,221 @@ def _generate_session(
             break
 
     return session
+
+
+
+def _generate_feedback(
+    accounts: polars.DataFrame,
+) -> polars.DataFrame:
+    feedback_entries = []
+
+    # Preload ~8 feedback strings from each bucket and sentiment
+    for category in FEEDBACK_BUCKETS:
+        for sentiment in FEEDBACK_BUCKETS[category]:
+            feedback_list = FEEDBACK_BUCKETS[category][sentiment]
+            if len(feedback_list) > 8:
+                FEEDBACK_BUCKETS[category][sentiment] = _RNG.choice(feedback_list, size=8, replace=False).tolist() #noqa
+
+    for account in accounts.rows(named=True):
+        # Decide number of tickets using a beta distribution
+        max_tickets = 10  # Maximum number of tickets
+
+        if account["Churned"]:
+            # Churned accounts are more likely to have higher number of tickets
+            num_tickets = int(_RNG.beta(2, 1) * max_tickets)
+        else:
+            # Non-churned accounts are more likely to have lower number of tickets
+            num_tickets = int(_RNG.beta(1, 2) * max_tickets)
+
+        num_tickets = max(0, min(num_tickets, max_tickets))  # Ensure within bounds
+
+        for _ in range(num_tickets):
+            # Generate timestamp between Start Date and Renewal or Churn Date
+            start_date = account["Start Date"]
+            end_date = account["Renewal or Churn Date"]
+            delta_days = (end_date - start_date).days
+            random_offset = datetime.timedelta(days=int(_RNG.integers(0, delta_days + 1)))
+            timestamp = start_date + random_offset
+
+            # Decide which bucket and sentiment to pick from
+            # Churned accounts are 50% more likely to pick negative feedback
+            categories = list(FEEDBACK_BUCKETS.keys())
+            category = _RNG.choice(categories)
+
+            sentiments = list(FEEDBACK_BUCKETS[category].keys())
+
+            if account["Churned"]:
+                # 60% chance to pick negative sentiment
+                if _RNG.random() < 0.6 and "Negative" in sentiments:
+                    sentiment = "Negative"
+                else:
+                    sentiment = _RNG.choice(sentiments)
+            else:
+                # 60% chance to pick neutral or positive sentiment
+                if _RNG.random() < 0.6:
+                    possible_sentiments = [s for s in sentiments if s != "Negative"]
+                    if possible_sentiments:
+                        sentiment = _RNG.choice(possible_sentiments)
+                    else:
+                        sentiment = _RNG.choice(sentiments)
+                else:
+                    sentiment = _RNG.choice(sentiments)
+
+            # Select feedback from the preloaded feedback strings
+            feedback_options = FEEDBACK_BUCKETS[category][sentiment]
+            #adding random text at the end so it doesn't get coded as categorical
+            email_signature = f"\n\nBest regards,\n{_FAKE.name()}"
+            feedback_text = f"{_RNG.choice(feedback_options)}, {_FAKE.sentence(nb_words=3)} {email_signature}" #noqa
+
+            feedback_entries.append({
+                "Company ID": account["Company ID"],
+                "Timestamp": timestamp,
+                "Feedback": feedback_text,
+            })
+
+    df = polars.DataFrame(feedback_entries)
+    return df.sort("Timestamp")
+
+
+
+# Feedback buckets from the JSON data
+FEEDBACK_BUCKETS = {
+    "Pricing Feedback": {
+        "Neutral": [
+            "Can you explain what features are included in the Standard plan?",
+            "What is the difference between the Basic and Pro tiers?",
+            "Do you offer any discounts for annual subscriptions?",
+            "Are there any hidden fees associated with the Premium plan?",
+            "Is there a trial period available for new users?",
+            "How does your pricing compare to other similar services?",
+            "Can I upgrade my plan at any time?",
+            "Does the Basic plan include customer support?",
+            "Are there any limits on data usage with the Standard tier?",
+            "What payment methods do you accept?",
+            "Is there a setup fee for new accounts?",
+            "Can I customize my plan to include specific features?",
+            "Are there any additional costs for add-on services?",
+            "Does the Pro plan include access to all features?",
+            "Is the pricing per user or per organization?",
+            "What happens if I exceed the usage limits of my plan?",
+            "Do you offer volume discounts for large teams?",
+            "Can I downgrade my subscription if needed?",
+            "Are updates included in the subscription price?",
+            "Is there a difference in support levels between the plans?",
+        ],
+        "Negative": [
+            "The pricing seems a bit steep for the features offered.",
+            "I think your service is overpriced compared to competitors.",
+            "I can't justify the cost for the Pro plan.",
+            "The subscription fees are too high for small businesses.",
+            "I find the pricing structure to be too expensive.",
+            "The Premium tier is beyond our budget.",
+            "Your plans are not affordable for startups.",
+            "Even the Basic plan is too costly.",
+            "I feel like I'm not getting enough value for the price.",
+            "The cost doesn't align with the benefits we receive.",
+            "We might have to look elsewhere due to high pricing.",
+            "The expensive plans are a barrier for us.",
+            "Your pricing model is prohibitive.",
+            "We cannot afford the current subscription rates.",
+            "I believe the service is overpriced.",
+            "The cost is too high for the limited features.",
+            "We expected more features for the price.",
+            "The high price point is discouraging.",
+            "It's hard to justify the expense.",
+            "Your service is out of our price range.",
+        ],
+    },
+    "Usability Feedback": {
+        "Neutral": [
+            "Where can I find the report generation tool?",
+            "How do I set up automated alerts?",
+            "Is there a tutorial on using the dashboard?",
+            "Can you guide me on how to import data?",
+            "How do I customize my user profile?",
+            "Is there a way to export reports in PDF format?",
+            "How do I change the default settings?",
+            "Where can I access the analytics features?",
+            "Can I integrate the platform with third-party apps?",
+            "How do I add new team members to my account?",
+            "Is there an option to schedule reports?",
+            "How do I navigate to the settings page?",
+            "Can you explain how to use the filter options?",
+            "Where is the help section located?",
+            "How do I create custom templates?",
+            "Is there a feature to track user activity?",
+            "How can I reset my password?",
+            "How do I update my billing information?",
+            "Where can I see my usage statistics?",
+            "Is there a search function within the platform?",
+        ],
+        "Negative": [
+            "Why is it so hard to find the report generation tool?",
+            "I can't figure out how to set up automated alerts; it's too confusing.",
+            "Is there no tutorial on using the dashboard? I'm completely lost.",
+            "Importing data shouldn't be this difficult.",
+            "How am I supposed to customize my profile when options are missing?",
+            "Exporting reports in PDF format isn't working.",
+            "Why can't I change the default settings? They keep reverting.",
+            "Accessing analytics features is a nightmare.",
+            "Integration with third-party apps is overly complicated.",
+            "Adding new team members shouldn't be this frustrating.",
+            "Scheduling reports is impossible with the current setup.",
+            "Navigating to the settings page is needlessly complex.",
+            "The filter options are unintuitive; how do I even use them?",
+            "The help section is useless; it doesn't answer my questions.",
+            "Creating custom templates is a hassle.",
+            "Tracking user activity isn't accurate; what's the point?",
+            "Resetting my password is problematic; I keep getting errors.",
+            "Updating billing information shouldn't be so troublesome.",
+            "Viewing usage statistics is more complicated than it needs to be.",
+            "Why is there no effective search function within the platform?",
+        ],
+    },
+    "Support Frustration": {
+        "Negative": [
+            "Your support team isn't addressing my issues.",
+            "I'm not getting helpful responses from support.",
+            "My questions are being ignored.",
+            "Support is not resolving my problems.",
+            "I feel like I'm talking to a wall with your support.",
+            "No one is giving me clear answers.",
+            "Your replies are unhelpful and generic.",
+            "Support is taking too long to respond.",
+            "My concerns are not being taken seriously.",
+            "I'm frustrated with the lack of assistance.",
+            "You keep sending me irrelevant information.",
+            "I have to repeat myself constantly.",
+            "Support isn't following up on my tickets.",
+            "I feel neglected by your support team.",
+            "My issues remain unresolved despite multiple contacts.",
+            "Communication from support is poor.",
+            "I need real solutions, not canned responses.",
+            "You're not providing the help I need.",
+            "Support is not addressing the root of the problem.",
+            "I'm disappointed with the lack of effective support.",
+        ],
+        "Positive": [
+            "Thank you for your prompt assistance.",
+            "I appreciate the help from your support team.",
+            "Your support resolved my issue quickly.",
+            "Thanks for the detailed explanation.",
+            "Great customer service experience!",
+            "Your team was very helpful.",
+            "I got the answers I needed, thank you.",
+            "Support was friendly and efficient.",
+            "Thanks for going above and beyond.",
+            "I appreciate the quick resolution.",
+            "Your assistance was invaluable.",
+            "Thank you for the excellent support.",
+            "Problem solved, thanks to your team.",
+            "Support was very responsive.",
+            "I'm grateful for your help.",
+            "Thank you for your patience and guidance.",
+            "Excellent assistance from support.",
+            "Your help made a big difference.",
+            "Support provided the solution I needed.",
+            "I'm very satisfied with the support received.",
+        ],
+    },
+}
