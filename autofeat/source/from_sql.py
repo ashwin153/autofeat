@@ -1,17 +1,14 @@
 import functools
 from collections.abc import Iterator
-from typing import TYPE_CHECKING
 
 import connectorx
 import polars.io.plugins
+import pyarrow
 import sqlalchemy
 
 from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
-
-if TYPE_CHECKING:
-    import pyarrow
 
 
 def from_sql(
@@ -56,11 +53,8 @@ def _scan_data(
         if n_rows is not None:
             query += f" LIMIT {n_rows}"
 
-        table: pyarrow.Table = connectorx.read_sql(
-            conn=uri,
-            query=query,
-            return_type="arrow2",
-        )
+        table = connectorx.read_sql(uri, query, return_type="arrow2")
+        assert isinstance(table, pyarrow.Table)
 
         for batch in table.to_batches(batch_size):
             df = polars.from_arrow(batch, schema)
