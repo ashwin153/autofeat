@@ -42,7 +42,7 @@ def _scan_data(
     table_name: str,
     schema: polars.Schema,
 ) -> polars.LazyFrame:
-    def data(
+    def load_data(
         with_columns: list[str] | None,
         predicate: polars.Expr | None,
         n_rows: int | None,
@@ -67,7 +67,7 @@ def _scan_data(
             yield df
 
     return polars.io.plugins.register_io_source(
-        callable=data,
+        callable=load_data,
         schema=schema,
     )
 
