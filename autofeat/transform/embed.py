@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from typing import Literal
 
 import polars
+import polars_candle  # noqa: F401
 
 from autofeat.attribute import Attribute
 from autofeat.convert import into_exprs, into_named_exprs
@@ -51,7 +52,7 @@ class Embed(Transform):
                         *into_exprs(extra_columns),
                         **into_named_exprs(embeddings),
                     ),
-                    name=table.name,
+                    name=f"embed({table.name})",
                     columns=columns,
                 )
 
@@ -66,7 +67,7 @@ class Embed(Transform):
             ):
                 result = Column(
                     name=column.name,
-                    attributes=column.attributes | {Attribute.not_null},
+                    attributes={Attribute.embedding},
                     derived_from=[(column, table)],
                 )
 

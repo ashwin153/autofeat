@@ -11,6 +11,9 @@ class Attribute(enum.Enum):
     categorical = enum.auto()
     """Contains categories."""
 
+    embedding = enum.auto()
+    """Contains text embeddings."""
+
     not_null = enum.auto()
     """Has no missing values."""
 
