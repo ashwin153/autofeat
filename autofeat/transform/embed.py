@@ -38,7 +38,7 @@ class Embed(Transform):
                 extra_columns = [
                     column
                     for column in table.columns
-                    if all(column.name != embedded_column.name for embedded_column, _ in embeddings)
+                    if Attribute.primary_key in column.attributes
                 ]
 
                 columns = [
