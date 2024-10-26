@@ -6,6 +6,7 @@ __all__ = [
     "Collect",
     "Combine",
     "Drop",
+    "Embed",
     "Encode",
     "Extract",
     "Filter",
@@ -28,6 +29,7 @@ from autofeat.transform.cast import Cast
 from autofeat.transform.collect import Collect
 from autofeat.transform.combine import Combine
 from autofeat.transform.drop import Drop
+from autofeat.transform.embed import Embed
 from autofeat.transform.encode import Encode
 from autofeat.transform.extract import Extract
 from autofeat.transform.filter import Filter

@@ -28,22 +28,18 @@ class Encode(Transform):
         )
 
         for table in tables:
-            encodings = [
-                *self._encodings(table, category_iterator),
-            ]
+            if encodings := list(self._encodings(table, category_iterator)):
+                extra_columns = [
+                    column
+                    for column in table.columns
+                    if all(column.name != encoded_column.name for encoded_column, _ in encodings)
+                ]
 
-            extra_columns = [
-                column
-                for column in table.columns
-                if all(column.name != encoded_column.name for encoded_column, _ in encodings)
-            ]
+                columns = [
+                    *extra_columns,
+                    *[column for column, _ in encodings],
+                ]
 
-            columns = [
-                *extra_columns,
-                *[column for column, _ in encodings],
-            ]
-
-            if columns:
                 yield Table(
                     data=table.data.select(
                         *into_exprs(extra_columns),
