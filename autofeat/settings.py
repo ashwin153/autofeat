@@ -29,7 +29,6 @@ class Settings:
         ) -> str:
             return self.name
 
-
     @enum.unique
     class PolarsEngine(enum.Enum):
         gpu = enum.auto()
