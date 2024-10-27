@@ -12,9 +12,15 @@ def make_predictions(
 
     :param model: Prediction model.
     """
+
+    # Add header and explanatory text
+    streamlit.subheader("Make Predictions With Model")
+
     left,  right = streamlit.columns(2)
 
     with left:
+        streamlit.write("Upload CSV w/ data you want to make predictions on.")
+
         csv_file = streamlit.file_uploader(
             label="Known Columns",
             type="CSV",
@@ -28,16 +34,11 @@ def make_predictions(
             else model.known.head(1)
         )
 
-        known = streamlit.data_editor(
-            default_known.to_pandas(),
-            hide_index=True,
-            num_rows="dynamic",
-            use_container_width=True,
-        )
+        known = default_known.to_pandas()
 
     with right:
         prediction = _make_prediction(model, known)
-
+        streamlit.write("Predictions (sample data if no upload)")
         streamlit.dataframe(
             polars.concat(
                 [prediction.y.to_frame(), prediction.known, prediction.X],
