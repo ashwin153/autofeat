@@ -1,12 +1,14 @@
+from collections.abc import Iterable
+
 import polars
 
-from autofeat.convert import IntoPaths, into_columns, into_paths
+from autofeat.convert import IntoPath, into_columns, into_path
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
 
 def from_excel(
-    files: IntoPaths,
+    files: Iterable[IntoPath],
     *,
     sheet_name: str | None = None,
 ) -> Dataset:
@@ -18,7 +20,9 @@ def from_excel(
     """
     tables = []
 
-    for path in into_paths(files):
+    for file in files:
+        path = into_path(file)
+
         data = polars.read_excel(
             source=path,
             sheet_name=sheet_name,

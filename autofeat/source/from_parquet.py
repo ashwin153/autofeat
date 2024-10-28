@@ -1,12 +1,14 @@
+from collections.abc import Iterable
+
 import polars
 
-from autofeat.convert import IntoPaths, into_columns, into_paths
+from autofeat.convert import IntoPath, into_columns, into_path
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
 
 def from_parquet(
-    files: IntoPaths,
+    files: Iterable[IntoPath],
     *,
     low_memory: bool = False,
 ) -> Dataset:
@@ -18,7 +20,9 @@ def from_parquet(
     """
     tables = []
 
-    for path in into_paths(files):
+    for file in files:
+        path = into_path(file)
+
         data = polars.scan_parquet(
             source=path,
             low_memory=low_memory,
