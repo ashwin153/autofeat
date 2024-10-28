@@ -1,17 +1,14 @@
-import os
-import pathlib
 from collections.abc import Iterable
-from typing import IO
 
 import polars
 
-from autofeat.convert import into_columns
+from autofeat.convert import IntoPath, into_columns, into_path
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
 
 def from_csv(
-    files: Iterable[str | pathlib.Path | IO[str] | IO[bytes]],
+    files: Iterable[IntoPath],
     *,
     ignore_errors: bool = False,
     low_memory: bool = False,
@@ -28,17 +25,19 @@ def from_csv(
     tables = []
 
     for file in files:
+        path = into_path(file)
+
         data = polars.scan_csv(
-            file,
             ignore_errors=ignore_errors,
             low_memory=low_memory,
             null_values=null_values,
+            source=path,
         )
 
         table = Table(
             columns=into_columns(data),
             data=data,
-            name=os.path.basename(str(file)),
+            name=path.name,
         )
 
         tables.append(table)

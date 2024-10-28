@@ -1,15 +1,14 @@
-import os
 from collections.abc import Iterable
 
 import polars
 
-from autofeat.convert import into_columns
+from autofeat.convert import IntoPath, into_columns, into_path
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
 
 def from_iceberg(
-    files: Iterable[str],
+    files: Iterable[IntoPath],
 ) -> Dataset:
     """Load from Iceberg files.
 
@@ -19,14 +18,16 @@ def from_iceberg(
     tables = []
 
     for file in files:
+        path = into_path(file)
+
         data = polars.scan_iceberg(
-            file,
+            source=path,
         )
 
         table = Table(
             columns=into_columns(data),
             data=data,
-            name=os.path.basename(str(file)),
+            name=path.name,
         )
 
         tables.append(table)

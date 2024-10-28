@@ -6,6 +6,7 @@ __all__ = [
     "into_lazy_frame",
     "into_msgpack",
     "into_named_exprs",
+    "into_path",
     "into_series",
     "IntoColumns",
     "IntoDataFrame",
@@ -14,6 +15,7 @@ __all__ = [
     "IntoLazyFrame",
     "IntoMsgpack",
     "IntoNamedExprs",
+    "IntoPath",
     "IntoSeries",
 ]
 
@@ -24,4 +26,5 @@ from autofeat.convert.into_exprs import IntoExprs, into_exprs
 from autofeat.convert.into_lazy_frame import IntoLazyFrame, into_lazy_frame
 from autofeat.convert.into_msgpack import IntoMsgpack, into_msgpack
 from autofeat.convert.into_named_exprs import IntoNamedExprs, into_named_exprs
+from autofeat.convert.into_path import IntoPath, into_path
 from autofeat.convert.into_series import IntoSeries, into_series
