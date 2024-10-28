@@ -10,29 +10,23 @@ from autofeat.dataset import Dataset
 from autofeat.table import Table
 
 
-def from_csv(
-    files: Iterable[str | pathlib.Path | IO[str] | IO[bytes]],
+def from_parquet(
+    files: Iterable[str | pathlib.Path | IO[bytes]],
     *,
-    ignore_errors: bool = False,
     low_memory: bool = False,
-    null_values: list[str] | None = None,
 ) -> Dataset:
-    """Load from CSV files.
+    """Load from Parquet files.
 
-    :param files: CSV files to load.
-    :param ignore_errors: Keep reading even if some lines are invalid.
+    :param files: Parquet files to load.
     :param low_memory: Reduce memory pressure at the expense of performance.
-    :param null_values: Values to interpret as null values.
     :return: Dataset.
     """
     tables = []
 
     for file in files:
-        data = polars.scan_csv(
+        data = polars.scan_parquet(
             file,
-            ignore_errors=ignore_errors,
             low_memory=low_memory,
-            null_values=null_values,
         )
 
         table = Table(
