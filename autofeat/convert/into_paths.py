@@ -51,7 +51,7 @@ def _into_paths(
             path = pathlib.Path(tempfile.mkdtemp(dir=_TMP)) / value.name
             path.write_bytes(value.getbuffer())
             yield path
-        elif isinstance(value, Iterable):
+        elif isinstance(value, Iterable) and not isinstance(value, bytes):
             yield from (y for x in value for y in _into_paths(x))
         else:
             raise NotImplementedError(f"{type(value)} is not supported")
