@@ -21,7 +21,7 @@ def from_example(
     """Load from randomized example data.
 
     :param num_accounts: Number of accounts to generate.
-    :return: Example dataset.
+    :return: Dataset.
     """
     accounts = _generate_accounts(num_accounts)
     sessions = _generate_sessions(accounts)
