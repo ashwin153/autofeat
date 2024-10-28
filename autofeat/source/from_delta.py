@@ -1,16 +1,12 @@
-import os
-import pathlib
-from collections.abc import Iterable
-
 import polars
 
-from autofeat.convert import into_columns
+from autofeat.convert import IntoPaths, into_columns, into_paths
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
 
 def from_delta(
-    files: Iterable[str | pathlib.Path],
+    files: IntoPaths,
 ) -> Dataset:
     """Load from Delta files.
 
@@ -19,15 +15,15 @@ def from_delta(
     """
     tables = []
 
-    for file in files:
+    for path in into_paths(files):
         data = polars.scan_delta(
-            str(file),
+            source=str(path),
         )
 
         table = Table(
             columns=into_columns(data),
             data=data,
-            name=os.path.basename(str(file)),
+            name=path.name,
         )
 
         tables.append(table)
