@@ -14,16 +14,17 @@ from autofeat.transform import Extract
 def explore_predictions(
     model: Model,
 ) -> None:
-    left, middle, right = streamlit.columns(3)
+
+    streamlit.subheader("Explore Specific Predictions")
+    streamlit.caption("Pick a predicted value & see which features are most imporant for that row")
+
+    left, right = streamlit.columns(2)
 
     with left:
         known = _into_input_widgets(model.known)
 
-    with middle:
-        features = _into_input_widgets(_extract_features(model, known))
-
     with right:
-        prediction = _make_prediction(model, known, features)
+        prediction = _make_prediction(model, known, _extract_features(model, known))
 
         streamlit.metric(
             label=prediction.y.name,
@@ -151,6 +152,11 @@ def _explain_prediction(
         else numpy.array(prediction.explanation.values).mean(0)
     )
 
+    magnitude = numpy.abs(impact)
+    normalized_magnitude = magnitude / numpy.sum(magnitude)
+
+    directions = ["Positive" if val > 0 else "Negative" for val in impact]
+
     feature_names = [
         feature_name.split(Extract.SEPARATOR, 1)
         for feature_name in prediction.explanation.feature_names
@@ -158,7 +164,8 @@ def _explain_prediction(
 
     df = pandas.DataFrame({
         "Feature": [column_name for column_name, _ in feature_names],
-        "Impact": impact,
+        "Impact": normalized_magnitude,
+        "Direction": directions,
     })
 
     df = df.sort_values("Impact", ascending=False, key=abs)
