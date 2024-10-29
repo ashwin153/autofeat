@@ -11,18 +11,6 @@ from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
-# https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources
-_SUPPORTED_BY_CONNECTORX = (
-    "bigquery://",
-    "mssql://",
-    "mysql://",
-    "oracle://",
-    "postgresql://",
-    "redshift://",
-    "sqlite://",
-    "trino://",
-)
-
 
 def from_sql(
     uri: str,
@@ -77,6 +65,19 @@ def _scan_data(
         callable=source,
         schema=schema,
     )
+
+
+# https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources
+_SUPPORTED_BY_CONNECTORX = (
+    "bigquery://",
+    "mssql://",
+    "mysql://",
+    "oracle://",
+    "postgresql://",
+    "redshift://",
+    "sqlite://",
+    "trino://",
+)
 
 
 def _load_data(
