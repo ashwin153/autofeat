@@ -2,6 +2,7 @@ import functools
 from collections.abc import Iterable, Iterator
 from typing import cast
 
+import connectorx
 import polars.io.plugins
 import pyarrow
 import sqlalchemy
@@ -9,6 +10,18 @@ import sqlalchemy
 from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
+
+# https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources
+_SUPPORTED_BY_CONNECTORX = (
+    "bigquery://",
+    "mssql://",
+    "mysql://",
+    "oracle://",
+    "postgresql://",
+    "redshift://",
+    "sqlite://",
+    "trino://",
+)
 
 
 def from_sql(
@@ -71,16 +84,13 @@ def _load_data(
     query: str,
     batch_size: int | None,
 ) -> Iterable[polars.DataFrame]:
-    try:
-        # TODO: connectorx supports a subset of backends (e.g., not snowflake)
-        import connectorx
-
+    if uri.startswith(_SUPPORTED_BY_CONNECTORX):
         table = connectorx.read_sql(uri, query, return_type="arrow2")
         assert isinstance(table, pyarrow.Table)
 
         for batch in table.to_batches(batch_size):
             yield cast(polars.DataFrame, polars.from_arrow(batch))
-    except ImportError:
+    else:
         engine = sqlalchemy.create_engine(uri)
 
         with engine.connect() as connection:
@@ -120,5 +130,9 @@ def _into_data_type(
         return polars.Int64()
     elif isinstance(column_type, sqlalchemy.types.Numeric):
         return polars.Float64()
+    elif isinstance(column_type, sqlalchemy.types.Date):
+        return polars.Date()
+    elif isinstance(column_type, sqlalchemy.types.DateTime):
+        return polars.Datetime()
     else:
         raise NotImplementedError(f"{column_type} is not supported")
