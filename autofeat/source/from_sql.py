@@ -95,7 +95,7 @@ def _load_data(
         engine = sqlalchemy.create_engine(uri)
 
         with engine.connect() as connection:
-            return polars.read_database(
+            yield from polars.read_database(
                 query,
                 connection=connection,
                 iter_batches=True,
