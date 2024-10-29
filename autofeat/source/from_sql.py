@@ -1,7 +1,7 @@
 import functools
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
+from typing import cast
 
-import connectorx
 import polars.io.plugins
 import pyarrow
 import sqlalchemy
@@ -42,7 +42,7 @@ def _scan_data(
     table_name: str,
     schema: polars.Schema,
 ) -> polars.LazyFrame:
-    def load_data(
+    def source(
         with_columns: list[str] | None,
         predicate: polars.Expr | None,
         n_rows: int | None,
@@ -53,23 +53,43 @@ def _scan_data(
         if n_rows is not None:
             query += f" LIMIT {n_rows}"
 
-        table = connectorx.read_sql(uri, query, return_type="arrow2")
-        assert isinstance(table, pyarrow.Table)
-
-        for batch in table.to_batches(batch_size):
-            df = polars.from_arrow(batch, schema)
-            assert isinstance(df, polars.DataFrame)
-
-            # TODO: push predicates down to the where clause
+        for df in _load_data(uri, query, batch_size):
+            # TODO: push predicates into the query
             if predicate is not None:
                 df = df.filter(predicate)
 
             yield df
 
     return polars.io.plugins.register_io_source(
-        callable=load_data,
+        callable=source,
         schema=schema,
     )
+
+
+def _load_data(
+    uri: str,
+    query: str,
+    batch_size: int | None,
+) -> Iterable[polars.DataFrame]:
+    try:
+        # TODO: connectorx supports a subset of backends (e.g., not snowflake)
+        import connectorx
+
+        table = connectorx.read_sql(uri, query, return_type="arrow2")
+        assert isinstance(table, pyarrow.Table)
+
+        for batch in table.to_batches(batch_size):
+            yield cast(polars.DataFrame, polars.from_arrow(batch))
+    except ImportError:
+        engine = sqlalchemy.create_engine(uri)
+
+        with engine.connect() as connection:
+            return polars.read_database(
+                query,
+                connection=connection,
+                iter_batches=True,
+                batch_size=batch_size,
+            )
 
 
 @functools.cache
@@ -79,7 +99,6 @@ def _load_schemas(
     engine = sqlalchemy.create_engine(uri)
     metadata = sqlalchemy.MetaData()
     metadata.reflect(engine)
-    engine.dispose()
 
     return {
         table.name: polars.Schema({
