@@ -5,6 +5,7 @@ from autofeat.dataset import Dataset
 from autofeat.model import Model
 from autofeat.predictor import PREDICTION_METHODS, PredictionMethod
 from autofeat.problem import Problem
+from autofeat.settings import SETTINGS
 from autofeat.table import Column, Table
 from autofeat.ui.show_log import show_log
 
@@ -66,7 +67,9 @@ def train_model(
         options=list(Problem),
     )
 
-    with streamlit.expander("Configure Methodology"):
+    prediction_method_container = streamlit.empty()
+
+    with prediction_method_container.expander("Configure Methodology"):
         prediction_method = streamlit.selectbox(
             help="Method of predicting the target variable given the input features",
             key="prediction_method",
@@ -74,6 +77,9 @@ def train_model(
             options=PREDICTION_METHODS,
             index=list(PREDICTION_METHODS).index("XGBoost"),
         )
+
+    if SETTINGS.display_mode == "minimal":
+        prediction_method_container.empty()
 
     with show_log("Training Model"):
         return _train_model(
