@@ -2,7 +2,6 @@ import functools
 from collections.abc import Iterable, Iterator
 from typing import cast
 
-import connectorx
 import polars.io.plugins
 import pyarrow
 import sqlalchemy
@@ -85,7 +84,12 @@ def _load_data(
     query: str,
     batch_size: int | None,
 ) -> Iterable[polars.DataFrame]:
-    if uri.startswith(_SUPPORTED_BY_CONNECTORX):
+    try:
+        import connectorx
+    except ImportError:
+        connectorx = None
+
+    if connectorx and uri.startswith(_SUPPORTED_BY_CONNECTORX):
         table = connectorx.read_sql(uri, query, return_type="arrow2")
         assert isinstance(table, pyarrow.Table)
 
