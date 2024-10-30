@@ -24,10 +24,12 @@ class Boruta(Selector):
     ) -> Collection[bool]:
         selector = boruta.BorutaPy(
             estimator=self.predictor,
-            n_estimators="auto",  # pyright: ignore[reportArgumentType]
-            perc=100,
             alpha=0.05,
+            early_stopping=True,
             max_iter=100,
+            n_estimators="auto",  # pyright: ignore[reportArgumentType]
+            n_iter_no_change=20,
+            perc=100,
         )
 
         selector.fit(X, y)
