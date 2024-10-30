@@ -39,7 +39,7 @@ class Settings:
     """
 
     dark_mode: bool = False
-    display_mode: DisplayMode = "standard"
+    display_mode: DisplayMode = "minimal"
     plotly_template: PlotlyTemplate = "plotly"
     polars_engine: PolarsEngine = "streaming"
 
