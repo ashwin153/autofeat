@@ -3498,10 +3498,7 @@ files = [
 [package.dependencies]
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
-typing-extensions = [
-    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
-    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
-]
+typing-extensions = {version = ">=4.6.1", markers = "python_version < \"3.13\""}
 
 [package.extras]
 email = ["email-validator (>=2.0.0)"]
@@ -5370,5 +5367,5 @@ scikit-learn = ["scikit-learn"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "ac1aca4d77750f20d7ea6adc6281eaeb8fa2a783e857fe6cb74c49b3b33e4456"
+python-versions = "~3.12"
+content-hash = "4762c13f2b924ba304a257b48d6a99f02a9b16d2d13b26185726b539cac1bab1"
