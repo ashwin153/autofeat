@@ -1,10 +1,11 @@
 import dataclasses
-from typing import assert_never
+from typing import Any, assert_never
 
 import xgboost
 
 from autofeat.predictor.base import PredictionMethod, Predictor
 from autofeat.problem import Problem
+from autofeat.settings import SETTINGS
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -15,10 +16,14 @@ class XGBoost(PredictionMethod):
         self,
         problem: Problem,
     ) -> Predictor:
+        parameters: dict[str, Any] = {
+            "device": "cuda" if SETTINGS.polars_engine == "gpu" else None,
+        }
+
         match problem:
             case Problem.classification:
-                return xgboost.XGBClassifier(device="cuda")
+                return xgboost.XGBClassifier(**parameters)
             case Problem.regression:
-                return xgboost.XGBRegressor(device="cuda")
+                return xgboost.XGBRegressor(**parameters)
             case _:
                 assert_never(problem)
