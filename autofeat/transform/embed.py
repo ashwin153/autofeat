@@ -70,7 +70,7 @@ class Embed(Transform):
                 )
 
                 yield result, column.expr.candle.embed_text(  # type: ignore[attr-defined]
-                    device="gpu" if SETTINGS.polars_engine == SETTINGS.PolarsEngine.gpu else "cpu",
+                    device="gpu" if SETTINGS.polars_engine == "gpu" else "cpu",
                     model_repo=self.model,
                     normalize=self.normalize,
                     pooling=self.pooling,

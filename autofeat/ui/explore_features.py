@@ -158,7 +158,7 @@ def _box_plot(  # type: ignore[no-any-unimported]
 
     figure.update_layout(
         margin={"t": 30},
-        template=SETTINGS.plotly_template.name,
+        template=SETTINGS.plotly_template,
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         yaxis={"range": [y_min, y_max]},
@@ -196,7 +196,7 @@ def _histogram(  # type: ignore[no-any-unimported]
         x="x",
         y="y",
         color=df.attrs["y_label"],
-        template=SETTINGS.plotly_template.name,
+        template=SETTINGS.plotly_template,
         labels={"x": df.attrs["x_label"], "y": "count"},
         hover_data=["percentage"],
     )
@@ -227,7 +227,7 @@ def _pie_chart(  # type: ignore[no-any-unimported]
         plotly.express.sunburst(
             df,
             path=["y", "x"],
-            template=SETTINGS.plotly_template.name,
+            template=SETTINGS.plotly_template,
         ).data[0],
         row=1,
         col=1,
@@ -237,7 +237,7 @@ def _pie_chart(  # type: ignore[no-any-unimported]
         plotly.express.sunburst(
             df,
             path=["x", "y"],
-            template=SETTINGS.plotly_template.name,
+            template=SETTINGS.plotly_template,
         ).data[0],
         row=1,
         col=2,
@@ -283,7 +283,7 @@ def _scatter_plot(  # type: ignore[no-any-unimported]
     )
 
     figure.update_layout(
-        template=SETTINGS.plotly_template.name,
+        template=SETTINGS.plotly_template,
         xaxis_title=df.attrs["x_label"],
         yaxis_title=df.attrs["y_label"],
         margin={"t": 30},
@@ -313,12 +313,12 @@ def _stacked_bar_chart(  # type: ignore[no-any-unimported]
             "y": "Percentage",
             "color": df.attrs["y_label"],
         },
-        template=SETTINGS.plotly_template.name,
+        template=SETTINGS.plotly_template,
     )
 
     figure.update_layout(
         margin={"t": 20},
-        template=SETTINGS.plotly_template.name,
+        template=SETTINGS.plotly_template,
         xaxis_title=df.attrs["x_label"],
         xaxis={"type": "category", "categoryorder": "total descending"},
         yaxis_title=f"{df.attrs['y_label']} (%)",
