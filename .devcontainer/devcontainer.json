@@ -16,15 +16,18 @@
 			],
 			"settings": {
 				"[python]": {
+					"editor.formatOnSave": true,
 					"editor.codeActionsOnSave": {
+						"source.fixAll": "always",
 						"source.organizeImports": "always"
-					}
+					},
+					"editor.defaultFormatter": "charliermarsh.ruff"
 				},
 				"editor.inlayHints.enabled": "offUnlessPressed",
 				"editor.rulers": [100],
 				"editor.stickyScroll.enabled": true,
+				"explorer.excludeGitIgnore": true,
 				"files.autoSave": "onFocusChange",
-				"files.excludeGitIgnore": true,
 				"python.analysis.autoFormatStrings": true,
 				"python.analysis.autoSearchPaths": false,
 				"python.analysis.completeFunctionParens": true,

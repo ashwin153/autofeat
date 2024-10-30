@@ -2,7 +2,6 @@ import functools
 from collections.abc import Iterable, Iterator
 from typing import cast
 
-import connectorx
 import polars.io.plugins
 import pyarrow
 import sqlalchemy
@@ -67,8 +66,16 @@ def _scan_data(
     )
 
 
+try:
+    import connectorx
+
+    _CONNECTORX_EXISTS = True
+except ImportError:
+    _CONNECTORX_EXISTS = False
+
+
 # https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources
-_SUPPORTED_BY_CONNECTORX = (
+_CONNECTORX_SOURCES = (
     "bigquery://",
     "mssql://",
     "mysql://",
@@ -85,7 +92,7 @@ def _load_data(
     query: str,
     batch_size: int | None,
 ) -> Iterable[polars.DataFrame]:
-    if uri.startswith(_SUPPORTED_BY_CONNECTORX):
+    if _CONNECTORX_EXISTS and uri.startswith(_CONNECTORX_SOURCES):
         table = connectorx.read_sql(uri, query, return_type="arrow2")
         assert isinstance(table, pyarrow.Table)
 
@@ -112,10 +119,9 @@ def _load_schemas(
     metadata.reflect(engine)
 
     return {
-        table.name: polars.Schema({
-            column.name: _into_data_type(column.type)
-            for column in table.columns.values()
-        })
+        table.name: polars.Schema(
+            {column.name: _into_data_type(column.type) for column in table.columns.values()},
+        )
         for table in metadata.tables.values()
     }
 
