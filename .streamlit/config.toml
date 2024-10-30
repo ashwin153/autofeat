@@ -9,6 +9,7 @@ enforceSerializableSessionState = true
 
 [server]
 maxUploadSize = 200
+runOnSave = false
 
 [theme]
 base = "light"
