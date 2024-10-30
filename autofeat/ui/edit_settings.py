@@ -17,6 +17,12 @@ def edit_settings() -> None:
             index=get_args(DisplayMode).index("standard"),
         )
 
+        SETTINGS.low_memory = streamlit.toggle(
+            label="Low Memory",
+            help="Whether or not to conserve memory at the expense of performance",
+            value=False,
+        )
+
         SETTINGS.plotly_template = streamlit.selectbox(
             label="Plotly Template",
             options=get_args(PlotlyTemplate),
