@@ -8,17 +8,12 @@ from autofeat.settings import SETTINGS
 from autofeat.table import Table
 
 
-def from_csv(
+def from_ndjson(
     files: Iterable[IntoPath],
-    *,
-    ignore_errors: bool = False,
-    null_values: list[str] | None = None,
 ) -> Dataset:
-    """Load from CSV files.
+    """Load from newline-delimited JSON files.
 
-    :param files: CSV files to load.
-    :param ignore_errors: Keep reading even if some lines are invalid.
-    :param null_values: Values to interpret as null values.
+    :param files: Newline-delimited JSON files to load.
     :return: Dataset.
     """
     tables = []
@@ -26,11 +21,9 @@ def from_csv(
     for file in files:
         path = into_path(file)
 
-        data = polars.scan_csv(
-            ignore_errors=ignore_errors,
-            low_memory=SETTINGS.low_memory,
-            null_values=null_values,
+        data = polars.scan_ndjson(
             source=path,
+            low_memory=SETTINGS.low_memory,
         )
 
         table = Table(

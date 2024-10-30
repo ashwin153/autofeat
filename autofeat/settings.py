@@ -34,12 +34,14 @@ class Settings:
 
     :param dark_mode: Whether or not dark mode is enabled.
     :param display_mode: Density of display in the UI.
+    :param low_memory: Whether or not to conserve memory at the expense of performance.
     :param plotly_template: Plotly template to use for charts in the UI.
     :param polars_engine: Polars computation backend.
     """
 
     dark_mode: bool = False
     display_mode: DisplayMode = "minimal"
+    low_memory: bool = False
     plotly_template: PlotlyTemplate = "plotly"
     polars_engine: PolarsEngine = "streaming"
 
