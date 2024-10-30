@@ -12,7 +12,7 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
 module = [
-  "BorutaShap.*",
+  "boruta.*",
   "catboost.*",
   "connectorx.*",
   "plotly.*",
@@ -31,7 +31,7 @@ readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-borutashap = "^1.0.17"
+boruta = "^0.4.3"
 catboost = "^1.2.7"
 connectorx = {markers = "sys_platform != 'linux' or platform_machine != 'aarch64'", version = "^0.3.3"}
 cudf-polars-cu12 = {source = "nvidia", version = "^24.10.0"}
@@ -47,12 +47,11 @@ pandas = "^2.2.2"
 polars = "^1.8.0"
 polars-candle = "^0.1.7"
 psycopg2 = "^2.9.10"
-pyarrow = "<17.0"
 pygwalker = "^0.4.9.9"
 python = "~3.12"
 rich = "^13.8.1"
 scikit-learn = "^1.5.2"
-scipy = "<1.12.0"
+scipy = "^1.12.0"
 shap = "^0.46.0"
 snowflake-sqlalchemy = "^1.6.1"
 sqlalchemy = "^2.0.36"
