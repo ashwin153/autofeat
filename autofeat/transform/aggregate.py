@@ -15,7 +15,7 @@ from autofeat.transform.base import Transform
 class Aggregate(Transform):
     """Group by a set of columns and aggregate the remaining columns in various ways.
 
-    :param allowed_pivots: Columns that are allowed to be pivoted.
+    :param is_pivotable: Columns that are allowed to be pivoted.
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
     """
 
