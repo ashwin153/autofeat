@@ -1,5 +1,14 @@
 [browser]
 gatherUsageStats = false
 
+[logger]
+level = "error"
+
+[runner]
+enforceSerializableSessionState = true
+
+[server]
+maxUploadSize = 200
+
 [theme]
 base = "light"
