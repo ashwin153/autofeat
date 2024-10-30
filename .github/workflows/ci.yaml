@@ -34,7 +34,7 @@ jobs:
           key: mypy
       - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
         with:
-          python-version: 3.11
+          python-version: 3.12
           poetry-version: 1.8.3
       - run: poetry run mypy .
   pre-commit:
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
       - uses: pre-commit/action@v3.0.1
         env:
           SKIP: no-commit-to-branch
@@ -53,6 +53,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: packetcoders/action-setup-cache-python-poetry@v1.2.0
         with:
-          python-version: 3.11
+          python-version: 3.12
           poetry-version: 1.8.3
       - run: poetry run pytest -v --cov=autofeat --doctest-modules
