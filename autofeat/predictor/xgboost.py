@@ -1,5 +1,5 @@
 import dataclasses
-from typing import assert_never
+from typing import Any, assert_never
 
 import xgboost
 
@@ -16,7 +16,7 @@ class XGBoost(PredictionMethod):
         self,
         problem: Problem,
     ) -> Predictor:
-        parameters = {
+        parameters: dict[str, Any] = {
             "device": "cuda" if SETTINGS.polars_engine == "gpu" else None,
         }
 
