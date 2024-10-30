@@ -16,12 +16,10 @@
 			],
 			"settings": {
 				"[python]": {
-					"editor.formatOnSave": true,
 					"editor.codeActionsOnSave": {
 						"source.fixAll": "always",
 						"source.organizeImports": "always"
-					},
-					"editor.defaultFormatter": "charliermarsh.ruff"
+					}
 				},
 				"editor.inlayHints.enabled": "offUnlessPressed",
 				"editor.rulers": [100],
