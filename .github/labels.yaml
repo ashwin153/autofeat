@@ -1,3 +1,12 @@
+area/engine:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'autofeat/*'
+          - 'autofeat/convert/**/*'
+          - 'autofeat/predictor/**/*'
+          - 'autofeat/selector/**/*'
+          - 'autofeat/source/**/*'
+          - 'autofeat/transform/**/*'
 area/sdlc:
   - changed-files:
       - any-glob-to-any-file:
