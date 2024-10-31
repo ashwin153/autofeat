@@ -7,6 +7,7 @@ from autofeat.ui.evaluate_model import evaluate_model
 from autofeat.ui.explore_dataset import explore_dataset
 from autofeat.ui.explore_features import explore_features
 from autofeat.ui.explore_predictions import explore_predictions
+from autofeat.ui.hide_elements import hide_elements
 from autofeat.ui.load_dataset import load_dataset
 from autofeat.ui.make_predictions import make_predictions
 from autofeat.ui.train_model import train_model
@@ -21,8 +22,9 @@ edit_settings()
 
 streamlit.header("Setup Dataset")
 if dataset := load_dataset():
-    dataset = edit_dataset(dataset)
-    explore_dataset(dataset)
+    with hide_elements("minimal"):
+        dataset = edit_dataset(dataset)
+        explore_dataset(dataset)
 
     streamlit.header("Train Model")
     if model := train_model(dataset):
