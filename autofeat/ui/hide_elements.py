@@ -2,6 +2,7 @@ import contextlib
 from collections.abc import Iterator
 
 import streamlit
+import streamlit.delta_generator
 
 from autofeat.settings import SETTINGS, DisplayMode
 
@@ -14,10 +15,10 @@ def hide_elements(
 
     :param display_modes: Display modes in which the elements are not visible.
     """
-    parent = streamlit.empty()
-
-    with parent.container():
-        yield
-
     if SETTINGS.display_mode in display_modes:
-        parent.empty()
+        container = streamlit.delta_generator.DeltaGenerator(root_container=None)
+    else:
+        container = contextlib.nullcontext()
+
+    with container:
+        yield
