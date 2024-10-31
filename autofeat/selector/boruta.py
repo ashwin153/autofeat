@@ -24,6 +24,13 @@ class Boruta(Selector):
     predictor: Predictor
     p_value: float = 0.05
 
+    def __post_init__(
+        self,
+    ) -> None:
+        assert 0 < self.max_iterations
+        assert 0 < self.p_value <= 1
+        assert 0 < self.percentile <= 100
+
     def select(
         self,
         X: numpy.ndarray,
