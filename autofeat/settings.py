@@ -3,6 +3,7 @@ import functools
 from typing import Literal, cast
 
 import cuda.cudart
+import loguru
 
 PlotlyTemplate = Literal[
     "ggplot2",
@@ -35,9 +36,12 @@ DisplayMode = Literal[
 def _cuda_is_available() -> bool:
     try:
         cuda_device_count = cast(int, cuda.cudart.cudaGetDeviceCount()[1])
-        return cuda_device_count > 0
     except Exception:
-        return False
+        cuda_device_count = 0
+
+    loguru.logger.info(f"detected {cuda_device_count} cuda devices")
+
+    return cuda_device_count > 0
 
 
 @dataclasses.dataclass(kw_only=True)
