@@ -84,4 +84,10 @@ class Extract(Transform):
                     derived_from=[(x, table), *primary_key],
                 )
 
-                yield column, x.expr
+                expr = (
+                    x.expr.cast(polars.Boolean())
+                    if Attribute.boolean in x.attributes
+                    else x.expr.shrink_dtype()
+                )
+
+                yield column, expr
