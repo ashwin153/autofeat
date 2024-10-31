@@ -15,6 +15,7 @@ module = [
   "boruta.*",
   "catboost.*",
   "connectorx.*",
+  "cuda.*",
   "plotly.*",
   "polars_candle.*",
   "pygwalker.*",
