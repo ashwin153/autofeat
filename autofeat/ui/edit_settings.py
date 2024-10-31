@@ -11,10 +11,14 @@ def edit_settings() -> None:
     default_settings = Settings()
 
     with streamlit.sidebar:
-        SETTINGS.dark_mode = (
-            "dark" == theme.get("base")
-            if (theme := streamlit_theme.st_theme())
-            else default_settings.dark_mode
+        SETTINGS.dark_mode = streamlit.toggle(
+            "Dark Mode",
+            disabled=True,
+            value=(
+                "dark" == theme.get("base")
+                if (theme := streamlit_theme.st_theme())
+                else default_settings.dark_mode
+            ),
         )
 
         SETTINGS.display_mode = streamlit.selectbox(
