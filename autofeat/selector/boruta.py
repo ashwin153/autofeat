@@ -1,4 +1,5 @@
 import dataclasses
+import math
 from collections.abc import Collection
 
 import boruta
@@ -12,10 +13,16 @@ from autofeat.selector.base import Selector
 class Boruta(Selector):
     """Select the most important features to the ``predictor`` using the Boruta algorithm.
 
+    :param max_iterations: Maximum number of iterations to run.
+    :param percentile: Threshold below which features are considered irrelevant.
     :param predictor: Prediction model.
+    :param p_value: Threshold below which results are considered statistically significant.
     """
 
+    max_iterations: int = 25
+    percentile: int = 95
     predictor: Predictor
+    p_value: float = 0.05
 
     def select(
         self,
@@ -23,13 +30,13 @@ class Boruta(Selector):
         y: numpy.ndarray,
     ) -> Collection[bool]:
         selector = boruta.BorutaPy(
-            estimator=self.predictor,
-            alpha=0.05,
+            alpha=self.p_value,
             early_stopping=True,
-            max_iter=100,
+            estimator=self.predictor,
+            max_iter=self.max_iterations,
             n_estimators="auto",  # pyright: ignore[reportArgumentType]
-            n_iter_no_change=20,
-            perc=100,
+            n_iter_no_change=math.ceil(self.max_iterations * 0.25),
+            perc=self.percentile,
         )
 
         selector.fit(X, y)
