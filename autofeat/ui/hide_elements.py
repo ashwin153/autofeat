@@ -15,10 +15,9 @@ def hide_elements(
 
     :param display_modes: Display modes in which the elements are not visible.
     """
-    if SETTINGS.display_mode in display_modes:
-        container = streamlit.delta_generator.DeltaGenerator(root_container=None)
-    else:
-        container = contextlib.nullcontext()
-
-    with container:
+    with (
+        streamlit.delta_generator.DeltaGenerator(root_container=None)
+        if SETTINGS.display_mode in display_modes
+        else contextlib.nullcontext(),
+    ):
         yield
