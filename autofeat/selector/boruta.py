@@ -35,7 +35,7 @@ class Boruta(Selector):
             estimator=self.predictor,
             max_iter=self.max_iterations,
             n_estimators="auto",  # pyright: ignore[reportArgumentType]
-            n_iter_no_change=math.ceil(self.max_iterations * 0.25),
+            n_iter_no_change=math.ceil(self.max_iterations / 4),
             perc=self.percentile,
         )
 
