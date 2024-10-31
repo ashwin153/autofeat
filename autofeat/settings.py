@@ -1,6 +1,12 @@
 import dataclasses
 from typing import Literal
 
+import cuda.cudart
+
+# use the cuda runtime to check if cuda is available
+_CUDA_IS_AVAILABLE = cuda.cudart.cudaGetDeviceCount()[1] > 0
+
+
 PlotlyTemplate = Literal[
     "ggplot2",
     "gridon",
@@ -43,7 +49,14 @@ class Settings:
     display_mode: DisplayMode = "minimal"
     low_memory: bool = False
     plotly_template: PlotlyTemplate = "plotly"
-    polars_engine: PolarsEngine = "streaming"
+    polars_engine: PolarsEngine = "gpu" if _CUDA_IS_AVAILABLE else "streaming"
+
+    def __post_init__(
+        self,
+    ) -> None:
+        assert (
+            self.polars_engine != "gpu" or _CUDA_IS_AVAILABLE
+        ), "cuda must be available to use the gpu"
 
 
 # global configuration
