@@ -307,7 +307,7 @@ class Model:  # type: ignore[no-any-unimported]
         # create prediction and selection models
         for i, selector in enumerate(selectors):
             # train the selection model
-            loguru.logger.info(f"fitting selection model ({i+1}/{len(selectors)})")
+            loguru.logger.info(f"fitting selection model ({type(selector).__name__})")
 
             selector.fit(X_train, y_train)
 
@@ -341,7 +341,7 @@ class Model:  # type: ignore[no-any-unimported]
             )
 
         # train the prediction model on the selected features
-        loguru.logger.info("fitting prediction model")
+        loguru.logger.info(f"fitting prediction model ({type(predictor).__name__})")
 
         predictor.fit(X_train, y_train)
         y_predicted = predictor.predict(X_test)
