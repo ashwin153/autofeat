@@ -52,20 +52,21 @@ def train_model(
     if not known_columns:
         return None
 
-    default_problem = (
-        Problem.classification
-        if Attribute.categorical in target_column.attributes
-        else Problem.regression
-    )
+    with hide_elements("minimal"):
+        default_problem = (
+            Problem.classification
+            if Attribute.categorical in target_column.attributes
+            else Problem.regression
+        )
 
-    problem = streamlit.selectbox(
-        help="Whether the target variable is categorical (classification) or numeric (regression)",
-        index=default_problem.value - 1,
-        key="problem",
-        label="Problem",
-        on_change=lambda: _clear_state("prediction_method"),
-        options=list(Problem),
-    )
+        problem = streamlit.selectbox(
+            help="Whether the target variable is categorical or numeric",
+            index=default_problem.value - 1,
+            key="problem",
+            label="Problem",
+            on_change=lambda: _clear_state("prediction_method"),
+            options=list(Problem),
+        )
 
     with hide_elements("minimal"):
         with streamlit.expander("Configure Methodology"):
