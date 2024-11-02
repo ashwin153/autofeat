@@ -46,6 +46,6 @@ class Boruta(Selector):
             perc=self.percentile,
         )
 
-        selector.fit(X, y)
+        selector.fit(numpy.nan_to_num(X), y)
 
         return selector.support_  # type: ignore[no-any-return]
