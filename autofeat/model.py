@@ -162,6 +162,7 @@ class Model:  # type: ignore[no-any-unimported]
     def train(
         dataset: Dataset,
         *,
+        as_of_column: Column | None,
         known_columns: tuple[Column, ...],
         prediction_method: PredictionMethod,
         problem: Problem,
@@ -171,6 +172,7 @@ class Model:  # type: ignore[no-any-unimported]
         """Train a model that predicts the ``target_column`` given the ``known_columns``.
 
         :param dataset: Dataset to extract features from.
+        :param as_of_column: Column that contains the time as of which to make predictions.
         :param known_columns: Columns that are known at the time of prediction.
         :param prediction_method: Method of predicting the target variable.
         :param training_data: Table containing the ``target_column`` and ``known_columns``.
@@ -179,6 +181,15 @@ class Model:  # type: ignore[no-any-unimported]
         """
         # extract the known and target variables from the training data
         loguru.logger.info("loading training data")
+
+        as_of = (
+            training_data.data
+            .select(as_of_column.name)
+            .collect()
+            .to_series()
+            if as_of_column is not None
+            else None
+        )
 
         known = (
             training_data.data
@@ -249,6 +260,7 @@ class Model:  # type: ignore[no-any-unimported]
             dataset = dataset.apply(Identity().then(Identity(), *transforms))
 
             model = Model._train_once(
+                as_of=as_of,
                 dataset=dataset,
                 known=known,
                 predictor=predictor,
@@ -267,6 +279,7 @@ class Model:  # type: ignore[no-any-unimported]
     @staticmethod
     def _train_once(
         *,
+        as_of: polars.Series | None,
         dataset: Dataset,
         known: polars.DataFrame,
         predictor: Predictor,
@@ -277,7 +290,7 @@ class Model:  # type: ignore[no-any-unimported]
         # extract features from the dataset
         loguru.logger.info("extracting features")
 
-        features = dataset.apply(Extract(known=known))
+        features = dataset.apply(Extract(as_of=as_of, known=known))
 
         X = into_data_frame(features)
         y = target

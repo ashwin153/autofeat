@@ -134,6 +134,7 @@ def _train_model(
     training_data: Table,
 ) -> Model:
     return Model.train(
+        as_of_column=as_of_column,
         dataset=dataset,
         known_columns=known_columns,
         prediction_method=prediction_method,
