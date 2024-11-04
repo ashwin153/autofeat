@@ -41,8 +41,15 @@ def train_model(
     if not target_column:
         return None
 
+    primary_key_columns = {
+        column.name
+        for table in dataset.tables
+        for column in table.columns
+        if Attribute.primary_key in column.attributes
+    }
+
     known_columns = streamlit.multiselect(
-        default=[c for c in training_data.columns if Attribute.primary_key in c.attributes],
+        default=[c for c in training_data.columns if c.name in primary_key_columns],
         help="Columns that are known at the time of prediction",
         key="known_columns",
         label="Known Columns",
@@ -51,6 +58,23 @@ def train_model(
 
     if not known_columns:
         return None
+
+    temporal_columns = [
+        column
+        for column in training_data.columns
+        if Attribute.temporal in column.attributes
+    ]
+
+    if temporal_columns:
+        time_column = streamlit.selectbox(
+            help="",
+            label="",
+            index=0,
+            key="time_column",
+            options=temporal_columns,
+        )
+    else:
+        time_column = None
 
     with hide_elements("minimal"):
         default_problem = (
@@ -84,8 +108,9 @@ def train_model(
             known_columns=tuple(known_columns),
             prediction_method=PREDICTION_METHODS[prediction_method],
             problem=problem,
-            training_data=training_data,
             target_column=target_column,
+            time_column=time_column,
+            training_data=training_data,
         )
 
 
@@ -105,6 +130,7 @@ def _train_model(
     prediction_method: PredictionMethod,
     problem: Problem,
     target_column: Column,
+    time_column: Column | None,
     training_data: Table,
 ) -> Model:
     return Model.train(
