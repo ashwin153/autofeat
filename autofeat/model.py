@@ -17,6 +17,7 @@ import sklearn.pipeline
 import sklearn.preprocessing
 
 from autofeat.convert import into_data_frame
+from autofeat.dataset import Dataset
 from autofeat.predictor import Baseline
 from autofeat.problem import Problem
 from autofeat.selector import (
@@ -27,18 +28,20 @@ from autofeat.selector import (
 )
 from autofeat.transform import (
     Aggregate,
+    Cast,
     Combine,
     Drop,
+    Encode,
     Extract,
     Filter,
     Identity,
     Keep,
     Transform,
+    Union,
 )
 
 if TYPE_CHECKING:
     from autofeat.convert import IntoDataFrame
-    from autofeat.dataset import Dataset
     from autofeat.predictor import PredictionMethod, Predictor
     from autofeat.table import Column, Table
 
@@ -182,6 +185,18 @@ class Model:  # type: ignore[no-any-unimported]
         # extract the known and target variables from the training data
         loguru.logger.info("loading training data")
 
+        clean_data = (
+            Union()
+            .then(Cast())
+            .then(Encode())
+        )
+
+        training_data = (
+            Dataset([training_data])
+            .apply(clean_data)
+            .tables[0]
+        )
+
         as_of = (
             training_data.data
             .select(as_of_column.name)
@@ -205,16 +220,14 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # drop all columns related to the target column from the dataset
-        dataset = dataset.apply(
-            Drop(
-                columns=[
-                    (column, table)
-                    for table in dataset.tables
-                    for column in table.columns
-                    if column.is_related(target_column)
-                ],
-            ),
-        )
+        related_to_target = [
+            (column, table)
+            for table in dataset.tables
+            for column in table.columns
+            if column.is_related(target_column)
+        ]
+
+        dataset = dataset.apply(Drop(columns=related_to_target).then(clean_data))
 
         # repeatedly transform the dataset and train a predictor on the top n features
         predictor = prediction_method.create(problem)
