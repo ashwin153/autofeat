@@ -8,22 +8,22 @@ from autofeat.selector.base import Selector
 
 
 @dataclasses.dataclass(kw_only=True)
-class Correlation(Selector):
+class PairwiseCorrelation(Selector):
     """Select features that are at most ``max`` correlated with any other selected feature.
 
-    :param max: Maximum correlation between selected features.
     :param method: Correlation method.
+    :param threshold: Maximum correlation between selected features.
     """
 
-    max: float = 0.5
     method: Literal["pearson", "kendall", "spearman"] = "pearson"
+    threshold: float = 0.5
 
     def select(
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
     ) -> list[bool]:
-        correlation = numpy.max(
+        pairwise_correlation = numpy.max(
             numpy.triu(
                 numpy.abs(
                     pandas.DataFrame(X)
@@ -35,7 +35,7 @@ class Correlation(Selector):
             axis=1,
         )
 
-        selection = numpy.argwhere(correlation < self.max)
+        selection = numpy.argwhere(pairwise_correlation < self.threshold)
 
         return [
             i in selection

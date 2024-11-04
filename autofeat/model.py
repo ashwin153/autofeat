@@ -21,10 +21,11 @@ from autofeat.dataset import Dataset
 from autofeat.predictor import Baseline
 from autofeat.problem import Problem
 from autofeat.selector import (
-    Correlation,
     FeatureImportance,
+    PairwiseCorrelation,
     Selector,
     ShapelyImpact,
+    TargetCorrelation,
 )
 from autofeat.transform import (
     Aggregate,
@@ -238,8 +239,9 @@ class Model:  # type: ignore[no-any-unimported]
                     Aggregate(is_pivotable=known_columns, max_pivots=1),
                 ],
                 [
+                    TargetCorrelation(threshold=0.95),
                     FeatureImportance(predictor=predictor, n=200),
-                    Correlation(max=0.8),
+                    PairwiseCorrelation(threshold=0.8),
                     ShapelyImpact(predictor=predictor, n=100),
                 ],
             ),
@@ -248,8 +250,9 @@ class Model:  # type: ignore[no-any-unimported]
                     Filter().then(Aggregate(is_pivotable=known_columns, max_pivots=1)),
                 ],
                 [
+                    TargetCorrelation(threshold=0.95),
                     FeatureImportance(predictor=predictor, n=150),
-                    Correlation(max=0.7),
+                    PairwiseCorrelation(threshold=0.7),
                     ShapelyImpact(predictor=predictor, n=100),
                 ],
             ),
@@ -258,6 +261,7 @@ class Model:  # type: ignore[no-any-unimported]
                     Combine(),
                 ],
                 [
+                    TargetCorrelation(threshold=0.95),
                     FeatureImportance(predictor=predictor, n=100),
                     ShapelyImpact(predictor=predictor, n=35),
                 ],
