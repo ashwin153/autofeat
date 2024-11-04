@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 import itertools
 from collections.abc import Collection, Iterable
 
@@ -17,10 +18,12 @@ class Aggregate(Transform):
 
     :param is_pivotable: Columns that are allowed to be pivoted.
     :param max_pivots: Maximum number of columns that can be pivoted at a time.
+    :param windows: Time windows over which to aggregate data.
     """
 
     is_pivotable: Collection[str | Column]
     max_pivots: int = 1
+    windows: list[datetime.timedelta] | None = None
 
     def apply(
         self,
@@ -28,14 +31,11 @@ class Aggregate(Transform):
     ) -> Iterable[Table]:
         for table in tables:
             pivotable_columns = [
-                Column(
-                    name=column.name,
-                    attributes=column.attributes | {Attribute.primary_key},
-                    derived_from=[(column, table)],
-                )
-                for column in table.columns
-                if Attribute.primary_key not in column.attributes
-                if any(column.name == str(c) for c in self.is_pivotable)
+                *self._pivotable_columns(table),
+            ]
+
+            temporal_columns = [
+                *self._temporal_columns(table),
             ]
 
             aggregations = [
@@ -43,24 +43,53 @@ class Aggregate(Transform):
             ]
 
             if aggregations and pivotable_columns:
-                for num_pivots in range(1, self.max_pivots + 1):
-                    for pivots in itertools.combinations(pivotable_columns, num_pivots):
-                        columns = [
-                            *pivots,
-                            *[column for column, _ in aggregations],
-                        ]
+                pivoted_columns = [
+                    column
+                    for num_pivots in range(1, self.max_pivots + 1)
+                    for pivot in itertools.combinations(pivotable_columns, num_pivots)
+                    for column in pivot
+                ]
 
-                        data = (
-                            table.data
-                            .group_by(into_exprs(pivots))
-                            .agg(**into_named_exprs(aggregations))
-                        )
+                yield Table(
+                    columns=[
+                        *pivoted_columns,
+                        *[column for column, _ in aggregations],
+                    ],
+                    data=(
+                        table.data
+                        .group_by(into_exprs(pivoted_columns))
+                        .agg(**into_named_exprs(aggregations))
+                    ),
+                    name="group_by({table}, {pivot})".format(
+                        table=table.name,
+                        pivot=", ".join(str(column) for column in pivoted_columns),
+                    ),
+                )
 
-                        yield Table(
-                            columns=columns,
-                            data=data,
-                            name=f"group_by({table.name}, {', '.join(str(c) for c in pivots)})",
-                        )
+                if self.windows and temporal_columns:
+                    for temporal_column in temporal_columns:
+                        for window in self.windows:
+                            yield Table(
+                                columns=[
+                                    temporal_column,
+                                    *pivoted_columns,
+                                    *[column for column, _ in aggregations],
+                                ],
+                                data=(
+                                    table.data
+                                    .group_by_dynamic(
+                                        temporal_column.name,
+                                        every=window,
+                                        group_by=into_exprs(pivoted_columns),
+                                    )
+                                    .agg(**into_named_exprs(aggregations))
+                                ),
+                                name="group_by({table}, {pivot}, {window})".format(
+                                    table=table.name,
+                                    pivot=", ".join(str(column) for column in pivoted_columns),
+                                    window=str(window),
+                                ),
+                            )
 
     def _aggregations(
         self,
@@ -99,3 +128,28 @@ class Aggregate(Transform):
                 )
 
                 yield column, expr
+
+    def _pivotable_columns(
+        self,
+        table: Table,
+    ) -> Iterable[Column]:
+        return [
+            Column(
+                name=column.name,
+                attributes=column.attributes | {Attribute.primary_key},
+                derived_from=[(column, table)],
+            )
+            for column in table.columns
+            if Attribute.primary_key not in column.attributes
+            if any(column.name == str(c) for c in self.is_pivotable)
+        ]
+
+    def _temporal_columns(
+        self,
+        table: Table,
+    ) -> Iterable[Column]:
+        return [
+            column
+            for column in table.columns
+            if Attribute.temporal in column.attributes
+        ]
