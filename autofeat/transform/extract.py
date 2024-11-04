@@ -5,7 +5,13 @@ from typing import ClassVar
 import polars
 
 from autofeat.attribute import Attribute
-from autofeat.convert import IntoDataFrame, into_data_frame, into_named_exprs
+from autofeat.convert import (
+    IntoDataFrame,
+    IntoSeries,
+    into_data_frame,
+    into_named_exprs,
+    into_series,
+)
 from autofeat.table import Column, Table
 from autofeat.transform.base import Transform
 
@@ -14,18 +20,21 @@ from autofeat.transform.base import Transform
 class Extract(Transform):
     """Extract features that are relevant to the ``known`` data.
 
+    :param as_of: Time as of which to extract features.
     :param known: Data that is already known.
     """
 
     # Reserved characters used to separate column and table names.
     SEPARATOR: ClassVar = " :: "
 
+    as_of: IntoSeries | None = None
     known: IntoDataFrame
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
+        as_of = None if self.as_of is None else into_series(self.as_of)
         known = into_data_frame(self.known)
 
         for table in tables:
@@ -50,12 +59,21 @@ class Extract(Transform):
                     for column, _ in features
                 ]
 
-                data = (
-                    known
-                    .lazy()
-                    .join(table.data, on=list(primary_key), how="left")
-                    .select(**into_named_exprs(features))
-                )
+                if time_column := self._time_column(table):
+                    data = (
+                        known
+                        .with_columns(**{time_column.name: as_of})
+                        .lazy()
+                        .join_asof(table.data, on=time_column.name, by=list(primary_key))
+                        .select(**into_named_exprs(features))
+                    )
+                else:
+                    data = (
+                        known
+                        .lazy()
+                        .join(table.data, on=list(primary_key), how="left")
+                        .select(**into_named_exprs(features))
+                    )
 
                 yield Table(
                     columns=columns,
@@ -91,3 +109,13 @@ class Extract(Transform):
                 )
 
                 yield column, expr
+
+    def _time_column(
+        self,
+        table: Table,
+    ) -> Column | None:
+        for column in table.columns:
+            if Attribute.temporal in column.attributes:
+                return column
+
+        return None

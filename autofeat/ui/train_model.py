@@ -34,7 +34,7 @@ def train_model(
         index=None,
         key="target_column",
         label="Target Column",
-        on_change=lambda: _clear_state("known_columns", "problem"),
+        on_change=lambda: _clear_state("as_of_column", "known_columns", "problem"),
         options=[c for c in training_data.columns if Attribute.not_null in c.attributes],
     )
 
@@ -66,15 +66,15 @@ def train_model(
     ]
 
     if temporal_columns:
-        time_column = streamlit.selectbox(
-            help="",
-            label="",
+        as_of_column = streamlit.selectbox(
+            help="Time as of which to make each prediction",
+            label="As Of Column",
             index=0,
-            key="time_column",
+            key="as_of_column",
             options=temporal_columns,
         )
     else:
-        time_column = None
+        as_of_column = None
 
     with hide_elements("minimal"):
         default_problem = (
@@ -104,12 +104,12 @@ def train_model(
 
     with show_log("Training Model"):
         return _train_model(
+            as_of_column=as_of_column,
             dataset=dataset,
             known_columns=tuple(known_columns),
             prediction_method=PREDICTION_METHODS[prediction_method],
             problem=problem,
             target_column=target_column,
-            time_column=time_column,
             training_data=training_data,
         )
 
@@ -125,12 +125,12 @@ def train_model(
 )
 def _train_model(
     *,
+    as_of_column: Column | None,
     dataset: Dataset,
     known_columns: tuple[Column, ...],
     prediction_method: PredictionMethod,
     problem: Problem,
     target_column: Column,
-    time_column: Column | None,
     training_data: Table,
 ) -> Model:
     return Model.train(
