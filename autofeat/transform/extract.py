@@ -27,7 +27,7 @@ class Extract(Transform):
     # Reserved characters used to separate column and table names.
     SEPARATOR: ClassVar = " :: "
 
-    as_of: IntoSeries | None
+    as_of: IntoSeries | None = None
     known: IntoDataFrame
 
     def apply(
