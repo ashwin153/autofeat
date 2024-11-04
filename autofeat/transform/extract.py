@@ -27,14 +27,14 @@ class Extract(Transform):
     # Reserved characters used to separate column and table names.
     SEPARATOR: ClassVar = " :: "
 
-    as_of: IntoSeries
+    as_of: IntoSeries | None
     known: IntoDataFrame
 
     def apply(
         self,
         tables: Iterable[Table],
     ) -> Iterable[Table]:
-        as_of = into_series(self.as_of)
+        as_of = None if self.as_of is None else into_series(self.as_of)
         known = into_data_frame(self.known)
 
         for table in tables:
@@ -62,14 +62,9 @@ class Extract(Transform):
                 if time_column := self._time_column(table):
                     data = (
                         known
-                        .with_columns(as_of)
+                        .with_columns(**{time_column.name: as_of})
                         .lazy()
-                        .join_asof(
-                            table.data,
-                            left_on=as_of.name,
-                            right_on=time_column.name,
-                            by=list(primary_key),
-                        )
+                        .join_asof(table.data, on=time_column.name, by=list(primary_key))
                         .select(**into_named_exprs(features))
                     )
                 else:
