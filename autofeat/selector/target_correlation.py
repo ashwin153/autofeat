@@ -16,17 +16,17 @@ class TargetCorrelation(Selector):
     """
 
     method: Literal["pearson", "kendall", "spearman"] = "pearson"
-    threshold: float = 0.5
+    threshold: float = 0.95
 
     def select(
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
     ) -> list[bool]:
-        target_correlation = numpy.abs(
+        target_correlation = (
             pandas.DataFrame(X)
-            .corrwith(pandas.Series(y), axis=1, method=self.method)
-            .to_numpy(),
+            .corrwith(pandas.Series(y), method=self.method)
+            .abs()
         )
 
         selection = numpy.argwhere(target_correlation < self.threshold)

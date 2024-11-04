@@ -239,7 +239,7 @@ class Model:  # type: ignore[no-any-unimported]
                     Aggregate(is_pivotable=known_columns, max_pivots=1),
                 ],
                 [
-                    TargetCorrelation(threshold=0.95),
+                    TargetCorrelation(threshold=0.99),
                     FeatureImportance(predictor=predictor, n=200),
                     PairwiseCorrelation(threshold=0.8),
                     ShapelyImpact(predictor=predictor, n=100),
@@ -250,7 +250,7 @@ class Model:  # type: ignore[no-any-unimported]
                     Filter().then(Aggregate(is_pivotable=known_columns, max_pivots=1)),
                 ],
                 [
-                    TargetCorrelation(threshold=0.95),
+                    TargetCorrelation(threshold=0.99),
                     FeatureImportance(predictor=predictor, n=150),
                     PairwiseCorrelation(threshold=0.7),
                     ShapelyImpact(predictor=predictor, n=100),
@@ -261,7 +261,7 @@ class Model:  # type: ignore[no-any-unimported]
                     Combine(),
                 ],
                 [
-                    TargetCorrelation(threshold=0.95),
+                    TargetCorrelation(threshold=0.99),
                     FeatureImportance(predictor=predictor, n=100),
                     ShapelyImpact(predictor=predictor, n=35),
                 ],
