@@ -1,4 +1,6 @@
 import datetime
+import glob
+import pathlib
 
 import faker
 import numpy
@@ -6,6 +8,7 @@ import polars
 
 from autofeat.convert.into_columns import into_columns
 from autofeat.dataset import Dataset
+from autofeat.source.from_csv import from_csv
 from autofeat.table import Table
 
 _RNG = numpy.random.Generator(numpy.random.PCG64())
@@ -14,36 +17,53 @@ _RNG = numpy.random.Generator(numpy.random.PCG64())
 _FAKE = faker.Faker()
 
 
+_CACHE = pathlib.Path(".cache") / "autofeat" / "example"
+
+
 def from_example(
     *,
     num_accounts: int = 250,
+    use_cache: bool = False,
 ) -> Dataset:
     """Load from randomized example data.
 
     :param num_accounts: Number of accounts to generate.
     :return: Dataset.
     """
-    accounts = _generate_accounts(num_accounts)
-    sessions = _generate_sessions(accounts)
-    feedback = _generate_feedback(accounts)
+    if use_cache and (cached_files := glob.glob(f"{_CACHE}/**/*.csv")):
+        dataset = from_csv(cached_files)
 
-    return Dataset([
-        Table(
-            name="Accounts",
-            data=accounts.lazy(),
-            columns=into_columns(accounts),
-        ),
-        Table(
-            name="Sessions",
-            data=sessions.lazy(),
-            columns=into_columns(sessions),
-        ),
-        Table(
-            name="Feedback",
-            data=feedback.lazy(),
-            columns=into_columns(feedback),
-        ),
-    ])
+        return dataset
+    else:
+        accounts = _generate_accounts(num_accounts)
+        sessions = _generate_sessions(accounts)
+        feedback = _generate_feedback(accounts)
+
+        dataset = Dataset([
+            Table(
+                name="accounts.csv",
+                data=accounts.lazy(),
+                columns=into_columns(accounts),
+            ),
+            Table(
+                name="sessions.csv",
+                data=sessions.lazy(),
+                columns=into_columns(sessions),
+            ),
+            Table(
+                name="feedback.csv",
+                data=feedback.lazy(),
+                columns=into_columns(feedback),
+            ),
+        ])
+
+        if use_cache:
+            _CACHE.mkdir(parents=True)
+
+            for table in dataset.tables:
+                table.data.collect().write_csv(_CACHE / table.name)
+
+        return dataset
 
 
 def _generate_accounts(
