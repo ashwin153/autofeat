@@ -72,6 +72,9 @@ def _infer_columns(
     for column_name, data_type in data.collect_schema().items():
         attributes = set()
 
+        if data_type.is_numeric():
+            attributes.add(Attribute.aggregable)
+
         if isinstance(data_type, polars.Boolean):
             attributes.add(Attribute.boolean)
 
@@ -86,6 +89,9 @@ def _infer_columns(
 
         if profile["n_unique"][column_name] == profile["len"][column_name]:
             attributes.add(Attribute.primary_key)
+
+        if data_type.is_temporal():
+            attributes.add(Attribute.temporal)
 
         if isinstance(data_type, polars.String):
             attributes.add(Attribute.textual)

@@ -5,6 +5,9 @@ import enum
 class Attribute(enum.Enum):
     """A characteristic of a column."""
 
+    aggregable = enum.auto()
+    """Contains values that can be aggregated."""
+
     boolean = enum.auto()
     """Contains ``True`` and ``False`` values."""
 
