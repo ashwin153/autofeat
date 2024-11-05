@@ -105,6 +105,7 @@ class Aggregate(Transform):
             column
             for column in table.columns
             if Attribute.numeric in column.attributes
+            if Attribute.aggregable in column.attributes
             if Attribute.primary_key not in column.attributes
             if all(column.name != c.name for c in pivotable_columns)
         ]
@@ -123,7 +124,7 @@ class Aggregate(Transform):
             for name, expr in aggregations:
                 column = Column(
                     name=name,
-                    attributes=x.attributes | {Attribute.not_null},
+                    attributes=(x.attributes | {Attribute.not_null}) - {Attribute.aggregable},
                     derived_from=[(x, table)],
                 )
 
