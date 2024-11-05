@@ -48,7 +48,7 @@ def load_dataset(
 
             return _load_dataset(source.from_csv, tuple(csv_files))
         case "Example":
-            return _load_dataset(source.from_example)
+            return _load_dataset(source.from_example, use_cache=True)
         case "Kaggle":
             kaggle_name = streamlit.text_input(
                 help="Name of the Kaggle dataset or competition to load data from",
