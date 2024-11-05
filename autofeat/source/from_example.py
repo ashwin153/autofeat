@@ -17,7 +17,7 @@ _RNG = numpy.random.Generator(numpy.random.PCG64())
 _FAKE = faker.Faker()
 
 
-_CACHE = pathlib.Path(".cache") / "autofeat" / "example"
+_CACHE = pathlib.Path.home() / ".cache" / "autofeat" / "example"
 
 
 def from_example(
@@ -28,9 +28,10 @@ def from_example(
     """Load from randomized example data.
 
     :param num_accounts: Number of accounts to generate.
+    :param use_cache: Whether or not to reuse previously generated example data.
     :return: Dataset.
     """
-    if use_cache and (cached_files := glob.glob(f"{_CACHE}/**/*.csv")):
+    if use_cache and (cached_files := glob.glob(f"{_CACHE}/*.csv")):
         dataset = from_csv(cached_files)
 
         return dataset
@@ -58,10 +59,10 @@ def from_example(
         ])
 
         if use_cache:
-            _CACHE.mkdir(parents=True)
+            _CACHE.mkdir(parents=True, exist_ok=True)
 
             for table in dataset.tables:
-                table.data.collect().write_csv(_CACHE / table.name)
+                table.data.sink_csv(_CACHE / table.name)
 
         return dataset
 
