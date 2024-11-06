@@ -887,12 +887,16 @@ python-versions = "*"
 files = [
     {file = "cuda_python-12.6.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:963974fedb1a06da60ce20a74f7ff7df7d1ad67bdd07bf8b3b9a03de246905b7"},
     {file = "cuda_python-12.6.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5fe4c6372da65a002a01c50f6b633818d2feaf8fcad0e6f5d34c29f31e89eec0"},
+    {file = "cuda_python-12.6.2-cp310-cp310-win_amd64.whl", hash = "sha256:e0ed0f0a832b0ba0b1019d19e042940d23508145a093af2480a17d8c1de1b7a6"},
     {file = "cuda_python-12.6.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:edfa70c2f49eb9c4d3acecfd0b85e41bba72ed344961943bbd7b97744ac48bdc"},
     {file = "cuda_python-12.6.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:438f391dffe10309b886d485a0a3ceed29a261faa795b8bd2a3807714d2b95f1"},
+    {file = "cuda_python-12.6.2-cp311-cp311-win_amd64.whl", hash = "sha256:fcfee1406208fd90fe0ae08c265eb7422c675467f95ebdf36d8d10f125edb03d"},
     {file = "cuda_python-12.6.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ae9ff92966409193eb183adb248d95c38db37bd685130f4df2dc2ddaa7ce08c8"},
     {file = "cuda_python-12.6.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5bd2edf78bc9a56b18887ff8ea58d1ba8f2a48a0b880bd65147ae18ff7ca0415"},
+    {file = "cuda_python-12.6.2-cp312-cp312-win_amd64.whl", hash = "sha256:d622b69cd35ddc580fb0dc5406d2f605d7d984c912179897714389c19f5c3f7b"},
     {file = "cuda_python-12.6.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5c9e48d189f7159d300bbee8251385546f0964d2f67443bc27d5e655bf70f0db"},
     {file = "cuda_python-12.6.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5b5e6e3cb5813d0a6c10361166edb9928383ee1f5770b2f3d6f5ffdc5ff180d7"},
+    {file = "cuda_python-12.6.2-cp39-cp39-win_amd64.whl", hash = "sha256:fa1424b467cf5b8f79047e31634d9182955e690839793a420fca6cdc9bc803d6"},
 ]
 
 [package.dependencies]
@@ -4803,13 +4807,13 @@ tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
 name = "streamlit"
-version = "1.39.0"
+version = "1.40.0"
 description = "A faster way to build and share data apps"
 optional = false
 python-versions = "!=3.9.7,>=3.8"
 files = [
-    {file = "streamlit-1.39.0-py2.py3-none-any.whl", hash = "sha256:a359fc54ed568b35b055ff1d453c320735539ad12e264365a36458aef55a5fba"},
-    {file = "streamlit-1.39.0.tar.gz", hash = "sha256:fef9de7983c4ee65c08e85607d7ffccb56b00482b1041fa62f90e4815d39df3a"},
+    {file = "streamlit-1.40.0-py2.py3-none-any.whl", hash = "sha256:05d22bc111d682ef4deaf7ededeec2305051b99dd6d7d564788705e4ce6f8029"},
+    {file = "streamlit-1.40.0.tar.gz", hash = "sha256:6e4d3b90c4934951f97d790daf7953df5beb2916e447ac9f78e1b76a9ef83327"},
 ]
 
 [package.dependencies]
@@ -4821,7 +4825,7 @@ gitpython = ">=3.0.7,<3.1.19 || >3.1.19,<4"
 numpy = ">=1.20,<3"
 packaging = ">=20,<25"
 pandas = ">=1.4.0,<3"
-pillow = ">=7.1.0,<11"
+pillow = ">=7.1.0,<12"
 protobuf = ">=3.20,<6"
 pyarrow = ">=7.0"
 pydeck = ">=0.8.0b4,<1"
