@@ -49,9 +49,19 @@ class Extract(Transform):
                 key=lambda feature: len(feature[0].name),
             )
 
+            time_column = next(
+                (
+                    column
+                    for column in table.columns
+                    if {Attribute.temporal, Attribute.not_null} <= column.attributes
+                ),
+                None,
+            )
+
             if (
                 primary_key
                 and primary_key.issubset(known.columns)
+                and (time_column is None or as_of is not None)
                 and features
             ):
                 columns = [
@@ -59,19 +69,24 @@ class Extract(Transform):
                     for column, _ in features
                 ]
 
-                if time_column := self._time_column(table):
+                if time_column:
                     data = (
                         known
                         .with_columns(**{time_column.name: as_of})
+                        .sort(time_column.name)
                         .lazy()
-                        .join_asof(table.data, on=time_column.name, by=list(primary_key))
+                        .join_asof(
+                            table.data.sort(time_column.name),
+                            on=time_column.name,
+                            by=list(primary_key),
+                        )
                         .select(**into_named_exprs(features))
                     )
                 else:
                     data = (
                         known
                         .lazy()
-                        .join(table.data, on=list(primary_key), how="left")
+                        .join(table.data, on=list(primary_key), how="left", validate="1:m")
                         .select(**into_named_exprs(features))
                     )
 
@@ -85,21 +100,23 @@ class Extract(Transform):
         self,
         table: Table,
     ) -> Iterable[tuple[Column, polars.Expr]]:
-        primary_key = [
-            (column, table)
-            for column in table.columns
-            if Attribute.primary_key in column.attributes
-        ]
-
         for x in table.columns:
             if  (
                 {Attribute.boolean, Attribute.numeric} & x.attributes
                 and Attribute.primary_key not in x.attributes
             ):
+                derived_from = [
+                    (column, table)
+                    for column in table.columns
+                    if x == column
+                    or Attribute.primary_key in column.attributes
+                    or Attribute.temporal in column.attributes
+                ]
+
                 column = Column(
                     name=f"{x.name}{Extract.SEPARATOR}{table.name}",
                     attributes=x.attributes,
-                    derived_from=[(x, table), *primary_key],
+                    derived_from=derived_from,
                 )
 
                 expr = (
@@ -115,7 +132,7 @@ class Extract(Transform):
         table: Table,
     ) -> Column | None:
         for column in table.columns:
-            if Attribute.temporal in column.attributes:
+            if {Attribute.temporal, Attribute.not_null} <= column.attributes:
                 return column
 
         return None

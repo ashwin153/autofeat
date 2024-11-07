@@ -50,21 +50,21 @@ class Aggregate(Transform):
                     for column in pivot
                 ]
 
-                yield Table(
-                    columns=[
-                        *pivoted_columns,
-                        *[column for column, _ in aggregations],
-                    ],
-                    data=(
-                        table.data
-                        .group_by(into_exprs(pivoted_columns))
-                        .agg(**into_named_exprs(aggregations))
-                    ),
-                    name="group_by({table}, {pivot})".format(
-                        table=table.name,
-                        pivot=", ".join(str(column) for column in pivoted_columns),
-                    ),
-                )
+                # yield Table(
+                #     columns=[
+                #         *pivoted_columns,
+                #         *[column for column, _ in aggregations],
+                #     ],
+                #     data=(
+                #         table.data
+                #         .group_by(into_exprs(pivoted_columns))
+                #         .agg(**into_named_exprs(aggregations))
+                #     ),
+                #     name="group_by({table}, {pivot})".format(
+                #         table=table.name,
+                #         pivot=", ".join(str(column) for column in pivoted_columns),
+                #     ),
+                # )
 
                 if self.windows and temporal_columns:
                     for temporal_column in temporal_columns:
@@ -90,7 +90,7 @@ class Aggregate(Transform):
                                     window=str(window),
                                 ),
                             )
-
+":<L MK[pl.pl]"
     def _aggregations(
         self,
         table: Table,
