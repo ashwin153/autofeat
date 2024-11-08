@@ -2,6 +2,7 @@ import functools
 from collections.abc import Iterable, Iterator
 from typing import cast
 
+import loguru
 import polars.io.plugins
 import pyarrow
 import sqlalchemy
@@ -118,12 +119,20 @@ def _load_schemas(
     metadata = sqlalchemy.MetaData()
     metadata.reflect(engine)
 
-    return {
-        table.name: polars.Schema(
-            {column.name: _into_data_type(column.type) for column in table.columns.values()},
-        )
-        for table in metadata.tables.values()
-    }
+    schemas = {}
+    with engine.connect() as connection:
+        for table in metadata.tables.values():
+            try:
+                connection.execute(f"SELECT * FROM {table.name} LIMIT 1")
+
+                schemas[table.name] = polars.Schema({
+                    column.name: _into_data_type(column.type)
+                    for column in table.columns.values()
+                })
+            except Exception:
+                loguru.logger.exception(f"failed to read {table.name}")
+
+    return schemas
 
 
 def _into_data_type(
