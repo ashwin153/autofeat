@@ -4755,6 +4755,21 @@ packaging = "*"
 SQLAlchemy = ">=0.9.2,<2.0.0"
 
 [[package]]
+name = "sqlalchemy-stubs"
+version = "0.4"
+description = "SQLAlchemy stubs and mypy plugin"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sqlalchemy-stubs-0.4.tar.gz", hash = "sha256:c665d6dd4482ef642f01027fa06c3d5e91befabb219dc71fc2a09e7d7695f7ae"},
+    {file = "sqlalchemy_stubs-0.4-py3-none-any.whl", hash = "sha256:5eec7aa110adf9b957b631799a72fef396b23ff99fe296df726645d01e312aa5"},
+]
+
+[package.dependencies]
+mypy = ">=0.790"
+typing-extensions = ">=3.7.4"
+
+[[package]]
 name = "sqlglot"
 version = "25.28.0"
 description = "An easily customizable SQL parser and transpiler"
@@ -5288,4 +5303,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.12"
-content-hash = "8857f7c1edac360b54168ea3487bca5a2701d94a6f1939ff6932b814065e2d58"
+content-hash = "4f5ee675a05b66a0e3670612495ad939ffe4834fe4497eeb7ade8bb95f5215a8"
