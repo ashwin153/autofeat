@@ -14,34 +14,55 @@ from autofeat.table import Table
 
 def from_sql(
     uri: str,
+    *,
+    schema: str | None = None,
 ) -> Dataset:
     """Load from a SQL database.
 
     :param uri: Database connection URI.
+    :param schema: Database schema to connect to.
     :return: SQL dataset.
     """
-    tables = []
+    return Dataset(list(_load_tables(uri, schema)))
 
-    schemas = _load_schemas(uri)
 
-    for table_name, schema in schemas.items():
-        data = _scan_data(uri, table_name, schema)
+@functools.cache
+def _load_tables(
+    uri: str,
+    schema: str | None,
+) -> Iterable[Table]:
+    engine = sqlalchemy.create_engine(uri)
+    metadata = sqlalchemy.MetaData()
+    metadata.reflect(engine, schema=schema)
 
-        table = Table(
-            data=data,
-            columns=into_columns(data),
-            name=table_name,
-        )
+    with engine.connect() as connection:
+        for table in metadata.tables.values():
+            name = (
+                f"{schema}.{table.name}"
+                if schema
+                else table.name
+            )
 
-        tables.append(table)
+            try:
+                connection.execute(f"SELECT * FROM {name} LIMIT 1")
 
-    return Dataset(tables)
+                data = _scan_data(uri, name, table)
+
+                table = Table(
+                    data=data,
+                    columns=into_columns(data),
+                    name=name,
+                )
+
+                yield table
+            except Exception:
+                loguru.logger.exception(f"failed to read {name}")
 
 
 def _scan_data(
     uri: str,
-    table_name: str,
-    schema: polars.Schema,
+    name: str,
+    table: sqlalchemy.Table,
 ) -> polars.LazyFrame:
     def source(
         with_columns: list[str] | None,
@@ -49,7 +70,7 @@ def _scan_data(
         n_rows: int | None,
         batch_size: int | None,
     ) -> Iterator[polars.DataFrame]:
-        query = f"SELECT {', '.join(with_columns) if with_columns else '*'} FROM {table_name}"
+        query = f"SELECT {', '.join(with_columns) if with_columns else '*'} FROM {name}"
 
         if n_rows is not None:
             query += f" LIMIT {n_rows}"
@@ -63,7 +84,7 @@ def _scan_data(
 
     return polars.io.plugins.register_io_source(
         callable=source,
-        schema=schema,
+        schema=_into_schema(table),
     )
 
 
@@ -111,28 +132,13 @@ def _load_data(
             )
 
 
-@functools.cache
-def _load_schemas(
-    uri: str,
-) -> dict[str, polars.Schema]:
-    engine = sqlalchemy.create_engine(uri)
-    metadata = sqlalchemy.MetaData()
-    metadata.reflect(engine)
-
-    schemas = {}
-    with engine.connect() as connection:
-        for table in metadata.tables.values():
-            try:
-                connection.execute(f"SELECT * FROM {table.name} LIMIT 1")
-
-                schemas[table.name] = polars.Schema({
-                    column.name: _into_data_type(column.type)
-                    for column in table.columns.values()
-                })
-            except Exception:
-                loguru.logger.exception(f"failed to read {table.name}")
-
-    return schemas
+def _into_schema(
+    table: sqlalchemy.Table,
+) -> polars.Schema:
+    return polars.Schema({
+        column.name: _into_data_type(column.type)
+        for column in table.columns.values()
+    })
 
 
 def _into_data_type(
