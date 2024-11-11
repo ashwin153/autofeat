@@ -18,9 +18,9 @@ import sklearn.preprocessing
 
 from autofeat.convert import into_data_frame
 from autofeat.dataset import Dataset
-from autofeat.predictor import Baseline
+from autofeat.predict import Baseline
 from autofeat.problem import Problem
-from autofeat.selector import (
+from autofeat.select import (
     FeatureImportance,
     PairwiseCorrelation,
     Selector,
@@ -43,7 +43,7 @@ from autofeat.transform import (
 
 if TYPE_CHECKING:
     from autofeat.convert import IntoDataFrame
-    from autofeat.predictor import PredictionMethod, Predictor
+    from autofeat.predict import PredictionMethod, Predictor
     from autofeat.table import Column, Table
 
 

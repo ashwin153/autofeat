@@ -3,7 +3,7 @@ from typing import Any, assert_never
 
 import xgboost
 
-from autofeat.predictor.base import PredictionMethod, Predictor
+from autofeat.predict.base import PredictionMethod, Predictor
 from autofeat.problem import Problem
 from autofeat.settings import SETTINGS
 

@@ -3,7 +3,7 @@ from typing import Any, assert_never
 
 import lightgbm
 
-from autofeat.predictor.base import PredictionMethod, Predictor
+from autofeat.predict.base import PredictionMethod, Predictor
 from autofeat.problem import Problem
 from autofeat.settings import SETTINGS
 

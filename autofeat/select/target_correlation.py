@@ -4,7 +4,7 @@ from typing import Literal
 import numpy
 import pandas
 
-from autofeat.selector.base import Selector
+from autofeat.select.base import Selector
 
 
 @dataclasses.dataclass(kw_only=True)
