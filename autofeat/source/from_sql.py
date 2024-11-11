@@ -7,9 +7,9 @@ import polars.io.plugins
 import pyarrow
 import sqlalchemy
 
-from autofeat.convert import into_columns
+from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
-from autofeat.table import Table
+from autofeat.table import Column, Table
 
 try:
     import connectorx
@@ -46,24 +46,47 @@ def _load_tables(
 
     with engine.connect() as connection:
         for table in metadata.tables.values():
-            name = (
+            table_name = (
                 f"{schema}.{table.name}"
                 if schema
                 else table.name
             )
 
             try:
-                connection.execute(f"SELECT * FROM {name} LIMIT 1")
+                len = connection.execute(f"""
+                    SELECT COUNT(*)
+                    FROM {table_name}
+                """).first()[0]
 
-                data = _scan_data(uri, name, table)
+                columns = [
+                    Column(
+                        name=column.name,
+                        attributes=Attribute.infer(
+                            data_type=_into_data_type(column.type),
+                            len=len,
+                            n_unique=connection.execute(f"""
+                                SELECT COUNT(DISTINCT {column.name})
+                                FROM {table_name}
+                            """).first()[0],
+                            null_count=connection.execute(f"""
+                                SELECT COUNT(*)
+                                FROM {table_name}
+                                WHERE {column.name} IS NULL
+                            """).first()[0],
+                        ),
+                    )
+                    for column in table.columns.values()
+                ]
+
+                data = _scan_data(uri, table_name, table)
 
                 yield Table(
                     data=data,
-                    columns=into_columns(data),
-                    name=name,
+                    columns=columns,
+                    name=table_name,
                 )
             except Exception:
-                loguru.logger.error(f"failed to load table {name}")
+                loguru.logger.exception(f"failed to load table {table_name}")
 
 
 def _scan_data(
