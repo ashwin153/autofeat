@@ -48,13 +48,11 @@ def _load_tables(
 
                 data = _scan_data(uri, name, table)
 
-                table = Table(
+                yield Table(
                     data=data,
                     columns=into_columns(data),
                     name=name,
                 )
-
-                yield table
             except Exception:
                 loguru.logger.exception(f"failed to read {name}")
 
