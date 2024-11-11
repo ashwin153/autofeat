@@ -1,15 +1,15 @@
 import dataclasses
 from typing import Any, assert_never
 
-import xgboost
+import lightgbm
 
-from autofeat.predictor.base import PredictionMethod, Predictor
+from autofeat.predict.base import PredictionMethod, Predictor
 from autofeat.problem import Problem
 from autofeat.settings import SETTINGS
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class XGBoost(PredictionMethod):
+class LightGBM(PredictionMethod):
     """An ensemble of gradient boosted decision trees."""
 
     def create(
@@ -17,13 +17,13 @@ class XGBoost(PredictionMethod):
         problem: Problem,
     ) -> Predictor:
         parameters: dict[str, Any] = {
-            "device": "cuda" if SETTINGS.polars_engine == "gpu" else None,
+            "device": "cuda" if SETTINGS.polars_engine == "gpu" else "cpu",
         }
 
         match problem:
             case Problem.classification:
-                return xgboost.XGBClassifier(**parameters)
+                return lightgbm.LGBMClassifier(**parameters)  # pyright: ignore[reportReturnType]
             case Problem.regression:
-                return xgboost.XGBRegressor(**parameters)
+                return lightgbm.LGBMRegressor(**parameters)  # pyright: ignore[reportReturnType]
             case _:
                 assert_never(problem)

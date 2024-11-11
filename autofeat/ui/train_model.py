@@ -3,7 +3,7 @@ import streamlit
 from autofeat.attribute import Attribute
 from autofeat.dataset import Dataset
 from autofeat.model import Model
-from autofeat.predictor import PREDICTION_METHODS, PredictionMethod
+from autofeat.predict import PREDICTION_METHODS, PredictionMethod
 from autofeat.problem import Problem
 from autofeat.table import Column, Table
 from autofeat.ui.hide_elements import hide_elements

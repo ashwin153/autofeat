@@ -5,7 +5,7 @@ import numpy
 import sklearn.feature_selection
 
 from autofeat.problem import Problem
-from autofeat.selector.base import Selector
+from autofeat.select.base import Selector
 
 
 @dataclasses.dataclass(kw_only=True)

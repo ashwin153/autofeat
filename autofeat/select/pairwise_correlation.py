@@ -4,11 +4,11 @@ from typing import Literal
 import numpy
 import pandas
 
-from autofeat.selector.base import Selector
+from autofeat.select.base import Selector
 
 
 @dataclasses.dataclass(kw_only=True)
-class TargetCorrelation(Selector):
+class PairwiseCorrelation(Selector):
     """Select features that are at most ``max`` correlated with any other selected feature.
 
     :param method: Correlation method.
@@ -16,20 +16,26 @@ class TargetCorrelation(Selector):
     """
 
     method: Literal["pearson", "kendall", "spearman"] = "pearson"
-    threshold: float = 0.95
+    threshold: float = 0.5
 
     def select(
         self,
         X: numpy.ndarray,
         y: numpy.ndarray,
     ) -> list[bool]:
-        target_correlation = (
-            pandas.DataFrame(X)
-            .corrwith(pandas.Series(y), method=self.method)
-            .abs()
+        pairwise_correlation = numpy.max(
+            numpy.triu(
+                numpy.abs(
+                    pandas.DataFrame(X)
+                    .corr(self.method)
+                    .to_numpy(),
+                ),
+                k=1,
+            ),
+            axis=1,
         )
 
-        selection = numpy.argwhere(target_correlation < self.threshold)
+        selection = numpy.argwhere(pairwise_correlation < self.threshold)
 
         return [
             i in selection

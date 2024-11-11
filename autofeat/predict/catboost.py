@@ -3,7 +3,7 @@ from typing import assert_never
 
 import catboost
 
-from autofeat.predictor.base import PredictionMethod, Predictor
+from autofeat.predict.base import PredictionMethod, Predictor
 from autofeat.problem import Problem
 
 

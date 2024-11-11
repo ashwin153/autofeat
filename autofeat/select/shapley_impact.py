@@ -3,8 +3,8 @@ import dataclasses
 import numpy
 import shap
 
-from autofeat.predictor.base import Predictor
-from autofeat.selector.base import Selector
+from autofeat.predict.base import Predictor
+from autofeat.select.base import Selector
 
 
 @dataclasses.dataclass(kw_only=True)

@@ -4,7 +4,7 @@ import enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from autofeat.predictor.base import Predictor
+    from autofeat.predict.base import Predictor
 
 
 @enum.unique
@@ -26,7 +26,7 @@ class Problem(enum.Enum):
 
         :return: Baseline method.
         """
-        from autofeat.predictor.baseline import Baseline
+        from autofeat.predict.baseline import Baseline
 
         baseline = Baseline()
         return baseline.create(self)
