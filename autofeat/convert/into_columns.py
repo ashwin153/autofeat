@@ -48,7 +48,8 @@ def _infer_columns(
     from autofeat.attribute import Attribute
     from autofeat.table import Column
 
-    # profile the data
+    schema = data.collect_schema()
+
     metrics = {
         "len":
             data.select(polars.all().len()),
@@ -66,36 +67,15 @@ def _infer_columns(
         )
     }
 
-    # use the profile and the schema of the data to infer column attributes
-    columns = []
-
-    for column_name, data_type in data.collect_schema().items():
-        attributes = set()
-
-        if data_type.is_numeric():
-            attributes.add(Attribute.aggregable)
-
-        if isinstance(data_type, polars.Boolean):
-            attributes.add(Attribute.boolean)
-
-        if profile["n_unique"][column_name] <= 50:
-            attributes.add(Attribute.categorical)
-
-        if profile["null_count"][column_name] == 0:
-            attributes.add(Attribute.not_null)
-
-        if data_type.is_numeric():
-            attributes.add(Attribute.numeric)
-
-        if profile["n_unique"][column_name] == profile["len"][column_name]:
-            attributes.add(Attribute.primary_key)
-
-        if data_type.is_temporal():
-            attributes.add(Attribute.temporal)
-
-        if isinstance(data_type, polars.String):
-            attributes.add(Attribute.textual)
-
-        columns.append(Column(name=column_name, attributes=attributes))
-
-    return columns
+    return [
+        Column(
+            name=name,
+            attributes=Attribute.infer(
+                data_type=data_type,
+                len=profile["len"][name],
+                n_unique=profile["n_unique"][name],
+                null_count=profile["null_count"][name],
+            ),
+        )
+        for name, data_type in schema.items()
+    ]

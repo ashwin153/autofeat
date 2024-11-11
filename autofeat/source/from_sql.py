@@ -11,6 +11,13 @@ from autofeat.convert import into_columns
 from autofeat.dataset import Dataset
 from autofeat.table import Table
 
+try:
+    import connectorx
+
+    _CONNECTORX_IS_INSTALLED = True
+except ImportError:
+    _CONNECTORX_IS_INSTALLED = False
+
 
 def from_sql(
     uri: str,
@@ -31,9 +38,11 @@ def _load_tables(
     uri: str,
     schema: str | None,
 ) -> Iterable[Table]:
+    loguru.logger.info("loading metadata")
     engine = sqlalchemy.create_engine(uri)
     metadata = sqlalchemy.MetaData()
     metadata.reflect(engine, schema=schema)
+    loguru.logger.info("loaded metadata")
 
     with engine.connect() as connection:
         for table in metadata.tables.values():
@@ -54,7 +63,7 @@ def _load_tables(
                     name=name,
                 )
             except Exception:
-                loguru.logger.exception(f"failed to read {name}")
+                loguru.logger.error(f"failed to load table {name}")
 
 
 def _scan_data(
@@ -86,14 +95,6 @@ def _scan_data(
     )
 
 
-try:
-    import connectorx
-
-    _CONNECTORX_EXISTS = True
-except ImportError:
-    _CONNECTORX_EXISTS = False
-
-
 # https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources
 _CONNECTORX_SOURCES = (
     "bigquery://",
@@ -112,7 +113,7 @@ def _load_data(
     query: str,
     batch_size: int | None,
 ) -> Iterable[polars.DataFrame]:
-    if _CONNECTORX_EXISTS and uri.startswith(_CONNECTORX_SOURCES):
+    if _CONNECTORX_IS_INSTALLED and uri.startswith(_CONNECTORX_SOURCES):
         table = connectorx.read_sql(uri, query, return_type="arrow2")
         assert isinstance(table, pyarrow.Table)
 
