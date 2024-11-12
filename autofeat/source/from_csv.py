@@ -11,7 +11,7 @@ from autofeat.table import Table
 def from_csv(
     files: Iterable[IntoPath],
     *,
-    ignore_errors: bool = False,
+    ignore_errors: bool = True,
     null_values: list[str] | None = None,
 ) -> Dataset:
     """Load from CSV files.
