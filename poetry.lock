@@ -3236,6 +3236,23 @@ files = [
 ]
 
 [[package]]
+name = "prettytable"
+version = "3.12.0"
+description = "A simple Python library for easily displaying tabular data in a visually appealing ASCII table format"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "prettytable-3.12.0-py3-none-any.whl", hash = "sha256:77ca0ad1c435b6e363d7e8623d7cc4fcf2cf15513bf77a1c1b2e814930ac57cc"},
+    {file = "prettytable-3.12.0.tar.gz", hash = "sha256:f04b3e1ba35747ac86e96ec33e3bb9748ce08e254dc2a1c6253945901beec804"},
+]
+
+[package.dependencies]
+wcwidth = "*"
+
+[package.extras]
+tests = ["pytest", "pytest-cov", "pytest-lazy-fixtures"]
+
+[[package]]
 name = "prometheus-client"
 version = "0.21.0"
 description = "Python client for the Prometheus monitoring system."
@@ -4774,18 +4791,46 @@ mypy = ">=0.790"
 typing-extensions = ">=3.7.4"
 
 [[package]]
+name = "sqlframe"
+version = "3.7.0"
+description = "Turning PySpark Into a Universal DataFrame API"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "sqlframe-3.7.0-py3-none-any.whl", hash = "sha256:3e12b6766ba4d90176639596f5301b1a2b302e01c87f65dcfa59cd3d187f7188"},
+    {file = "sqlframe-3.7.0.tar.gz", hash = "sha256:da2ba0d575e060120f0fc15f32ae99b9216b0495e92867884341b6a6002bcb4f"},
+]
+
+[package.dependencies]
+prettytable = "<3.12.1"
+sqlglot = ">=24.0.0,<25.29"
+typing-extensions = ">=4.8,<5"
+
+[package.extras]
+bigquery = ["google-cloud-bigquery-storage (>=2,<3)", "google-cloud-bigquery[pandas] (>=3,<4)"]
+dev = ["duckdb (>=0.9,<1.2)", "findspark (>=2,<3)", "mypy (>=1.10.0,<1.14)", "openai (>=1.30,<1.54)", "pandas (>=2,<3)", "pandas-stubs (>=2,<3)", "pre-commit (>=3.5)", "pre-commit (>=3.7,<4.1)", "psycopg (>=3.1,<4)", "pyarrow (>=10,<19)", "pyspark (>=2,<3.6)", "pytest (>=8.2.0,<8.4)", "pytest-postgresql (>=6,<7)", "pytest-xdist (>=3.6,<3.7)", "ruff (>=0.4.4,<0.8)", "types-psycopg2 (>=2.9,<3)"]
+docs = ["mkdocs (==1.4.2)", "mkdocs-include-markdown-plugin (==6.0.6)", "mkdocs-material (==9.0.5)", "mkdocs-material-extensions (==1.1.1)", "pymdown-extensions"]
+duckdb = ["duckdb (>=0.9,<1.2)", "pandas (>=2,<3)"]
+openai = ["openai (>=1.30,<1.54)"]
+pandas = ["pandas (>=2,<3)"]
+postgres = ["psycopg2 (>=2.8,<3)"]
+redshift = ["redshift-connector (>=2.1.1,<2.2.0)"]
+snowflake = ["snowflake-connector-python[secure-local-storage] (>=3.10.0,<3.13)"]
+spark = ["pyspark (>=2,<3.6)"]
+
+[[package]]
 name = "sqlglot"
-version = "25.29.0"
+version = "25.28.0"
 description = "An easily customizable SQL parser and transpiler"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "sqlglot-25.29.0-py3-none-any.whl", hash = "sha256:ab79c50439d77860eb49a0e5d7e0d0b8d19024796f21dec3fd607a3d969c013b"},
-    {file = "sqlglot-25.29.0.tar.gz", hash = "sha256:fcb4e2f5cb9a17ca3f003f6c165afcbe0001c0a57d477252727fef56b8f8b352"},
+    {file = "sqlglot-25.28.0-py3-none-any.whl", hash = "sha256:01a6b76dd916c2ce39a5f808559e337600ea261873d25be0dc7f99da3d24860d"},
+    {file = "sqlglot-25.28.0.tar.gz", hash = "sha256:1bfcadada28bcab873382b271ed30138597cbf8893d90cc259563f9498bd1b49"},
 ]
 
 [package.extras]
-dev = ["duckdb (>=0.6)", "maturin (>=1.4,<2.0)", "mypy", "pandas", "pandas-stubs", "pdoc", "pre-commit", "python-dateutil", "pytz", "ruff (==0.7.2)", "types-python-dateutil", "types-pytz", "typing-extensions"]
+dev = ["duckdb (>=0.6)", "maturin (>=1.4,<2.0)", "mypy", "pandas", "pandas-stubs", "pdoc", "pre-commit", "python-dateutil", "pytz", "ruff (==0.4.3)", "types-python-dateutil", "types-pytz", "typing-extensions"]
 rs = ["sqlglotrs (==0.2.13)"]
 
 [[package]]
@@ -5308,4 +5353,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.12"
-content-hash = "ffc9140eedfcff72bd248a388b7aab8311c3943b1a720b496f56e4a5a51aa362"
+content-hash = "e18562c7cf66f5592017511dcaaf5bd3a27e8df68870f96595b7a976a08ad89a"

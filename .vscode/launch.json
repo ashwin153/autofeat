@@ -1,16 +1,16 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "UI: Debug",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "streamlit",
-            "console": "integratedTerminal",
-            "args": [
-                "run",
-                "autofeat/ui/__main__.py",
-            ]
-        }
-    ]
+  "configurations": [
+    {
+      "args": [
+        "run",
+        "autofeat/ui/__main__.py"
+      ],
+      "console": "integratedTerminal",
+      "module": "streamlit",
+      "name": "UI: Debug",
+      "request": "launch",
+      "type": "debugpy"
+    }
+  ],
+  "version": "0.2.0"
 }
