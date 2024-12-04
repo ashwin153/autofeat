@@ -14,7 +14,7 @@ _SOURCE_TYPES = [
     "Example",
     "Iceburg (coming soon)",
     "Kaggle",
-    "Parquet (coming soon)",
+    "Parquet",
     "RedShift (coming soon)",
     "Salesforce (coming soon)",
     "Snowflake (coming soon)",
@@ -60,6 +60,17 @@ def load_dataset(
                 return None
 
             return _load_dataset(source.from_kaggle, kaggle_name)
+        case "Parquet":
+            parquet_files = streamlit.file_uploader(
+                accept_multiple_files=True,
+                label="Upload Files",
+                type="parquet",
+            )
+
+            if not parquet_files:
+                return None
+
+            return _load_dataset(source.from_parquet, tuple(parquet_files))
         case _:
             raise NotImplementedError(f"{source_type} is not supported")
 
