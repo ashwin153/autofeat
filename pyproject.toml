@@ -37,7 +37,7 @@ catboost = "^1.2.7"
 connectorx = {markers = "sys_platform != 'linux' or platform_machine != 'aarch64'", version = "^0.4.0"}
 cuda-python = "^12.6.0"
 cudf-polars-cu12 = {source = "nvidia", version = "^24.10.0"}
-faker = "^30.1.0"
+faker = "^33.0.0"
 fastexcel = "^0.12.0"
 kaggle = "^1.6.17"
 lightgbm = "^4.5.0"
