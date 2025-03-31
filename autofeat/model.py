@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import functools
 from typing import TYPE_CHECKING
 
@@ -16,19 +17,20 @@ import sklearn.model_selection
 import sklearn.pipeline
 import sklearn.preprocessing
 
+from autofeat.attribute import Attribute
 from autofeat.convert import into_data_frame
 from autofeat.dataset import Dataset
 from autofeat.predict import Baseline
 from autofeat.problem import Problem
 from autofeat.select import (
     FeatureImportance,
-    PairwiseCorrelation,
     Selector,
     ShapelyImpact,
     TargetCorrelation,
 )
 from autofeat.transform import (
     Aggregate,
+    AnyOf,
     Cast,
     Combine,
     Drop,
@@ -236,33 +238,72 @@ class Model:  # type: ignore[no-any-unimported]
         iterations: list[tuple[list[Transform], list[Selector]]] = [
             (
                 [
-                    Aggregate(is_pivotable=known_columns, max_pivots=1),
+                    Identity(),
+                    Filter().then(
+                        Aggregate(
+                            is_pivotable=known_columns,
+                            max_pivots=2,
+                            windows=[
+                                datetime.timedelta(days=1),
+                                datetime.timedelta(days=7),
+                                datetime.timedelta(days=30),
+                                datetime.timedelta(days=90),
+                                datetime.timedelta(days=365),
+                            ],
+                        ),
+                    ),
+                    Aggregate(
+                        is_pivotable=known_columns,
+                        max_pivots=2,
+                        windows=[
+                            datetime.timedelta(days=1),
+                            datetime.timedelta(days=7),
+                            datetime.timedelta(days=30),
+                            datetime.timedelta(days=90),
+                            datetime.timedelta(days=365),
+                        ],
+                    ),
                 ],
                 [
                     TargetCorrelation(threshold=0.99),
-                    FeatureImportance(predictor=predictor, n=200),
-                    PairwiseCorrelation(threshold=0.8),
-                    ShapelyImpact(predictor=predictor, n=100),
+                    FeatureImportance(predictor=predictor, n=100),
+                    # PairwiseCorrelation(threshold=0.8),
+                    ShapelyImpact(predictor=predictor, n=35),
                 ],
             ),
             (
                 [
-                    Filter().then(Aggregate(is_pivotable=known_columns, max_pivots=1)),
-                ],
-                [
-                    TargetCorrelation(threshold=0.99),
-                    FeatureImportance(predictor=predictor, n=150),
-                    PairwiseCorrelation(threshold=0.7),
-                    ShapelyImpact(predictor=predictor, n=100),
-                ],
-            ),
-            (
-                [
+                    Identity(),
+                    Filter().then(
+                        Aggregate(
+                            is_pivotable=known_columns,
+                            max_pivots=2,
+                            windows=[
+                                datetime.timedelta(days=1),
+                                datetime.timedelta(days=7),
+                                datetime.timedelta(days=30),
+                                datetime.timedelta(days=90),
+                                datetime.timedelta(days=365),
+                            ],
+                        ),
+                    ),
+                    Aggregate(
+                        is_pivotable=known_columns,
+                        max_pivots=2,
+                        windows=[
+                            datetime.timedelta(days=1),
+                            datetime.timedelta(days=7),
+                            datetime.timedelta(days=30),
+                            datetime.timedelta(days=90),
+                            datetime.timedelta(days=365),
+                        ],
+                    ),
                     Combine(),
                 ],
                 [
                     TargetCorrelation(threshold=0.99),
                     FeatureImportance(predictor=predictor, n=100),
+                    # PairwiseCorrelation(threshold=0.8),
                     ShapelyImpact(predictor=predictor, n=35),
                 ],
             ),
@@ -274,11 +315,9 @@ class Model:  # type: ignore[no-any-unimported]
 
             transforms, selectors = iterations[i]
 
-            dataset = dataset.apply(Identity().then(Identity(), *transforms))
-
             model = Model._train_once(
                 as_of=as_of,
-                dataset=dataset,
+                dataset=dataset.apply(AnyOf(transforms)),
                 known=known,
                 predictor=predictor,
                 problem=problem,
@@ -286,11 +325,29 @@ class Model:  # type: ignore[no-any-unimported]
                 target=target,
             )
 
-            dataset = model.dataset
-
             if i == len(iterations) - 1:
                 return model
             else:
+                ancestors = {
+                    ancestor
+                    for table in model.dataset.tables
+                    for ancestor in table.ancestors
+                }
+
+                dataset = dataset.apply(
+                    Keep(
+                        columns=[
+                            (column, table)
+                            for table in dataset.tables
+                            for column in table.columns
+                            if (column, table) in ancestors
+                            or column in known_columns
+                            or Attribute.primary_key in column.attributes
+                            or Attribute.temporal in column.attributes
+                        ],
+                    ),
+                )
+
                 i += 1
 
     @staticmethod
@@ -335,7 +392,7 @@ class Model:  # type: ignore[no-any-unimported]
         )
 
         # create prediction and selection models
-        for i, selector in enumerate(selectors):
+        for selector in selectors:
             # train the selection model
             loguru.logger.info(f"fitting selection model ({type(selector).__name__})")
 
@@ -369,6 +426,8 @@ class Model:  # type: ignore[no-any-unimported]
                     ],
                 ),
             )
+
+            loguru.logger.info(f"selected {len(X.columns)} features")
 
         # train the prediction model on the selected features
         loguru.logger.info(f"fitting prediction model ({type(predictor).__name__})")

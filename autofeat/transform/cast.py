@@ -65,7 +65,7 @@ class Cast(Transform):
                 else:
                     result = Column(
                         name=column.name,
-                        attributes={Attribute.temporal},
+                        attributes={Attribute.temporal, Attribute.not_null},
                         derived_from=[(column, table)],
                     )
 

@@ -8,6 +8,8 @@ import polars
 
 if TYPE_CHECKING:
 
+    from collections.abc import Iterable
+
     from autofeat.attribute import Attribute
 
 
@@ -20,14 +22,39 @@ class Column:
     :param name: Unique name of the column within the table.
     """
 
-    attributes: set[Attribute] = dataclasses.field(default_factory=set, repr=False)
-    derived_from: list[tuple[Column, Table]] = dataclasses.field(default_factory=list, repr=False)
+    attributes: set[Attribute] = dataclasses.field(
+        default_factory=set,
+        compare=False,
+        repr=False,
+    )
+    derived_from: list[tuple[Column, Table]] = dataclasses.field(
+        default_factory=list,
+        compare=False,
+        repr=False,
+    )
     name: str
 
     def __str__(
         self,
     ) -> str:
         return self.name
+
+    @functools.cached_property
+    def ancestors(
+        self,
+    ) -> set[Column]:
+        """
+
+        :return:
+        """
+        if self.derived_from:
+            return {
+                ancestor
+                for parent, _ in self.derived_from
+                for ancestor in parent.ancestors
+            }
+        else:
+            return {self}
 
     @functools.cached_property
     def expr(
@@ -49,20 +76,7 @@ class Column:
         :param other: Other column.
         :return: Has common ancestor.
         """
-        return not self._ancestors.isdisjoint(other._ancestors)
-
-    @functools.cached_property
-    def _ancestors(
-        self,
-    ) -> set[str]:
-        if self.derived_from:
-            return {
-                ancestor
-                for parent, _ in self.derived_from
-                for ancestor in parent._ancestors
-            }
-        else:
-            return {self.name}
+        return not self.ancestors.isdisjoint(other.ancestors)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -82,6 +96,29 @@ class Table:
         self,
     ) -> str:
         return self.name
+
+    @functools.cached_property
+    def ancestors(
+        self,
+    ) -> set[tuple[Column, Table]]:
+        """
+
+        :return:
+        """
+        return {
+            ancestor
+            for column in self.columns
+            for ancestor in self._ancestors(column)
+        }
+
+    def _ancestors(
+        self,
+        column: Column,
+    ) -> Iterable[tuple[Column, Table]]:
+        yield (column, self)
+
+        for parent_column, parent_table in column.derived_from:
+            yield from parent_table._ancestors(parent_column)
 
     def column(
         self,
