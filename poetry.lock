@@ -648,27 +648,41 @@ test = ["pytest"]
 
 [[package]]
 name = "connectorx"
-version = "0.4.0"
+version = "0.4.6"
 description = ""
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "connectorx-0.4.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:447bd065feb69b63e51a8a056b1de3ccb98a48108b52987dba1b67555f01a8d8"},
-    {file = "connectorx-0.4.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:342d233ca0008ec7cfef2ab91da566f15a1326ac2f51c87c6dd9f77dc9a6549e"},
-    {file = "connectorx-0.4.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:72103766090f81ed7f8aeba9183d7eb2f24b65de9678d74a61c16f85f89e8b81"},
-    {file = "connectorx-0.4.0-cp310-none-win_amd64.whl", hash = "sha256:63a5a4961ed43e5f33eebaa9ee0ea0bb4e3f7d0f710d48e2b51ede3bd1e2af44"},
-    {file = "connectorx-0.4.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:fb3653c4ff1de8ada871c2ab883ed04dc2b7bb84704fcf08e6a23cf67deb931f"},
-    {file = "connectorx-0.4.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:224da692923f3e2f6ae5677dfd0f00ac0374e3989832ee4de029112b09da2281"},
-    {file = "connectorx-0.4.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:d9b6d1832c071201cacb810b06c7311cb605f99dead0ee47935d38086f1c9d4b"},
-    {file = "connectorx-0.4.0-cp311-none-win_amd64.whl", hash = "sha256:31b2c02f56360c6c4034d23c107772df98c8ab6102f71242bcb9a8a0fec06512"},
-    {file = "connectorx-0.4.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:5c6bb6cc468ff77b18b71ee44b5ea7e3c72de3a08a4740040fed3361a6086659"},
-    {file = "connectorx-0.4.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:42d9ae283541aca860f7082186ecb0525ff933b714e676dfe0e517e7943a9799"},
-    {file = "connectorx-0.4.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:c3ebe1e95e4c82d69804d0165be4d4f80ff4bb1beac04d6946aa73ed04819440"},
-    {file = "connectorx-0.4.0-cp312-none-win_amd64.whl", hash = "sha256:d4c156df650860002f61155e2eff23d9c822c2e9f14e16d04e21dd1033b09cdc"},
-    {file = "connectorx-0.4.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:b74266abb86c7d570579004d909d8b4ce5d18dab29e07c63015ea75ed0178adb"},
-    {file = "connectorx-0.4.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:dd80488823a174d0c73e4575b10f0c0eb86bc82cbd72e28fd2b611733308699d"},
-    {file = "connectorx-0.4.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:33a64fdd0b3efd32f54cce664f1022d448db5878e919e7a2f186f2af19eaa572"},
-    {file = "connectorx-0.4.0-cp313-none-win_amd64.whl", hash = "sha256:635727407b0a14ff30cd02519e631766b2df55c94da2d57c7599e5a9a4ce2f4f"},
+    {file = "connectorx-0.4.6-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:e768c60f6452d98de77ee6dcf336242b75400bc2e4762dcc7bee4607b5868026"},
+    {file = "connectorx-0.4.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:800a1d1a0479a5c85c073330831efb6280088f6ab5fc1787583fc380e2aef872"},
+    {file = "connectorx-0.4.6-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:495bb83af59a1e3676308f1a846238682342080904989202e9cfde6529f5421b"},
+    {file = "connectorx-0.4.6-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:2ed4085c81a19f85975566a1c568db4849a44859c012996bd0b0d0c648c0756e"},
+    {file = "connectorx-0.4.6-cp310-cp310-win_amd64.whl", hash = "sha256:317d1d67373608bf8df80058e54d54ee782010175acad183623fd826625f3351"},
+    {file = "connectorx-0.4.6-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:0084e9cc5321834d5591e00c19acf9694ae9154faa0378b8cfb2c06294b724d8"},
+    {file = "connectorx-0.4.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:22d5e6c2b4b2ac85b546e667f8203ae4e4fe2ccf5181c85e0a4017c36f5c5225"},
+    {file = "connectorx-0.4.6-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:c799a9258efcf2a9328c6eaaa9add64c47d17be873fc81bea80ec983afb7e76f"},
+    {file = "connectorx-0.4.6-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:97516507332abb68c6e469fd97f4f9dd794ac81167804cdbd0f6e741252d6622"},
+    {file = "connectorx-0.4.6-cp311-cp311-win_amd64.whl", hash = "sha256:5864b1135e0a8a25a759aacfa9e58e566a98376f04347a8853202be50f7af37d"},
+    {file = "connectorx-0.4.6-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:ed208d58cce76d48ff70e2eae38a7f12eb86d26d8cd8c844a16f9d1dce3c5799"},
+    {file = "connectorx-0.4.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a80a0286c8f17264f63c14a73b99705c9384fb81460d3f29976499f7ea0c5d95"},
+    {file = "connectorx-0.4.6-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:ed60e2735c8f89bbea97047860b1551bd5247d33c532fced252c65cd5e8f9a42"},
+    {file = "connectorx-0.4.6-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:e3da099b69bb36687d9ca723aa7da9432ced6c4aad2f935ca7bc7f7534b80460"},
+    {file = "connectorx-0.4.6-cp312-cp312-win_amd64.whl", hash = "sha256:e11ac218fd5d110cbd1dbd20d52e1f44edc8f37e51a1e096cbea02d3892b5f60"},
+    {file = "connectorx-0.4.6-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:fffc777550e96aae8d4e91d6b8d1febfeb23525b9ffb686595a654a5e2557e07"},
+    {file = "connectorx-0.4.6-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:2f2a4568e2042522c19cedde7ce0238817af945363358385509bc50186aed872"},
+    {file = "connectorx-0.4.6-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:ff2619fb6b7a46cce9f109ceda59e554e11bd3a98bde052e3018543198dd4241"},
+    {file = "connectorx-0.4.6-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:937391d0ba510ce3686863234b3b671dfaaed955469cc2d223cf3da93b0ae3b9"},
+    {file = "connectorx-0.4.6-cp313-cp313-win_amd64.whl", hash = "sha256:7aa6da6fe724931e25c956a53c1e7921caa3d27f7aaef6cc5ddd8725a33d8b17"},
+    {file = "connectorx-0.4.6-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:e70f2c1e49287a793bbe079ef8dd9a3b29edf0435463a7d5254aa8b639b0322f"},
+    {file = "connectorx-0.4.6-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:2dfc32d0fff898fc62dfe458c8dc7ed6db4e930b5fad9fc098c1a3d3470eb821"},
+    {file = "connectorx-0.4.6-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:d4901b109ec39a1b131513861cc161a94ab28e3e8b49dcd66598e67d2b6b93fc"},
+    {file = "connectorx-0.4.6-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:4718df87ead456bca21b506766df3270015e0b4f34cfbe4fda48c79a8ee6c60c"},
+    {file = "connectorx-0.4.6-cp314-cp314-win_amd64.whl", hash = "sha256:675fd8a44da1247b2728b20b42aa32d6d19a427de27e16a956eed45dd8875332"},
+    {file = "connectorx-0.4.6-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:06261424b90af919ce47fed973bb7651e0c4cfe4547beaa4f4fbd2e40598ddbf"},
+    {file = "connectorx-0.4.6-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:bf287ce1c7401a1123eb07b35e6a267b12382eea4cffa96a958c94ee563837c4"},
+    {file = "connectorx-0.4.6-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:e8778223f3a61934f23d9f86a13d87d940da6dfe7e2e663bf7b88788d2ebe282"},
+    {file = "connectorx-0.4.6-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:8b7fa24139621fd1b67d1c039f9fda81bf62021c21a36901478483ff5f670fb7"},
+    {file = "connectorx-0.4.6-cp314-cp314t-win_amd64.whl", hash = "sha256:4db6f42ee1c72f35dc7c731b3003a0bec8954a35317a01390840b1ddcfeaa9e5"},
 ]
 
 [[package]]
@@ -3343,6 +3357,7 @@ files = [
     {file = "psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4"},
     {file = "psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067"},
     {file = "psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e"},
+    {file = "psycopg2-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:91fd603a2155da8d0cfcdbf8ab24a2d54bca72795b90d2a3ed2b6da8d979dee2"},
     {file = "psycopg2-2.9.10-cp39-cp39-win32.whl", hash = "sha256:9d5b3b94b79a844a986d029eee38998232451119ad653aea42bb9220a8c5066b"},
     {file = "psycopg2-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:88138c8dedcbfa96408023ea2b0c369eda40fe5d75002c0964c78f46f11fa442"},
     {file = "psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11"},
